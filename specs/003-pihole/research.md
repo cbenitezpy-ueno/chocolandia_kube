@@ -12,32 +12,42 @@ This document consolidates research findings for deploying Pi-hole as a containe
 
 ## 1. Deployment Approach
 
-### Decision: Kubernetes Raw Manifests (Managed via OpenTofu)
+### Decision: OpenTofu HCL Native Resources (Kubernetes Provider)
 
 **Rationale:**
-- **Learning value**: Writing raw Kubernetes YAML manifests teaches Kubernetes resource structure, labels, selectors, and dependencies
-- **OpenTofu integration**: Manifests deployed via OpenTofu Kubernetes provider (`kubernetes_manifest` resource) maintains Infrastructure as Code principle
-- **Simplicity**: Single Pi-hole instance with straightforward configuration doesn't require Helm's complexity
-- **Transparency**: Every Kubernetes resource is explicitly defined and version-controlled
-- **GitOps alignment**: OpenTofu manages Kubernetes resources declaratively with state tracking
+- **Type safety**: HCL provides compile-time validation of Kubernetes resource structure
+- **OpenTofu native**: Uses `kubernetes_deployment`, `kubernetes_service`, `kubernetes_secret`, `kubernetes_persistent_volume_claim` resources directly
+- **Maintainability**: Changes to configuration don't require YAML string manipulation
+- **Consistency**: All infrastructure (K3s cluster + Pi-hole) managed in HCL
+- **State management**: OpenTofu tracks Kubernetes resource state, enabling safe updates and rollbacks
+
+**Implementation**: All Pi-hole resources defined in `terraform/modules/pihole/main.tf` using native HCL blocks (not `kubernetes_manifest` with YAML strings).
 
 ### Alternatives Considered:
+
+#### Kubernetes Raw Manifests (via kubernetes_manifest)
+- **Pros**: Familiar YAML syntax, can copy-paste from examples
+- **Cons**: String manipulation error-prone, no compile-time validation, harder to parameterize
+- **Why rejected**: HCL native resources provide better validation and maintainability
 
 #### Helm Chart (MoJo2600/pihole-kubernetes)
 - **Pros**: Single command deployment, community support, built-in best practices
 - **Cons**: Abstracts Kubernetes details (reduces learning), adds Helm as dependency, harder to customize for specific requirements
-- **Why rejected**: Learning environment benefits from explicit manifest creation; Helm better suited for complex multi-component applications or prod environments with frequent upgrades
-
-#### Pure OpenTofu Kubernetes Provider (HCL syntax)
-- **Pros**: All configuration in HCL, OpenTofu native
-- **Cons**: HCL doesn't natively understand Kubernetes YAML structure, requires manual translation, verbose for complex resources
-- **Why rejected**: YAML manifests applied via `kubernetes_manifest` resource provides best balance of readability and IaC management
+- **Why rejected**: Learning environment benefits from explicit resource creation; Helm better suited for complex multi-component applications
 
 ---
 
 ## 2. Pi-hole Docker Image Configuration
 
-### Image: `pihole/pihole:latest`
+### Image: `pihole/pihole:2024.07.0`
+
+**Version Decision**: Use specific version tag (2024.07.0) instead of `latest` for:
+- **Reproducibility**: Deployments use same image version across environments
+- **Change control**: Updates require explicit version bump in code
+- **Stability**: Avoids unexpected breaking changes from automatic updates
+- **Best practice**: Production-like deployments should pin versions
+
+**Image Pull Policy**: `Always` - ensures latest patch version of 2024.07.0 is pulled on pod restart
 
 ### Required Environment Variables:
 
@@ -93,44 +103,87 @@ securityContext:
 
 ## 3. Kubernetes Service Configuration
 
-### Decision: NodePort Service (Dual Services for DNS)
+### Decision: NodePort + MetalLB LoadBalancer Architecture
+
+**Final Implementation**:
+- **MetalLB LoadBalancer** deployed to expose DNS on standard port 53
+- **NodePort** for web admin interface (port 30001)
+- **CoreDNS integration** to route external queries through Pi-hole
 
 **Rationale:**
-- **Eero network constraint**: No LoadBalancer controller (MetalLB) available in MVP environment
-- **Simplicity**: NodePort works without additional infrastructure
-- **Accessibility**: Web interface accessible at `http://<node-ip>:<nodeport>` from Eero network (192.168.4.0/24)
-- **DNS service**: Port 53 accessible via `<node-ip>:30053` (or custom NodePort)
+- **Standard DNS port**: LoadBalancer provides dedicated IP (192.168.4.200) on port 53, compatible with routers and devices
+- **No hostPort conflicts**: CoreDNS continues using port 53 on nodes, Pi-hole accessible via LoadBalancer IP
+- **Network compatibility**: Eero router and macOS DNS settings require port 53 (cannot specify custom ports)
+- **Clean separation**: Web admin on NodePort, DNS on LoadBalancer, internal cluster DNS maintained
 
 ### Service Architecture:
 
-**Two separate Services required** (Kubernetes limitation: can't mix TCP/UDP protocols on same NodePort):
+**Three Services deployed**:
 
-1. **DNS Service (TCP + UDP)**:
-   - Type: ClusterIP (for internal K3s DNS resolution if needed)
-   - Ports: 53 TCP + 53 UDP
-   - Alternative: LoadBalancer (when MetalLB deployed in future)
-
-2. **Web Admin Service**:
+1. **DNS Service (NodePort - Pi-hole)**:
    - Type: NodePort
-   - Port: 80 HTTP → NodePort 30001 (custom, within range 30000-32767)
-   - Accessibility: `http://192.168.4.101:30001` or `http://192.168.4.102:30001`
+   - Ports: 53 TCP + 53 UDP → NodePort 30053
+   - Purpose: Fallback access to Pi-hole DNS
+   - Selector: `app=pihole`
 
-### DNS Access Pattern:
+2. **Web Admin Service (NodePort)**:
+   - Type: NodePort
+   - Port: 80 HTTP → NodePort 30001
+   - Accessibility: `http://192.168.4.101:30001/admin` or `http://192.168.4.102:30001/admin`
+   - Selector: `app=pihole`
 
-**For MVP (Eero network)**:
-- Devices configured manually to use K3s node IP as DNS server (192.168.4.101 or 192.168.4.102)
-- Pi-hole DNS service exposed via ClusterIP + host networking alternative OR NodePort
-- **Limitation**: NodePort for DNS requires non-standard port (e.g., 30053 instead of 53)
+3. **CoreDNS LoadBalancer (External DNS Access)**:
+   - Type: LoadBalancer
+   - Service Name: `coredns-lb` (kube-system namespace)
+   - LoadBalancer IP: 192.168.4.200 (assigned by MetalLB)
+   - Ports: 53 TCP + 53 UDP
+   - Purpose: Expose cluster DNS externally for network devices
+   - Selector: `k8s-app=kube-dns`
 
-**Alternative Approach (More Complex)**:
-- Run Pi-hole with `hostNetwork: true` to bind directly to node port 53
-- **Conflict risk**: K3s CoreDNS already uses port 53 on cluster nodes
-- **Not recommended** for learning environment
+### DNS Query Flow:
 
-**Future Enhancement (Feature 001 with FortiGate)**:
-- Deploy MetalLB LoadBalancer controller
-- Assign dedicated IP to Pi-hole DNS service (e.g., 192.168.4.10)
-- Devices use standard port 53 without node IP dependency
+```text
+Device (192.168.4.x) → 192.168.4.200:53 (MetalLB LoadBalancer)
+                            ↓
+                       CoreDNS Service
+                            ↓
+                    ┌───────┴───────┐
+                    ↓               ↓
+        Internal K8s queries   External queries
+        (*.cluster.local)      (google.com, etc.)
+                    ↓               ↓
+            CoreDNS resolves   Forward to Pi-hole
+                                (10.43.232.162:53)
+                                    ↓
+                              ┌─────┴─────┐
+                              ↓           ↓
+                        Blocked domain  Allowed domain
+                        Return 0.0.0.0  Forward to upstream
+                                        (1.1.1.1, 8.8.8.8)
+```
+
+### CoreDNS Integration:
+
+**Configuration Change** (CoreDNS ConfigMap):
+```yaml
+forward . 10.43.232.162  # Changed from: forward . /etc/resolv.conf
+```
+
+**Benefits**:
+- Internal cluster DNS (service discovery) continues working
+- External DNS queries routed through Pi-hole for ad blocking
+- Network devices benefit from ad blocking
+- Kubernetes pods benefit from ad blocking
+
+### MetalLB Configuration:
+
+**IP Address Pool**:
+```yaml
+addresses:
+- 192.168.4.200-192.168.4.210  # 11 IPs available for LoadBalancers
+```
+
+**L2 Advertisement**: ARP-based load balancing (no BGP required for home network)
 
 ### Service Configuration Best Practices:
 
@@ -155,7 +208,7 @@ spec:
 ```yaml
 livenessProbe:
   httpGet:
-    path: /admin/api.php?info&login
+    path: /admin/api.php  # Simplified endpoint (no query params)
     port: 80
   initialDelaySeconds: 60  # Pi-hole needs time to initialize
   periodSeconds: 10
@@ -167,13 +220,15 @@ livenessProbe:
 ```yaml
 readinessProbe:
   httpGet:
-    path: /admin/api.php?info&login
+    path: /admin/api.php  # Simplified endpoint (no query params)
     port: 80
   initialDelaySeconds: 60
   periodSeconds: 10
   timeoutSeconds: 5
   failureThreshold: 3      # Faster traffic removal on failure
 ```
+
+**Endpoint Decision**: Changed from `/admin/api.php?info&login` to `/admin/api.php` for simplicity. Both endpoints work, but simplified version is more reliable across Pi-hole versions.
 
 **Rationale:**
 - **HTTP endpoint check**: More reliable than DNS-based check (avoids recursive DNS issues)

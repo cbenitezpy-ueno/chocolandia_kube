@@ -96,7 +96,7 @@ resource "kubernetes_deployment" "pihole" {
         container {
           name  = "pihole"
           image = var.image
-          image_pull_policy = "IfNotPresent"
+          image_pull_policy = "Always"
 
           # Environment Variables
           env {
@@ -169,7 +169,7 @@ resource "kubernetes_deployment" "pihole" {
           # Liveness Probe
           liveness_probe {
             http_get {
-              path = "/admin/"
+              path = "/admin/api.php"
               port = 80
             }
             initial_delay_seconds = 60
@@ -181,7 +181,7 @@ resource "kubernetes_deployment" "pihole" {
           # Readiness Probe
           readiness_probe {
             http_get {
-              path = "/admin/"
+              path = "/admin/api.php"
               port = 80
             }
             initial_delay_seconds = 60

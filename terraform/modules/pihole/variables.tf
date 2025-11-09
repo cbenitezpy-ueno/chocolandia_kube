@@ -50,7 +50,7 @@ variable "namespace" {
 variable "image" {
   description = "Pi-hole Docker image"
   type        = string
-  default     = "pihole/pihole:latest"
+  default     = "pihole/pihole:2024.07.0"
 }
 
 variable "replicas" {

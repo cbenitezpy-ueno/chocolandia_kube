@@ -22,7 +22,7 @@ This document defines the key entities, their attributes, relationships, validat
 |-----------|------|-------------|-------------|--------|
 | `name` | String | Deployment name | `pihole` | Kubernetes metadata |
 | `namespace` | String | Kubernetes namespace | `default` or `pihole` | Kubernetes metadata |
-| `image` | String | Container image reference | `pihole/pihole:latest` | Deployment spec |
+| `image` | String | Container image reference | `pihole/pihole:2024.07.0` | Deployment spec |
 | `admin_password` | Secret | Web UI admin password | Min 8 chars, stored in K8s Secret | Environment variable |
 | `timezone` | String | Timezone for logs | IANA format (e.g., `America/New_York`) | Environment variable |
 | `upstream_dns` | List[String] | Upstream DNS servers | Valid IP addresses, semicolon-separated | Environment variable |
@@ -49,28 +49,30 @@ This document defines the key entities, their attributes, relationships, validat
 
 ### 1.2 DNS Service
 
-**Description**: Kubernetes Service exposing Pi-hole DNS resolver on port 53 TCP+UDP.
+**Description**: Kubernetes Service exposing Pi-hole DNS resolver on port 53 TCP+UDP (NodePort) + MetalLB LoadBalancer for external DNS access.
 
 **Attributes**:
 
 | Attribute | Type | Description | Constraints | Source |
 |-----------|------|-------------|-------------|--------|
 | `name` | String | Service name | `pihole-dns` | Service metadata |
-| `type` | Enum | Service type | `ClusterIP`, `LoadBalancer`, `NodePort` | Service spec |
+| `type` | Enum | Service type | `NodePort` | Service spec |
 | `cluster_ip` | String | Internal cluster IP | Auto-assigned by K8s | Service status |
-| `external_ip` | String | External LoadBalancer IP | Auto-assigned or specified | Service status (if LoadBalancer) |
 | `dns_tcp_port` | Integer | DNS TCP port | 53 | Service port |
 | `dns_udp_port` | Integer | DNS UDP port | 53 | Service port |
+| `node_port` | Integer | NodePort (exposed) | 30053 | Service spec |
 | `selector` | Map[String, String] | Pod selector labels | `app: pihole` | Service spec |
 
 **Validation Rules**:
-- `type` MUST be `ClusterIP` for MVP (LoadBalancer requires MetalLB)
+- `type` MUST be `NodePort`
 - `dns_tcp_port` and `dns_udp_port` MUST be 53
+- `node_port` MUST be 30053 (custom NodePort for DNS)
 - `selector` MUST match Pi-hole Deployment labels
 
 **Relationships**:
 - **Targets**: Pi-hole Instance pods (1:N relationship via label selector)
-- **Consumed By**: Devices on Eero network (192.168.4.0/24)
+- **Consumed By**: CoreDNS (forwards external queries to Pi-hole ClusterIP)
+- **Alternative Access**: Direct access via NodePort 30053 (fallback)
 
 ---
 
@@ -100,8 +102,52 @@ This document defines the key entities, their attributes, relationships, validat
 
 **Access Pattern**:
 ```
-User Notebook (192.168.4.x) → http://192.168.4.101:30001 → NodePort Service → Pi-hole Pod
-                                 or http://192.168.4.102:30001
+User Notebook (192.168.4.x) → http://192.168.4.101:30001/admin → NodePort Service → Pi-hole Pod
+                                 or http://192.168.4.102:30001/admin
+```
+
+---
+
+### 1.3.1 CoreDNS LoadBalancer Service
+
+**Description**: MetalLB LoadBalancer service exposing CoreDNS externally on standard DNS port 53 for network devices.
+
+**Attributes**:
+
+| Attribute | Type | Description | Constraints | Source |
+|-----------|------|-------------|-------------|--------|
+| `name` | String | Service name | `coredns-lb` | Service metadata |
+| `namespace` | String | Kubernetes namespace | `kube-system` | Service metadata |
+| `type` | Enum | Service type | `LoadBalancer` | Service spec |
+| `loadbalancer_ip` | String | External IP (MetalLB) | `192.168.4.200` | Service annotation + MetalLB IP pool |
+| `dns_tcp_port` | Integer | DNS TCP port | 53 | Service port |
+| `dns_udp_port` | Integer | DNS UDP port | 53 | Service port |
+| `selector` | Map[String, String] | Pod selector labels | `k8s-app: kube-dns` | Service spec |
+
+**Validation Rules**:
+- `type` MUST be `LoadBalancer`
+- `loadbalancer_ip` MUST be within MetalLB IP pool range (192.168.4.200-192.168.4.210)
+- `dns_tcp_port` and `dns_udp_port` MUST be 53
+- `selector` MUST match CoreDNS pods
+
+**Relationships**:
+- **Targets**: CoreDNS pods in kube-system namespace
+- **Consumed By**: Network devices (192.168.4.0/24) - Eero router, notebooks, phones
+- **Forwards To**: Pi-hole ClusterIP (10.43.232.162) for external queries
+
+**Access Pattern**:
+```
+Device DNS Query (192.168.4.x) → 192.168.4.200:53 (MetalLB LoadBalancer)
+                                       ↓
+                                  CoreDNS Service
+                                       ↓
+                            ┌──────────┴───────────┐
+                            ↓                      ↓
+                   Internal queries         External queries
+                   (*.cluster.local)        (google.com, etc.)
+                            ↓                      ↓
+                    CoreDNS resolves        Forward to Pi-hole
+                                            (10.43.232.162:53)
 ```
 
 ---
@@ -278,52 +324,72 @@ OpenTofu → Create Secret (base64 encoded password)
 ## 2. Relationships Diagram
 
 ```text
-┌─────────────────────────────────────────────────────────────┐
-│                    Eero Network (192.168.4.0/24)            │
-│                                                             │
-│  ┌──────────────┐           ┌──────────────┐              │
-│  │ User Notebook│           │ Client Device│              │
-│  │ (192.168.4.x)│           │ (192.168.4.y)│              │
-│  └──────┬───────┘           └──────┬───────┘              │
-│         │                          │                       │
-│         │ HTTP                     │ DNS Query             │
-│         │ (port 30001)             │ (port 53)             │
-└─────────┼──────────────────────────┼───────────────────────┘
-          │                          │
-          ▼                          ▼
-  ┌────────────────┐         ┌────────────────┐
-  │ Web Admin      │         │ DNS Service    │
-  │ Service        │         │ (ClusterIP)    │
-  │ (NodePort)     │         │                │
-  └────────┬───────┘         └────────┬───────┘
-           │                          │
-           │                          │
-           └──────────┬───────────────┘
-                      │
-                      ▼
-          ┌───────────────────────┐
-          │   Pi-hole Instance    │
-          │   (Deployment/Pod)    │
-          │                       │
-          │  ┌─────────────────┐  │
-          │  │ Pi-hole         │  │
-          │  │ Container       │  │
-          │  │                 │  │
-          │  │ /etc/pihole ────┼──┼───► PersistentVolumeClaim
-          │  └─────────────────┘  │       │
-          │                       │       │
-          │  Environment Vars:    │       ▼
-          │   - Admin Password ───┼───► Kubernetes Secret
-          │   - Upstream DNS      │
-          │   - Timezone          │
-          └───────────────────────┘
-                      │
-                      │ Upstream DNS
-                      ▼
-          ┌───────────────────────┐
-          │ Cloudflare (1.1.1.1)  │
-          │ Google (8.8.8.8)      │
-          └───────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      Eero Network (192.168.4.0/24)                      │
+│                                                                         │
+│  ┌──────────────┐           ┌──────────────┐      ┌──────────────┐    │
+│  │ User Notebook│           │ Eero Router  │      │ Client Device│    │
+│  │ (192.168.4.x)│           │ (192.168.4.1)│      │ (192.168.4.y)│    │
+│  └──────┬───────┘           └──────┬───────┘      └──────┬───────┘    │
+│         │                          │                     │             │
+│         │ HTTP                     │ DNS Query           │ DNS Query   │
+│         │ (port 30001)             │ (port 53)           │ (port 53)   │
+└─────────┼──────────────────────────┼─────────────────────┼─────────────┘
+          │                          │                     │
+          │                          └─────────┬───────────┘
+          │                                    │
+          │                                    ▼
+          │                          ┌─────────────────────┐
+          │                          │ MetalLB LoadBalancer│
+          │                          │ 192.168.4.200:53    │
+          │                          └──────────┬──────────┘
+          │                                     │
+          │                                     ▼
+          │                          ┌─────────────────────┐
+          │                          │ CoreDNS Service     │
+          │                          │ (kube-system)       │
+          │                          └──────────┬──────────┘
+          │                                     │
+          │                          ┌──────────┴─────────┐
+          │                          ↓                    ↓
+          │                    Internal queries    External queries
+          │                    (*.cluster.local)   (google.com, etc.)
+          │                          ↓                    ↓
+          │                    CoreDNS resolves    Forward to Pi-hole
+          │                                        (10.43.232.162:53)
+          ▼                                               ▼
+  ┌────────────────┐                          ┌────────────────┐
+  │ Web Admin      │                          │ DNS Service    │
+  │ Service        │                          │ (NodePort)     │
+  │ (NodePort)     │                          │ Port 30053     │
+  └────────┬───────┘                          └────────┬───────┘
+           │                                           │
+           └───────────────────┬───────────────────────┘
+                               │
+                               ▼
+                   ┌───────────────────────┐
+                   │   Pi-hole Instance    │
+                   │   (Deployment/Pod)    │
+                   │                       │
+                   │  ┌─────────────────┐  │
+                   │  │ Pi-hole         │  │
+                   │  │ Container       │  │
+                   │  │                 │  │
+                   │  │ /etc/pihole ────┼──┼───► PersistentVolumeClaim
+                   │  └─────────────────┘  │       │
+                   │                       │       │
+                   │  Environment Vars:    │       ▼
+                   │   - Admin Password ───┼───► Kubernetes Secret
+                   │   - Upstream DNS      │
+                   │   - Timezone          │
+                   └───────────────────────┘
+                               │
+                               │ Upstream DNS
+                               ▼
+                   ┌───────────────────────┐
+                   │ Cloudflare (1.1.1.1)  │
+                   │ Google (8.8.8.8)      │
+                   └───────────────────────┘
 ```
 
 ---
