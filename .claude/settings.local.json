@@ -4,8 +4,8 @@
       "Bash(talosctl:*)",
       "Bash(SHORT_NAME=\"k3s-cluster-setup\" git ls-remote:*)",
       "Bash(SHORT_NAME=k3s-cluster-setup find:*)",
-      "Bash(/Users/cbenitez/chocolandia_kube/.specify/scripts/bash/create-new-feature.sh:*)",
-      "Bash(/Users/cbenitez/chocolandia_kube/.specify/scripts/bash/update-agent-context.sh:*)",
+      "Bash(.specify/scripts/bash/create-new-feature.sh:*)",
+      "Bash(.specify/scripts/bash/update-agent-context.sh:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(.specify/scripts/bash/setup-plan.sh:*)"
