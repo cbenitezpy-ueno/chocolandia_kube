@@ -21,7 +21,7 @@ This guide walks you through deploying a 4-node K3s high-availability cluster na
 - [ ] Static IP addresses or DHCP reservations configured
 - [ ] SSH access enabled on all mini-PCs
 - [ ] SSH keys configured for passwordless authentication
-- [ ] Terraform 1.6+ installed on your control machine
+- [ ] OpenTofu 1.6+ installed on your control machine
 - [ ] kubectl installed on your control machine
 
 ## Step 1: Prepare Your Mini-PCs (10 minutes)
