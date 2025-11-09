@@ -50,19 +50,19 @@ This task list implements a minimal viable K3s cluster with 2 nodes (1 control-p
 
 ### Directory Structure & Initialization
 
-- [ ] T001 [P1] [Setup] Create OpenTofu module directory structure at /Users/cbenitez/chocolandia_kube/terraform/modules/k3s-node/
-- [ ] T002 [P1] [Setup] Create OpenTofu environment directory structure at /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/
-- [ ] T003 [P1] [Setup] Create scripts directory at /Users/cbenitez/chocolandia_kube/terraform/modules/k3s-node/scripts/
-- [ ] T004 [P1] [Setup] Create validation scripts directory at /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/scripts/
-- [ ] T005 [P1] [Setup] Create tests directory at /Users/cbenitez/chocolandia_kube/tests/integration/
-- [ ] T006 [P1] [Setup] Create runbooks directory at /Users/cbenitez/chocolandia_kube/docs/runbooks/
-- [ ] T007 [P1] [Setup] Initialize OpenTofu workspace in /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/ (run `tofu init`)
+- [x] T001 [P1] [Setup] Create OpenTofu module directory structure at /Users/cbenitez/chocolandia_kube/terraform/modules/k3s-node/
+- [x] T002 [P1] [Setup] Create OpenTofu environment directory structure at /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/
+- [x] T003 [P1] [Setup] Create scripts directory at /Users/cbenitez/chocolandia_kube/terraform/modules/k3s-node/scripts/
+- [x] T004 [P1] [Setup] Create validation scripts directory at /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/scripts/
+- [x] T005 [P1] [Setup] Create tests directory at /Users/cbenitez/chocolandia_kube/tests/integration/
+- [x] T006 [P1] [Setup] Create runbooks directory at /Users/cbenitez/chocolandia_kube/docs/runbooks/
+- [x] T007 [P1] [Setup] Initialize OpenTofu workspace in /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/ (run `tofu init`)
 
 ### Git Configuration
 
-- [ ] T008 [P1] [Setup] Create .gitignore file at /Users/cbenitez/chocolandia_kube/.gitignore with entries for *.tfstate, *.tfstate.*, .terraform/, *.tfvars (sensitive data)
-- [ ] T009 [P1] [Setup] Create placeholder README.md at /Users/cbenitez/chocolandia_kube/terraform/README.md describing OpenTofu structure and MVP purpose
-- [ ] T010 [P1] [Setup] Commit initial project structure to branch 002-k3s-mvp-eero
+- [x] T008 [P1] [Setup] Create .gitignore file at /Users/cbenitez/chocolandia_kube/.gitignore with entries for *.tfstate, *.tfstate.*, .terraform/, *.tfvars (sensitive data)
+- [x] T009 [P1] [Setup] Create placeholder README.md at /Users/cbenitez/chocolandia_kube/terraform/README.md describing OpenTofu structure and MVP purpose
+- [x] T010 [P1] [Setup] Commit initial project structure to branch 002-k3s-mvp-eero
 
 ---
 
@@ -78,24 +78,24 @@ This task list implements a minimal viable K3s cluster with 2 nodes (1 control-p
 
 ### k3s-node Module - Core Infrastructure
 
-- [ ] T011 [P1] [Foundational] Create /Users/cbenitez/chocolandia_kube/terraform/modules/k3s-node/variables.tf defining input variables (hostname, role, ip_address, ssh_user, ssh_key_path, k3s_version, k3s_flags, cluster_token, server_url)
-- [ ] T012 [P1] [Foundational] Create /Users/cbenitez/chocolandia_kube/terraform/modules/k3s-node/outputs.tf defining outputs (node_ip, kubeconfig_path, cluster_token_path)
-- [ ] T013 [P1] [Foundational] Create /Users/cbenitez/chocolandia_kube/terraform/modules/k3s-node/main.tf with null_resource for SSH-based provisioning
-- [ ] T014 [P1] [Foundational] Add SSH connection block to /Users/cbenitez/chocolandia_kube/terraform/modules/k3s-node/main.tf using ssh_user, ssh_key_path, ip_address variables
+- [x] T011 [P1] [Foundational] Create /Users/cbenitez/chocolandia_kube/terraform/modules/k3s-node/variables.tf defining input variables (hostname, role, ip_address, ssh_user, ssh_key_path, k3s_version, k3s_flags, cluster_token, server_url)
+- [x] T012 [P1] [Foundational] Create /Users/cbenitez/chocolandia_kube/terraform/modules/k3s-node/outputs.tf defining outputs (node_ip, kubeconfig_path, cluster_token_path)
+- [x] T013 [P1] [Foundational] Create /Users/cbenitez/chocolandia_kube/terraform/modules/k3s-node/main.tf with null_resource for SSH-based provisioning
+- [x] T014 [P1] [Foundational] Add SSH connection block to /Users/cbenitez/chocolandia_kube/terraform/modules/k3s-node/main.tf using ssh_user, ssh_key_path, ip_address variables
 
 ### k3s-node Module - Installation Scripts
 
-- [ ] T015 [P1] [Foundational] Create /Users/cbenitez/chocolandia_kube/terraform/modules/k3s-node/scripts/install-k3s-server.sh for K3s server installation (single-server mode, SQLite, --cluster-init=false)
-- [ ] T016 [P1] [Foundational] Add --tls-san flag support to install-k3s-server.sh to accept dynamic IP addresses for API server certificate
-- [ ] T017 [P1] [Foundational] Add optional --disable flags support to install-k3s-server.sh (traefik, servicelb) based on variables
-- [ ] T018 [P1] [Foundational] Create /Users/cbenitez/chocolandia_kube/terraform/modules/k3s-node/scripts/install-k3s-agent.sh for K3s agent installation with K3S_URL and K3S_TOKEN support
-- [ ] T019 [P1] [Foundational] Add node label support to install-k3s-agent.sh (e.g., --node-label role=worker)
+- [x] T015 [P1] [Foundational] Create /Users/cbenitez/chocolandia_kube/terraform/modules/k3s-node/scripts/install-k3s-server.sh for K3s server installation (single-server mode, SQLite, --cluster-init=false)
+- [x] T016 [P1] [Foundational] Add --tls-san flag support to install-k3s-server.sh to accept dynamic IP addresses for API server certificate
+- [x] T017 [P1] [Foundational] Add optional --disable flags support to install-k3s-server.sh (traefik, servicelb) based on variables
+- [x] T018 [P1] [Foundational] Create /Users/cbenitez/chocolandia_kube/terraform/modules/k3s-node/scripts/install-k3s-agent.sh for K3s agent installation with K3S_URL and K3S_TOKEN support
+- [x] T019 [P1] [Foundational] Add node label support to install-k3s-agent.sh (e.g., --node-label role=worker)
 
 ### k3s-node Module - Provisioning Logic
 
-- [ ] T020 [P1] [Foundational] Add remote-exec provisioner to /Users/cbenitez/chocolandia_kube/terraform/modules/k3s-node/main.tf for copying installation scripts to target node
-- [ ] T021 [P1] [Foundational] Add conditional logic to /Users/cbenitez/chocolandia_kube/terraform/modules/k3s-node/main.tf to execute install-k3s-server.sh if role=server or install-k3s-agent.sh if role=agent
-- [ ] T022 [P1] [Foundational] Add validation to /Users/cbenitez/chocolandia_kube/terraform/modules/k3s-node/variables.tf ensuring cluster_token and server_url are provided only when role=agent
+- [x] T020 [P1] [Foundational] Add remote-exec provisioner to /Users/cbenitez/chocolandia_kube/terraform/modules/k3s-node/main.tf for copying installation scripts to target node
+- [x] T021 [P1] [Foundational] Add conditional logic to /Users/cbenitez/chocolandia_kube/terraform/modules/k3s-node/main.tf to execute install-k3s-server.sh if role=server or install-k3s-agent.sh if role=agent
+- [x] T022 [P1] [Foundational] Add validation to /Users/cbenitez/chocolandia_kube/terraform/modules/k3s-node/variables.tf ensuring cluster_token and server_url are provided only when role=agent
 
 ---
 
@@ -113,29 +113,29 @@ This task list implements a minimal viable K3s cluster with 2 nodes (1 control-p
 
 ### US1 Tests (Write Tests First)
 
-- [ ] T023 [P1] [US1] Create /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/scripts/validate-single-node.sh to verify master1 is Ready and API accessible
-- [ ] T024 [P1] [US1] Create /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/scripts/validate-cluster.sh to verify both nodes are Ready (master1 + nodo1)
-- [ ] T025 [P1] [US1] Create /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/scripts/deploy-test-workload.sh to deploy nginx pod and verify Running status on nodo1
+- [x] T023 [P1] [US1] Create /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/scripts/validate-single-node.sh to verify master1 is Ready and API accessible
+- [x] T024 [P1] [US1] Create /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/scripts/validate-cluster.sh to verify both nodes are Ready (master1 + nodo1)
+- [x] T025 [P1] [US1] Create /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/scripts/deploy-test-workload.sh to deploy nginx pod and verify Running status on nodo1
 
 ### US1 Environment Configuration
 
-- [ ] T026 [P1] [US1] Create /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/providers.tf defining required_providers (null, local) and OpenTofu version constraint (>=1.6)
-- [ ] T027 [P1] [US1] Create /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/variables.tf defining environment-specific variables (master1_ip, nodo1_ip, ssh_user, ssh_key_path, k3s_version, cluster_name)
-- [ ] T028 [P1] [US1] Create /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/terraform.tfvars.example with sample values (192.168.4.10, 192.168.4.11, ubuntu, /Users/cbenitez/.ssh/id_rsa, v1.28.5+k3s1, chocolandiadc-mvp)
-- [ ] T029 [P1] [US1] Create /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/outputs.tf defining outputs (kubeconfig_command, cluster_endpoint, validation_commands)
+- [x] T026 [P1] [US1] Create /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/providers.tf defining required_providers (null, local) and OpenTofu version constraint (>=1.6)
+- [x] T027 [P1] [US1] Create /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/variables.tf defining environment-specific variables (master1_ip, nodo1_ip, ssh_user, ssh_key_path, k3s_version, cluster_name)
+- [x] T028 [P1] [US1] Create /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/terraform.tfvars.example with sample values (192.168.4.10, 192.168.4.11, ubuntu, /Users/cbenitez/.ssh/id_rsa, v1.28.5+k3s1, chocolandiadc-mvp)
+- [x] T029 [P1] [US1] Create /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/outputs.tf defining outputs (kubeconfig_command, cluster_endpoint, validation_commands)
 
 ### US1 Cluster Deployment
 
-- [ ] T030 [P1] [US1] Create /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/main.tf invoking k3s-node module for master1 as server (hostname=master1, role=server, ip=var.master1_ip, k3s_flags="--cluster-init=false --disable traefik --tls-san ${var.master1_ip}")
-- [ ] T031 [P1] [US1] Add null_resource to /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/main.tf to retrieve cluster token from master1 at /var/lib/rancher/k3s/server/token
-- [ ] T032 [P1] [US1] Add k3s-node module invocation to /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/main.tf for nodo1 as agent (hostname=nodo1, role=agent, ip=var.nodo1_ip, server_url="https://${var.master1_ip}:6443", cluster_token=<retrieved from T031>)
-- [ ] T033 [P1] [US1] Add depends_on relationship to /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/main.tf ensuring nodo1 provisioning waits for master1 token retrieval
-- [ ] T034 [P1] [US1] Add local_file resource to /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/main.tf to copy kubeconfig from master1 to /Users/cbenitez/.kube/config and replace 127.0.0.1 with master1 IP
+- [x] T030 [P1] [US1] Create /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/main.tf invoking k3s-node module for master1 as server (hostname=master1, role=server, ip=var.master1_ip, k3s_flags="--cluster-init=false --disable traefik --tls-san ${var.master1_ip}")
+- [x] T031 [P1] [US1] Add null_resource to /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/main.tf to retrieve cluster token from master1 at /var/lib/rancher/k3s/server/token
+- [x] T032 [P1] [US1] Add k3s-node module invocation to /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/main.tf for nodo1 as agent (hostname=nodo1, role=agent, ip=var.nodo1_ip, server_url="https://${var.master1_ip}:6443", cluster_token=<retrieved from T031>)
+- [x] T033 [P1] [US1] Add depends_on relationship to /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/main.tf ensuring nodo1 provisioning waits for master1 token retrieval
+- [x] T034 [P1] [US1] Add local_file resource to /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/main.tf to copy kubeconfig from master1 to /Users/cbenitez/.kube/config and replace 127.0.0.1 with master1 IP
 
 ### US1 Validation & Testing
 
-- [ ] T035 [P1] [US1] Run `tofu apply` in /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/ and verify cluster creation (capture output for documentation)
-- [ ] T036 [P1] [US1] Execute /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/scripts/validate-cluster.sh and /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/scripts/deploy-test-workload.sh to verify cluster functionality
+- [x] T035 [P1] [US1] Run `tofu apply` in /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/ and verify cluster creation (capture output for documentation)
+- [x] T036 [P1] [US1] Execute /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/scripts/validate-cluster.sh and /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/scripts/deploy-test-workload.sh to verify cluster functionality
 
 ---
 
@@ -153,16 +153,16 @@ This task list implements a minimal viable K3s cluster with 2 nodes (1 control-p
 
 ### US2 Tests (Write Tests First)
 
-- [ ] T037 [P2] [US2] Create /Users/cbenitez/chocolandia_kube/tests/integration/test-prometheus.sh to verify Prometheus deployment and scrape targets (master1, nodo1 targets active)
-- [ ] T038 [P2] [US2] Create /Users/cbenitez/chocolandia_kube/tests/integration/test-grafana.sh to verify Grafana deployment and dashboard accessibility via NodePort 30000
+- [x] T037 [P2] [US2] Create /Users/cbenitez/chocolandia_kube/tests/integration/test-prometheus.sh to verify Prometheus deployment and scrape targets (master1, nodo1 targets active)
+- [x] T038 [P2] [US2] Create /Users/cbenitez/chocolandia_kube/tests/integration/test-grafana.sh to verify Grafana deployment and dashboard accessibility via NodePort 30000
 
 ### US2 Monitoring Stack Deployment
 
-- [ ] T039 [P2] [US2] Add Helm provider to /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/providers.tf with kubeconfig path from US1
-- [ ] T040 [P2] [US2] Create /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/monitoring.tf with helm_release resource for kube-prometheus-stack chart (namespace=monitoring)
-- [ ] T041 [P2] [US2] Configure Prometheus scrape targets in /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/monitoring.tf for kubelet and node-exporter on both nodes
-- [ ] T042 [P2] [US2] Configure Grafana service in /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/monitoring.tf to expose via NodePort 30000 for Eero network access
-- [ ] T043 [P2] [US2] Add Grafana dashboard ConfigMaps to /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/monitoring.tf for CPU, memory, disk, network metrics
+- [x] T039 [P2] [US2] Add Helm provider to /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/providers.tf with kubeconfig path from US1
+- [x] T040 [P2] [US2] Create /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/monitoring.tf with helm_release resource for kube-prometheus-stack chart (namespace=monitoring)
+- [x] T041 [P2] [US2] Configure Prometheus scrape targets in /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/monitoring.tf for kubelet and node-exporter on both nodes
+- [x] T042 [P2] [US2] Configure Grafana service in /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/monitoring.tf to expose via NodePort 30000 for Eero network access
+- [x] T043 [P2] [US2] Add Grafana dashboard ConfigMaps to /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/monitoring.tf for CPU, memory, disk, network metrics
 
 ---
 
@@ -180,11 +180,11 @@ This task list implements a minimal viable K3s cluster with 2 nodes (1 control-p
 
 ### US3 Migration Documentation
 
-- [ ] T044 [P3] [US3] Create /Users/cbenitez/chocolandia_kube/docs/runbooks/migration-to-feature-001.md documenting migration steps from Eero flat network to FortiGate VLANs
-- [ ] T045 [P3] [US3] Document in /Users/cbenitez/chocolandia_kube/docs/runbooks/migration-to-feature-001.md the backup procedures for SQLite datastore (/var/lib/rancher/k3s/server/db/state.db), OpenTofu state, and kubeconfig
-- [ ] T046 [P3] [US3] Create /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/scripts/backup-state.sh to backup OpenTofu state and cluster token
-- [ ] T047 [P3] [US3] Create /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/scripts/backup-cluster.sh to backup SQLite database and kubeconfig from master1
-- [ ] T048 [P3] [US3] Add migration checklist to /Users/cbenitez/chocolandia_kube/docs/runbooks/migration-to-feature-001.md with pre-migration validation steps (cluster health, workload backups, IP mappings)
+- [x] T044 [P3] [US3] Create /Users/cbenitez/chocolandia_kube/docs/runbooks/migration-to-feature-001.md documenting migration steps from Eero flat network to FortiGate VLANs
+- [x] T045 [P3] [US3] Document in /Users/cbenitez/chocolandia_kube/docs/runbooks/migration-to-feature-001.md the backup procedures for SQLite datastore (/var/lib/rancher/k3s/server/db/state.db), OpenTofu state, and kubeconfig
+- [x] T046 [P3] [US3] Create /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/scripts/backup-state.sh to backup OpenTofu state and cluster token
+- [x] T047 [P3] [US3] Create /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/scripts/backup-cluster.sh to backup SQLite database and kubeconfig from master1
+- [x] T048 [P3] [US3] Add migration checklist to /Users/cbenitez/chocolandia_kube/docs/runbooks/migration-to-feature-001.md with pre-migration validation steps (cluster health, workload backups, IP mappings)
 
 ---
 
@@ -200,19 +200,19 @@ This task list implements a minimal viable K3s cluster with 2 nodes (1 control-p
 
 ### Documentation
 
-- [ ] T049 [P1] [Polish] Validate /Users/cbenitez/chocolandia_kube/specs/002-k3s-mvp-eero/quickstart.md against actual deployment (update IPs, commands, expected outputs based on T035 results)
-- [ ] T050 [P2] [Polish] Create /Users/cbenitez/chocolandia_kube/docs/runbooks/troubleshooting-eero-network.md with common Eero connectivity issues (WiFi instability, DHCP IP changes, inter-node connectivity)
-- [ ] T051 [P1] [Polish] Update /Users/cbenitez/chocolandia_kube/terraform/README.md with usage instructions, prerequisites, and links to quickstart guide
+- [x] T049 [P1] [Polish] Validate /Users/cbenitez/chocolandia_kube/specs/002-k3s-mvp-eero/quickstart.md against actual deployment (update IPs, commands, expected outputs based on T035 results)
+- [x] T050 [P2] [Polish] Create /Users/cbenitez/chocolandia_kube/docs/runbooks/troubleshooting-eero-network.md with common Eero connectivity issues (WiFi instability, DHCP IP changes, inter-node connectivity)
+- [x] T051 [P1] [Polish] Update /Users/cbenitez/chocolandia_kube/terraform/README.md with usage instructions, prerequisites, and links to quickstart guide
 
 ### OpenTofu Code Quality
 
-- [ ] T052 [P1] [Polish] Run `tofu fmt -recursive` on /Users/cbenitez/chocolandia_kube/terraform/ to ensure consistent formatting
-- [ ] T053 [P1] [Polish] Run `tofu validate` on /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/ and /Users/cbenitez/chocolandia_kube/terraform/modules/k3s-node/ to verify configuration syntax
+- [x] T052 [P1] [Polish] Run `tofu fmt -recursive` on /Users/cbenitez/chocolandia_kube/terraform/ to ensure consistent formatting
+- [x] T053 [P1] [Polish] Run `tofu validate` on /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/ and /Users/cbenitez/chocolandia_kube/terraform/modules/k3s-node/ to verify configuration syntax
 
 ### Security Hardening
 
-- [ ] T054 [P1] [Polish] Create /Users/cbenitez/chocolandia_kube/docs/security-checklist.md documenting security considerations (SSH key permissions 0600, kubeconfig permissions 0600, cluster token not committed to Git, Eero flat network risks)
-- [ ] T055 [P1] [Polish] Verify .gitignore at /Users/cbenitez/chocolandia_kube/.gitignore excludes sensitive files (*.tfstate, *.tfvars, kubeconfig, *.pem, *.key)
+- [x] T054 [P1] [Polish] Create /Users/cbenitez/chocolandia_kube/docs/security-checklist.md documenting security considerations (SSH key permissions 0600, kubeconfig permissions 0600, cluster token not committed to Git, Eero flat network risks)
+- [x] T055 [P1] [Polish] Verify .gitignore at /Users/cbenitez/chocolandia_kube/.gitignore excludes sensitive files (*.tfstate, *.tfvars, kubeconfig, *.pem, *.key)
 
 ---
 
