@@ -241,15 +241,15 @@ users:
 
 ---
 
-### 7. TerraformState
+### 7. OpenTofuState
 
-**Description**: Terraform state file tracking managed infrastructure
+**Description**: OpenTofu state file tracking managed infrastructure
 
 **Attributes**:
-- `version` (integer, required): Terraform state format version
-- `terraform_version` (string, required): Terraform binary version used
+- `version` (integer, required): OpenTofu state format version
+- `opentofu_version` (string, required): OpenTofu binary version used
 - `resources` (array of Resource, required): List of managed resources
-- `outputs` (object, optional): Terraform outputs (kubeconfig, API endpoint, etc.)
+- `outputs` (object, optional): OpenTofu outputs (kubeconfig, API endpoint, etc.)
 
 **Relationships**:
 - Tracks all infrastructure entities (Cluster, Nodes, MonitoringStack)
