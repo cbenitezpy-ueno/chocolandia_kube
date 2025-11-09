@@ -1,0 +1,583 @@
+# Network Configuration Contract: ChocolandiaDC FortiGate Network Infrastructure
+# This file defines the expected network configuration schema and validation rules
+# for FortiGate 100D VLAN segmentation, firewall policies, and DHCP services.
+# It serves as documentation and reference for OpenTofu FortiOS provider implementation.
+
+---
+apiVersion: v1
+kind: ConfigContract
+metadata:
+  name: chocolandiadc-network-config
+  version: 1.0.0
+  created: 2025-11-08
+  description: "Network-first infrastructure configuration for ChocolandiaDC homelab"
+
+# FortiGate firewall configuration
+fortigate:
+  # Device identification
+  model: "FortiGate-100D"
+  hostname: "fortigate"
+  management_ip: "10.0.10.1"
+  fortios_version_min: "6.4.0"
+
+  # API configuration for OpenTofu provider
+  api:
+    endpoint: "https://{{ management_ip }}"
+    token_storage: "environment_variable"  # TF_VAR_fortigate_api_token
+    token_env_var: "FORTIGATE_API_TOKEN"
+    insecure_tls: true  # Homelab self-signed cert (disable in production)
+
+  # Physical interfaces
+  interfaces:
+    - name: "wan1"
+      type: "WAN"
+      description: "Uplink to Eero mesh network (office node)"
+      mode: "DHCP"  # Or static with reservation in Eero
+      expected_subnet: "192.168.4.0/24"  # Typical Eero subnet
+      expected_ip: "192.168.4.50"  # Example - actual IP assigned by Eero
+
+    - name: "internal"
+      type: "LAN"
+      description: "Internal trunk port for all VLANs (802.1Q)"
+
+# VLAN Configuration (4 VLANs for network segmentation)
+vlans:
+  # Management VLAN - Administrative access
+  - vlan_id: 10
+    name: "management"
+    description: "Administrative access (SSH, FortiGate GUI, jump host)"
+    subnet: "10.0.10.0/24"
+    gateway_ip: "10.0.10.1"
+    netmask: "255.255.255.0"
+    physical_interface: "internal"
+    dhcp_enabled: true
+    allowed_access: ["ping", "https", "ssh"]  # FortiGate interface access
+
+    # DHCP configuration for management VLAN
+    dhcp:
+      default_gateway: "10.0.10.1"
+      dns_servers: ["10.0.30.10", "10.0.10.1"]  # Pi-hole primary, FortiGate fallback
+      domain_name: "chocolandiadc.local"
+      lease_time: 86400  # 24 hours
+      pool:
+        start_ip: "10.0.10.100"
+        end_ip: "10.0.10.199"
+
+      # Static DHCP reservations
+      reservations:
+        - ip: "10.0.10.10"
+          mac: "REPLACE_WITH_RASPBERRY_PI_MAC"
+          hostname: "services"
+          description: "Raspberry Pi - Jump host"
+
+    # IP allocation plan
+    ip_allocation:
+      "10.0.10.1": "FortiGate management interface"
+      "10.0.10.10": "Raspberry Pi (jump host)"
+      "10.0.10.100-199": "DHCP pool for admin workstations"
+
+  # Cluster VLAN - K3s nodes communication
+  - vlan_id: 20
+    name: "cluster"
+    description: "K3s cluster nodes VLAN (API, etcd, pod network)"
+    subnet: "10.0.20.0/24"
+    gateway_ip: "10.0.20.1"
+    netmask: "255.255.255.0"
+    physical_interface: "internal"
+    dhcp_enabled: true
+    allowed_access: ["ping"]  # No admin access from cluster VLAN
+
+    # DHCP configuration for cluster VLAN
+    dhcp:
+      default_gateway: "10.0.20.1"
+      dns_servers: ["10.0.30.10", "10.0.20.1"]  # Pi-hole primary
+      domain_name: "chocolandiadc.local"
+      lease_time: 86400
+      pool:
+        start_ip: "10.0.20.100"
+        end_ip: "10.0.20.199"
+
+      # Static DHCP reservations for K3s nodes
+      reservations:
+        - ip: "10.0.20.11"
+          mac: "REPLACE_WITH_MASTER1_MAC"
+          hostname: "master1"
+          description: "K3s control-plane node 1 (Lenovo)"
+
+        - ip: "10.0.20.12"
+          mac: "REPLACE_WITH_MASTER2_MAC"
+          hostname: "master2"
+          description: "K3s control-plane node 2 (Lenovo)"
+
+        - ip: "10.0.20.13"
+          mac: "REPLACE_WITH_MASTER3_MAC"
+          hostname: "master3"
+          description: "K3s control-plane node 3 (Lenovo)"
+
+        - ip: "10.0.20.21"
+          mac: "REPLACE_WITH_NODO1_MAC"
+          hostname: "nodo1"
+          description: "K3s worker node 1 (HP ProDesk)"
+
+        - ip: "10.0.20.22"
+          mac: "RESERVED_FOR_NODO2"
+          hostname: "nodo2"
+          description: "K3s worker node 2 (future expansion)"
+          enabled: false  # Reserved but not active
+
+        - ip: "10.0.20.23"
+          mac: "RESERVED_FOR_NODO3"
+          hostname: "nodo3"
+          description: "K3s worker node 3 (future expansion)"
+          enabled: false  # Reserved but not active
+
+    # IP allocation plan
+    ip_allocation:
+      "10.0.20.1": "FortiGate cluster VLAN gateway"
+      "10.0.20.11": "master1 (Lenovo control-plane)"
+      "10.0.20.12": "master2 (Lenovo control-plane)"
+      "10.0.20.13": "master3 (Lenovo control-plane)"
+      "10.0.20.21": "nodo1 (HP ProDesk worker)"
+      "10.0.20.22-23": "Reserved for nodo2, nodo3"
+      "10.0.20.100-199": "DHCP pool for additional cluster nodes"
+
+  # Services VLAN - Auxiliary services
+  - vlan_id: 30
+    name: "services"
+    description: "Auxiliary services VLAN (Pi-hole, DNS, future NFS)"
+    subnet: "10.0.30.0/24"
+    gateway_ip: "10.0.30.1"
+    netmask: "255.255.255.0"
+    physical_interface: "internal"
+    dhcp_enabled: true
+    allowed_access: ["ping"]
+
+    # DHCP configuration for services VLAN
+    dhcp:
+      default_gateway: "10.0.30.1"
+      dns_servers: ["10.0.30.10", "1.1.1.1"]  # Pi-hole on same VLAN, Cloudflare fallback
+      domain_name: "chocolandiadc.local"
+      lease_time: 86400
+      pool:
+        start_ip: "10.0.30.100"
+        end_ip: "10.0.30.199"
+
+      # Static DHCP reservations
+      reservations:
+        - ip: "10.0.30.10"
+          mac: "REPLACE_WITH_RASPBERRY_PI_MAC"
+          hostname: "services"
+          description: "Raspberry Pi - Pi-hole, DNS, internal services"
+
+    # IP allocation plan
+    ip_allocation:
+      "10.0.30.1": "FortiGate services VLAN gateway"
+      "10.0.30.10": "Raspberry Pi (Pi-hole, DNS)"
+      "10.0.30.100-199": "DHCP pool for future services"
+
+  # DMZ VLAN - Public-facing services (future use)
+  - vlan_id: 40
+    name: "dmz"
+    description: "DMZ for exposed services (optional - future use)"
+    subnet: "10.0.40.0/24"
+    gateway_ip: "10.0.40.1"
+    netmask: "255.255.255.0"
+    physical_interface: "internal"
+    dhcp_enabled: false  # Static IPs only for DMZ
+    allowed_access: []  # No direct access to FortiGate from DMZ
+
+    # IP allocation plan
+    ip_allocation:
+      "10.0.40.1": "FortiGate DMZ VLAN gateway"
+      "10.0.40.0/24": "Reserved for future public-facing services"
+
+# FortiGate Address Objects (reusable in firewall policies)
+address_objects:
+  # Subnet objects
+  - name: "management-subnet"
+    type: "subnet"
+    subnet: "10.0.10.0/24"
+    comment: "Management VLAN subnet"
+
+  - name: "cluster-subnet"
+    type: "subnet"
+    subnet: "10.0.20.0/24"
+    comment: "K3s cluster VLAN subnet"
+
+  - name: "services-subnet"
+    type: "subnet"
+    subnet: "10.0.30.0/24"
+    comment: "Auxiliary services VLAN subnet"
+
+  - name: "dmz-subnet"
+    type: "subnet"
+    subnet: "10.0.40.0/24"
+    comment: "DMZ VLAN subnet"
+
+  # Host objects
+  - name: "pihole-ip"
+    type: "subnet"
+    subnet: "10.0.30.10/32"  # Single host as /32
+    comment: "Raspberry Pi - Pi-hole DNS server"
+
+  - name: "jump-host-ip"
+    type: "subnet"
+    subnet: "10.0.10.10/32"
+    comment: "Raspberry Pi - Jump host"
+
+  # Address group for cluster nodes
+  - name: "cluster-nodes"
+    type: "group"
+    members:
+      - "master1-ip"
+      - "master2-ip"
+      - "master3-ip"
+      - "nodo1-ip"
+    comment: "All K3s cluster nodes"
+
+  # Individual cluster node objects (for granular rules)
+  - name: "master1-ip"
+    type: "subnet"
+    subnet: "10.0.20.11/32"
+    comment: "master1 control-plane node"
+
+  - name: "master2-ip"
+    type: "subnet"
+    subnet: "10.0.20.12/32"
+    comment: "master2 control-plane node"
+
+  - name: "master3-ip"
+    type: "subnet"
+    subnet: "10.0.20.13/32"
+    comment: "master3 control-plane node"
+
+  - name: "nodo1-ip"
+    type: "subnet"
+    subnet: "10.0.20.21/32"
+    comment: "nodo1 worker node"
+
+# Firewall Policies (default deny, explicit allow)
+firewall_policies:
+  # Policy 1: Management → Cluster (SSH for administration)
+  - policy_id: 10
+    name: "mgmt-to-cluster-ssh"
+    source_interface: "management"
+    destination_interface: "cluster"
+    source_addresses: ["management-subnet"]
+    destination_addresses: ["cluster-nodes"]
+    services: ["SSH"]
+    action: "accept"
+    nat_enabled: false
+    logging: "all"
+    schedule: "always"
+    comment: "Allow SSH from management VLAN to cluster nodes for administration"
+    enabled: true
+
+  # Policy 2: Cluster → Internet (HTTPS for image pulls, package updates)
+  - policy_id: 20
+    name: "cluster-to-internet"
+    source_interface: "cluster"
+    destination_interface: "wan1"
+    source_addresses: ["cluster-subnet"]
+    destination_addresses: ["all"]
+    services: ["HTTPS", "HTTP", "DNS"]  # DNS for resolution, HTTP/HTTPS for downloads
+    action: "accept"
+    nat_enabled: true  # Source NAT for outbound traffic
+    logging: "all"
+    schedule: "always"
+    comment: "Allow K3s nodes to pull container images and packages from internet"
+    enabled: true
+
+  # Policy 3: Cluster → Services (DNS queries to Pi-hole)
+  - policy_id: 30
+    name: "cluster-to-pihole-dns"
+    source_interface: "cluster"
+    destination_interface: "services"
+    source_addresses: ["cluster-subnet"]
+    destination_addresses: ["pihole-ip"]
+    services: ["DNS"]
+    action: "accept"
+    nat_enabled: false
+    logging: "all"
+    schedule: "always"
+    comment: "Allow K3s nodes to query Pi-hole for DNS resolution"
+    enabled: true
+
+  # Policy 4: Services → Internet (Pi-hole blocklist updates, OS updates)
+  - policy_id: 40
+    name: "services-to-internet"
+    source_interface: "services"
+    destination_interface: "wan1"
+    source_addresses: ["services-subnet"]
+    destination_addresses: ["all"]
+    services: ["HTTPS", "HTTP", "DNS"]
+    action: "accept"
+    nat_enabled: true
+    logging: "all"
+    schedule: "always"
+    comment: "Allow Raspberry Pi to update blocklists and OS packages"
+    enabled: true
+
+  # Policy 5: Management → Services (SSH to jump host, access Pi-hole web UI)
+  - policy_id: 50
+    name: "mgmt-to-services"
+    source_interface: "management"
+    destination_interface: "services"
+    source_addresses: ["management-subnet"]
+    destination_addresses: ["services-subnet"]
+    services: ["SSH", "HTTP", "HTTPS"]
+    action: "accept"
+    nat_enabled: false
+    logging: "all"
+    schedule: "always"
+    comment: "Allow management VLAN access to Raspberry Pi services"
+    enabled: true
+
+  # Policy 6: Management → Internet (Workstation internet access)
+  - policy_id: 60
+    name: "mgmt-to-internet"
+    source_interface: "management"
+    destination_interface: "wan1"
+    source_addresses: ["management-subnet"]
+    destination_addresses: ["all"]
+    services: ["HTTPS", "HTTP", "DNS"]
+    action: "accept"
+    nat_enabled: true
+    logging: "all"
+    schedule: "always"
+    comment: "Allow workstations internet access"
+    enabled: true
+
+  # Policy 7: Cluster intra-VLAN traffic (allow within cluster VLAN)
+  - policy_id: 70
+    name: "cluster-intra-vlan"
+    source_interface: "cluster"
+    destination_interface: "cluster"
+    source_addresses: ["cluster-subnet"]
+    destination_addresses: ["cluster-subnet"]
+    services: ["ALL"]
+    action: "accept"
+    nat_enabled: false
+    logging: "disable"  # High volume traffic, disable for performance
+    schedule: "always"
+    comment: "Allow all traffic within cluster VLAN (K3s API, etcd, pod network)"
+    enabled: true
+
+  # Policy 9999: Deny all (default deny - catch-all rule)
+  - policy_id: 9999
+    name: "deny-all-inter-vlan"
+    source_interface: "any"
+    destination_interface: "any"
+    source_addresses: ["all"]
+    destination_addresses: ["all"]
+    services: ["ALL"]
+    action: "deny"
+    nat_enabled: false
+    logging: "all"  # Critical for learning blocked traffic patterns
+    schedule: "always"
+    comment: "Default deny rule - logs all blocked traffic for security auditing"
+    enabled: true
+
+# Virtual IPs (Port Forwarding / DNAT)
+# Expose monitoring services to Eero WiFi network
+virtual_ips:
+  - vip_id: 1
+    name: "grafana-external-access"
+    external_interface: "wan1"
+    external_ip: "{{ wan1_ip }}"  # FortiGate WAN IP from Eero (e.g., 192.168.4.50)
+    external_port: 3000
+    protocol: "TCP"
+    mapped_ip: "10.0.30.21"  # Grafana pod IP on Services VLAN
+    mapped_port: 3000
+    comment: "Allow Grafana access from Eero WiFi network (laptop, phone)"
+    enabled: true
+
+  - vip_id: 2
+    name: "prometheus-external-access"
+    external_interface: "wan1"
+    external_ip: "{{ wan1_ip }}"
+    external_port: 9090
+    protocol: "TCP"
+    mapped_ip: "10.0.30.20"  # Prometheus pod IP on Services VLAN
+    mapped_port: 9090
+    comment: "Allow Prometheus access from Eero WiFi network"
+    enabled: true
+
+  - vip_id: 3
+    name: "pihole-admin-external-access"
+    external_interface: "wan1"
+    external_ip: "{{ wan1_ip }}"
+    external_port: 8080
+    protocol: "TCP"
+    mapped_ip: "10.0.30.10"  # Raspberry Pi (Pi-hole)
+    mapped_port: 80
+    comment: "Allow Pi-hole admin interface access from Eero WiFi network"
+    enabled: true
+
+# Firewall policies for Virtual IPs
+# NOTE: These policies MUST be added to allow traffic through VIPs
+vip_firewall_policies:
+  - policy_id: 100
+    name: "wan-to-grafana-vip"
+    source_interface: "wan1"
+    destination_interface: "services"
+    source_addresses: ["all"]  # Or restrict to Eero subnet: 192.168.4.0/24
+    destination_addresses: ["grafana-vip"]  # Virtual IP object
+    services: ["HTTP-3000"]  # Custom service object for port 3000
+    action: "accept"
+    nat_enabled: false  # DNAT already applied by VIP
+    logging: "all"
+    schedule: "always"
+    comment: "Allow external access to Grafana via port forwarding"
+    enabled: true
+
+  - policy_id: 101
+    name: "wan-to-prometheus-vip"
+    source_interface: "wan1"
+    destination_interface: "services"
+    source_addresses: ["all"]
+    destination_addresses: ["prometheus-vip"]
+    services: ["HTTP-9090"]  # Custom service object for port 9090
+    action: "accept"
+    nat_enabled: false
+    logging: "all"
+    schedule: "always"
+    comment: "Allow external access to Prometheus via port forwarding"
+    enabled: true
+
+  - policy_id: 102
+    name: "wan-to-pihole-vip"
+    source_interface: "wan1"
+    destination_interface: "services"
+    source_addresses: ["all"]
+    destination_addresses: ["pihole-vip"]
+    services: ["HTTP"]
+    action: "accept"
+    nat_enabled: false
+    logging: "all"
+    schedule: "always"
+    comment: "Allow external access to Pi-hole admin interface via port forwarding"
+    enabled: true
+
+# Validation rules for network configuration
+validation:
+  vlan_id:
+    range: [1, 4094]
+    unique: true
+    description: "VLAN IDs must be unique and in valid 802.1Q range"
+
+  subnet:
+    type: "RFC1918_private"
+    allowed_ranges:
+      - "10.0.0.0/8"
+      - "172.16.0.0/12"
+      - "192.168.0.0/16"
+    overlap_check: true
+    description: "Subnets must be private RFC1918 ranges and not overlap"
+
+  gateway_ip:
+    pattern: "subnet_first_ip"
+    description: "Gateway IP should be first IP in subnet (e.g., 10.0.10.1 for 10.0.10.0/24)"
+
+  dhcp_pool:
+    within_subnet: true
+    start_less_than_end: true
+    no_overlap_with_reservations: true
+    description: "DHCP pool must be within VLAN subnet and not overlap with static reservations"
+
+  firewall_policy_id:
+    unique: true
+    range: [1, 9999]
+    description: "Policy IDs must be unique, with 9999 reserved for deny-all rule"
+
+  address_object_name:
+    pattern: "^[a-z0-9-]+$"
+    unique: true
+    description: "Address object names must be lowercase, alphanumeric, hyphens only"
+
+# Testing requirements
+testing:
+  pre_apply:
+    - "tofu fmt -check"
+    - "tofu validate"
+    - "tofu plan -out=tfplan (review network changes carefully)"
+
+  post_apply_network:
+    - "Ping FortiGate gateways (10.0.10.1, 10.0.20.1, 10.0.30.1, 10.0.40.1)"
+    - "Verify DHCP assigns IPs to test device"
+    - "Test SSH from management VLAN to cluster VLAN (should work)"
+    - "Test SSH from cluster VLAN to management VLAN (should fail)"
+    - "Check FortiGate logs for denied traffic (policy 9999)"
+
+  connectivity_tests:
+    - test_name: "Management → Cluster SSH"
+      source: "10.0.10.x (workstation)"
+      destination: "10.0.20.11 (master1)"
+      protocol: "SSH (port 22)"
+      expected: "allowed"
+
+    - test_name: "Cluster → Management"
+      source: "10.0.20.11 (master1)"
+      destination: "10.0.10.1 (FortiGate)"
+      protocol: "SSH (port 22)"
+      expected: "denied"
+
+    - test_name: "Cluster → Pi-hole DNS"
+      source: "10.0.20.11 (master1)"
+      destination: "10.0.30.10 (Pi-hole)"
+      protocol: "DNS (port 53)"
+      expected: "allowed"
+
+    - test_name: "Cluster → Internet HTTPS"
+      source: "10.0.20.11 (master1)"
+      destination: "8.8.8.8 (internet)"
+      protocol: "HTTPS (port 443)"
+      expected: "allowed (with NAT)"
+
+# OpenTofu module outputs
+outputs:
+  management_vlan_gateway:
+    value: "10.0.10.1"
+    description: "Management VLAN gateway IP"
+
+  cluster_vlan_gateway:
+    value: "10.0.20.1"
+    description: "Cluster VLAN gateway IP"
+
+  services_vlan_gateway:
+    value: "10.0.30.1"
+    description: "Services VLAN gateway IP"
+
+  pihole_ip:
+    value: "10.0.30.10"
+    description: "Pi-hole DNS server IP"
+
+  dhcp_reservations_cluster:
+    value:
+      master1: "10.0.20.11"
+      master2: "10.0.20.12"
+      master3: "10.0.20.13"
+      nodo1: "10.0.20.21"
+    description: "DHCP reservations for K3s cluster nodes"
+
+  firewall_policy_count:
+    value: 8
+    description: "Number of active firewall policies (excluding deny-all)"
+
+# Documentation requirements
+documentation:
+  required_files:
+    - "docs/adrs/005-vlan-segmentation.md"
+    - "docs/adrs/002-fortigate-over-pfsense.md"
+    - "docs/runbooks/vlan-changes.md"
+    - "docs/runbooks/firewall-rules.md"
+    - "docs/diagrams/network-topology.md"
+    - "terraform/modules/fortigate-network/README.md"
+
+  network_diagram_required: true
+  network_diagram_path: "docs/diagrams/network-topology.png"
+
+  firewall_policy_documentation:
+    - "Each policy must have clear 'comment' field explaining purpose"
+    - "Policy changes must be documented in Git commit messages"
+    - "New firewall rules require ADR or justification in PR"
