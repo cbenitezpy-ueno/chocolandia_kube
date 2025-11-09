@@ -17,7 +17,9 @@
       "Bash(git -C /Users/cbenitez/chocolandia_kube status:*)",
       "Bash(git -C /Users/cbenitez/chocolandia_kube log -1 --stat)",
       "Bash(tofu init:*)",
-      "Bash(git -C /Users/cbenitez/chocolandia_kube diff .claude/settings.local.json)"
+      "Bash(git -C /Users/cbenitez/chocolandia_kube diff .claude/settings.local.json)",
+      "Bash(chmod:*)",
+      "Bash(tofu validate:*)"
     ],
     "deny": [],
     "ask": []
