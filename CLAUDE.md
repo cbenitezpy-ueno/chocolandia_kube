@@ -4,7 +4,7 @@ Auto-generated from all feature plans. Last updated: 2025-11-08
 
 ## Active Technologies
 
-- HCL (Terraform) 1.6+, Bash scripting for validation (001-k3s-cluster-setup)
+- HCL (OpenTofu) 1.6+, Bash scripting for validation (001-k3s-cluster-setup)
 
 ## Project Structure
 
