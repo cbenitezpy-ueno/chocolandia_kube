@@ -1,0 +1,44 @@
+# ChocolandiaDC MVP Environment Configuration Example
+# Copy this file to terraform.tfvars and customize with your values
+#
+# IMPORTANT: terraform.tfvars is gitignored and should never be committed
+# It may contain sensitive information like IP addresses and SSH keys
+
+# ============================================================================
+# Cluster Configuration
+# ============================================================================
+
+cluster_name = "chocolandiadc-mvp"
+k3s_version  = "v1.28.3+k3s1"  # Update to latest stable if needed
+
+# ============================================================================
+# Node IP Addresses (Eero Network)
+# ============================================================================
+
+# Master node (control-plane)
+master1_hostname = "master1"
+master1_ip       = "192.168.4.10"  # Replace with your master1 static IP
+
+# Worker node
+nodo1_hostname = "nodo1"
+nodo1_ip       = "192.168.4.11"  # Replace with your nodo1 static IP
+
+# ============================================================================
+# SSH Configuration
+# ============================================================================
+
+ssh_user             = "cbenitez"  # Replace with your SSH username
+ssh_private_key_path = "~/.ssh/id_rsa"  # Path to your SSH private key
+ssh_port             = 22
+
+# ============================================================================
+# K3s Configuration
+# ============================================================================
+
+# Components to disable (Traefik disabled by default for custom ingress)
+disable_components = ["traefik"]
+
+# Additional K3s flags (optional)
+# k3s_additional_flags = [
+#   "--write-kubeconfig-mode=644"
+# ]
