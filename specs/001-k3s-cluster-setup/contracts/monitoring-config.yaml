@@ -1,0 +1,600 @@
+# Monitoring Configuration Contract: ChocolandiaDC Prometheus + Grafana Stack
+# This file defines the expected monitoring configuration schema and validation rules
+# for Prometheus metrics collection and Grafana visualization.
+# It serves as documentation and reference for Helm chart deployment via OpenTofu.
+
+---
+apiVersion: v1
+kind: ConfigContract
+metadata:
+  name: chocolandiadc-monitoring-config
+  version: 1.0.0
+  created: 2025-11-08
+  description: "Observability stack configuration for ChocolandiaDC K3s cluster"
+
+# Monitoring stack deployment
+monitoring_stack:
+  # Deployment configuration
+  deployment:
+    method: "helm"
+    chart_repository: "https://prometheus-community.github.io/helm-charts"
+    chart_name: "kube-prometheus-stack"
+    chart_version: "51.0.0"  # Update to latest stable as needed
+    release_name: "kube-prometheus-stack"
+    namespace: "monitoring"
+    create_namespace: true
+
+  # Components included in stack
+  components:
+    - name: "Prometheus Operator"
+      description: "Manages Prometheus, Alertmanager, and ServiceMonitor CRDs"
+      enabled: true
+
+    - name: "Prometheus Server"
+      description: "Metrics collection, storage, and alerting"
+      enabled: true
+
+    - name: "Grafana"
+      description: "Dashboard visualization and analytics"
+      enabled: true
+
+    - name: "Alertmanager"
+      description: "Alert routing, grouping, and silencing"
+      enabled: true
+
+    - name: "Node Exporter"
+      description: "Hardware and OS metrics from all cluster nodes"
+      deployment_type: "DaemonSet"
+      enabled: true
+
+    - name: "kube-state-metrics"
+      description: "Kubernetes object state metrics"
+      enabled: true
+
+    - name: "Prometheus Adapter"
+      description: "Custom metrics for HPA (horizontal pod autoscaling)"
+      enabled: false  # Future enhancement
+
+# Prometheus configuration
+prometheus:
+  # Instance configuration
+  instance:
+    replicas: 1  # Single replica for homelab (not HA)
+    retention_period: "15d"  # 15 days metrics retention
+    evaluation_interval: "30s"  # How often to evaluate alert rules
+    scrape_interval: "30s"  # Global scrape interval for all targets
+    scrape_timeout: "10s"  # Timeout for scrape requests
+
+  # Storage configuration
+  storage:
+    enabled: true
+    storage_class: "local-path"  # K3s default local-path provisioner
+    size: "20Gi"  # 20GB persistent volume (15d retention + overhead)
+    access_mode: "ReadWriteOnce"
+    reclaim_policy: "Retain"  # Keep data if PVC deleted
+
+  # Resource limits
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "1000m"
+      memory: "2Gi"
+
+  # Scrape targets (ServiceMonitors auto-discovered by Prometheus Operator)
+  scrape_targets:
+    # Kubernetes API server
+    - job_name: "apiserver"
+      kubernetes_sd_role: "endpoints"
+      namespaces: ["default"]
+      selectors:
+        - "kubernetes"
+      metrics_path: "/metrics"
+      scheme: "https"
+      tls_config:
+        ca_file: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+
+    # Kubelet (node-level metrics)
+    - job_name: "kubelet"
+      kubernetes_sd_role: "node"
+      metrics_path: "/metrics"
+      scheme: "https"
+
+    # cAdvisor (container metrics from kubelet)
+    - job_name: "cadvisor"
+      kubernetes_sd_role: "node"
+      metrics_path: "/metrics/cadvisor"
+      scheme: "https"
+
+    # Etcd (embedded in K3s control-plane nodes)
+    - job_name: "etcd"
+      static_configs:
+        - targets:
+            - "10.0.20.11:2381"  # master1 etcd metrics endpoint
+            - "10.0.20.12:2381"  # master2 etcd metrics endpoint
+            - "10.0.20.13:2381"  # master3 etcd metrics endpoint
+      scheme: "http"
+      metrics_path: "/metrics"
+
+    # K3s-specific components
+    - job_name: "k3s-server"
+      static_configs:
+        - targets:
+            - "10.0.20.11:10250"  # master1
+            - "10.0.20.12:10250"  # master2
+            - "10.0.20.13:10250"  # master3
+
+    # Node Exporter (hardware/OS metrics)
+    - job_name: "node-exporter"
+      kubernetes_sd_role: "pod"
+      relabel_configs:
+        - source_labels: ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          regex: "prometheus-node-exporter"
+          action: "keep"
+
+    # kube-state-metrics (Kubernetes object metrics)
+    - job_name: "kube-state-metrics"
+      kubernetes_sd_role: "service"
+      relabel_configs:
+        - source_labels: ["__meta_kubernetes_service_label_app_kubernetes_io_name"]
+          regex: "kube-state-metrics"
+          action: "keep"
+
+  # Alert rules configuration
+  alerting_rules:
+    enabled: true
+    rule_files:
+      - "/etc/prometheus/rules/*.yaml"
+
+    # Pre-configured alert rules
+    rules:
+      # Node alerts
+      - alert_name: "NodeDown"
+        promql_expr: 'up{job="node-exporter"} == 0'
+        for_duration: "2m"
+        severity: "critical"
+        summary: "Node {{ $labels.instance }} is down"
+        description: "Node has been unreachable for more than 2 minutes"
+
+      - alert_name: "NodeHighCPU"
+        promql_expr: '100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80'
+        for_duration: "5m"
+        severity: "warning"
+        summary: "Node {{ $labels.instance }} has high CPU usage"
+        description: "CPU usage is above 80% for 5 minutes"
+
+      - alert_name: "NodeHighMemory"
+        promql_expr: '(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85'
+        for_duration: "5m"
+        severity: "warning"
+        summary: "Node {{ $labels.instance }} has high memory usage"
+        description: "Memory usage is above 85% for 5 minutes"
+
+      - alert_name: "NodeDiskSpaceLow"
+        promql_expr: '(1 - (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})) * 100 > 80'
+        for_duration: "5m"
+        severity: "warning"
+        summary: "Node {{ $labels.instance }} has low disk space"
+        description: "Disk usage on / is above 80%"
+
+      # Etcd alerts
+      - alert_name: "EtcdQuorumLost"
+        promql_expr: 'sum(up{job="etcd"}) < 2'
+        for_duration: "1m"
+        severity: "critical"
+        summary: "Etcd quorum lost"
+        description: "Etcd has fewer than 2 members available (quorum requires 2/3)"
+
+      - alert_name: "EtcdLeaderElection"
+        promql_expr: 'rate(etcd_server_leader_changes_seen_total[5m]) > 0'
+        for_duration: "2m"
+        severity: "warning"
+        summary: "Etcd leader election in progress"
+        description: "Etcd is experiencing leader elections (may indicate instability)"
+
+      # Kubernetes component alerts
+      - alert_name: "KubernetesAPIDown"
+        promql_expr: 'up{job="apiserver"} == 0'
+        for_duration: "1m"
+        severity: "critical"
+        summary: "Kubernetes API server is down"
+        description: "API server has been unreachable for more than 1 minute"
+
+      - alert_name: "KubernetesPodCrashLooping"
+        promql_expr: 'rate(kube_pod_container_status_restarts_total[15m]) > 0'
+        for_duration: "5m"
+        severity: "warning"
+        summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is crash looping"
+        description: "Pod has restarted multiple times in the last 15 minutes"
+
+      - alert_name: "KubernetesPodNotReady"
+        promql_expr: 'kube_pod_status_phase{phase!~"Running|Succeeded"} > 0'
+        for_duration: "5m"
+        severity: "warning"
+        summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is not Ready"
+        description: "Pod has been in non-Running state for 5 minutes"
+
+  # Alertmanager integration
+  alertmanager:
+    enabled: true
+    endpoint: "http://kube-prometheus-stack-alertmanager:9093"
+
+  # Service configuration
+  service:
+    type: "ClusterIP"
+    port: 9090
+    target_port: 9090
+
+  # Web UI access
+  web_ui:
+    access_method: "kubectl port-forward"
+    port_forward_command: "kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090:9090"
+    url: "http://localhost:9090"
+
+# Grafana configuration
+grafana:
+  # Instance configuration
+  instance:
+    replicas: 1  # Single replica for homelab
+    admin_user: "admin"
+    admin_password_secret: "kube-prometheus-stack-grafana"  # Kubernetes Secret name
+    admin_password_secret_key: "admin-password"
+
+  # Persistence configuration
+  persistence:
+    enabled: true
+    storage_class: "local-path"
+    size: "5Gi"
+    access_mode: "ReadWriteOnce"
+
+  # Resource limits
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+  # Datasources configuration
+  datasources:
+    - name: "Prometheus"
+      type: "prometheus"
+      url: "http://kube-prometheus-stack-prometheus:9090"
+      access: "proxy"
+      is_default: true
+      json_data:
+        timeInterval: "30s"
+
+  # Pre-configured dashboards
+  dashboards:
+    # Cluster-level dashboards
+    - name: "Kubernetes / Compute Resources / Cluster"
+      uid: "cluster-overview"
+      description: "Overall cluster CPU, memory, network, and storage"
+      datasource: "Prometheus"
+      folder: "Kubernetes"
+
+    - name: "Kubernetes / Compute Resources / Namespace (Pods)"
+      uid: "namespace-pods"
+      description: "Per-namespace resource usage"
+      datasource: "Prometheus"
+      folder: "Kubernetes"
+
+    - name: "Kubernetes / Compute Resources / Pod"
+      uid: "pod-resources"
+      description: "Per-pod resource usage and container metrics"
+      datasource: "Prometheus"
+      folder: "Kubernetes"
+
+    # Node-level dashboards
+    - name: "Node Exporter / Nodes"
+      uid: "node-exporter"
+      description: "Hardware and OS metrics for each node (CPU, memory, disk, network)"
+      datasource: "Prometheus"
+      folder: "Nodes"
+
+    - name: "Node Exporter / USE Method / Node"
+      uid: "use-method-node"
+      description: "Utilization, Saturation, Errors metrics per node"
+      datasource: "Prometheus"
+      folder: "Nodes"
+
+    # Etcd dashboard
+    - name: "Etcd"
+      uid: "etcd"
+      description: "Etcd quorum status, leader elections, latency, database size"
+      datasource: "Prometheus"
+      folder: "Kubernetes"
+
+    # Persistent Volume dashboards
+    - name: "Kubernetes / Persistent Volumes"
+      uid: "persistent-volumes"
+      description: "PVC usage, capacity, and health"
+      datasource: "Prometheus"
+      folder: "Kubernetes"
+
+  # Service configuration
+  service:
+    type: "ClusterIP"
+    port: 80
+    target_port: 3000
+
+  # Ingress configuration (optional - for future use)
+  ingress:
+    enabled: false
+    hostname: "grafana.chocolandiadc.local"
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: "/"
+
+  # Web UI access
+  web_ui:
+    access_method: "kubectl port-forward"
+    port_forward_command: "kubectl port-forward -n monitoring svc/kube-prometheus-stack-grafana 3000:80"
+    url: "http://localhost:3000"
+    default_credentials:
+      username: "admin"
+      password: "<retrieved from Kubernetes Secret>"
+
+  # Dashboard customization
+  dashboard_config:
+    default_home_dashboard: "cluster-overview"
+    timezone: "browser"
+    theme: "dark"
+
+# Alertmanager configuration
+alertmanager:
+  # Instance configuration
+  instance:
+    replicas: 1  # Single replica for homelab
+
+  # Resource limits
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "200m"
+      memory: "256Mi"
+
+  # Configuration (future enhancement - email/Slack notifications)
+  config:
+    global:
+      resolve_timeout: "5m"
+
+    route:
+      group_by: ["alertname", "cluster", "severity"]
+      group_wait: "30s"
+      group_interval: "5m"
+      repeat_interval: "12h"
+      receiver: "null"  # Default: no notifications (configure for production)
+
+    receivers:
+      - name: "null"
+        # Future: Add email, Slack, PagerDuty integrations
+
+  # Service configuration
+  service:
+    type: "ClusterIP"
+    port: 9093
+
+# Node Exporter configuration
+node_exporter:
+  # DaemonSet deployment (runs on all nodes)
+  deployment_type: "DaemonSet"
+
+  # Resource limits (per pod)
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "100m"
+      memory: "128Mi"
+
+  # Collectors enabled
+  collectors:
+    - "cpu"
+    - "diskstats"
+    - "filesystem"
+    - "loadavg"
+    - "meminfo"
+    - "netdev"
+    - "stat"
+    - "time"
+    - "uname"
+
+  # Service configuration
+  service:
+    type: "ClusterIP"
+    port: 9100
+
+# kube-state-metrics configuration
+kube_state_metrics:
+  # Deployment configuration
+  replicas: 1
+
+  # Resource limits
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "100m"
+      memory: "128Mi"
+
+  # Collectors enabled
+  collectors:
+    - "certificatesigningrequests"
+    - "configmaps"
+    - "cronjobs"
+    - "daemonsets"
+    - "deployments"
+    - "endpoints"
+    - "horizontalpodautoscalers"
+    - "jobs"
+    - "limitranges"
+    - "namespaces"
+    - "nodes"
+    - "persistentvolumeclaims"
+    - "persistentvolumes"
+    - "poddisruptionbudgets"
+    - "pods"
+    - "replicasets"
+    - "resourcequotas"
+    - "secrets"
+    - "services"
+    - "statefulsets"
+    - "storageclasses"
+
+  # Service configuration
+  service:
+    type: "ClusterIP"
+    port: 8080
+
+# Validation rules
+validation:
+  retention_period:
+    pattern: "^[0-9]+(d|h|m)$"
+    min_days: 7
+    max_days: 30
+    description: "Retention period must be valid duration (7-30 days recommended)"
+
+  storage_size:
+    pattern: "^[0-9]+(Gi|Mi)$"
+    min_size: "10Gi"
+    max_size: "100Gi"
+    description: "Storage size must accommodate retention period (estimate 1GB/day)"
+
+  scrape_interval:
+    pattern: "^[0-9]+(s|m)$"
+    min_seconds: 15
+    max_seconds: 120
+    recommended: "30s"
+    description: "Scrape interval should be 15s-120s (30s recommended)"
+
+  resource_limits:
+    prometheus_memory:
+      min: "1Gi"
+      max: "4Gi"
+      description: "Prometheus requires 1-4GB RAM depending on retention and targets"
+
+    grafana_memory:
+      min: "256Mi"
+      max: "1Gi"
+      description: "Grafana requires 256Mi-1Gi RAM"
+
+# Testing requirements
+testing:
+  pre_deploy:
+    - "tofu validate"
+    - "kubectl get nodes (verify cluster is operational)"
+    - "kubectl get ns (verify monitoring namespace can be created)"
+
+  post_deploy:
+    - "kubectl get pods -n monitoring (all pods Running)"
+    - "kubectl get pvc -n monitoring (PVCs Bound)"
+    - "kubectl get servicemonitors -n monitoring (ServiceMonitors created)"
+    - "Prometheus targets check (all targets Up)"
+    - "Grafana health check (HTTP 200 on port-forward)"
+    - "Dashboard load test (cluster-overview loads < 3s)"
+
+  functional_tests:
+    - test_name: "Prometheus scraping cluster nodes"
+      query: 'up{job="node-exporter"}'
+      expected_result: "4 targets (master1, master2, master3, nodo1)"
+      success_criteria: "All targets show value=1 (Up)"
+
+    - test_name: "Prometheus scraping etcd"
+      query: 'up{job="etcd"}'
+      expected_result: "3 targets (master1:2381, master2:2381, master3:2381)"
+      success_criteria: "All targets show value=1 (Up)"
+
+    - test_name: "Etcd quorum health"
+      query: 'sum(up{job="etcd"})'
+      expected_result: "3"
+      success_criteria: "Sum equals 3 (all etcd members healthy)"
+
+    - test_name: "Node CPU metrics available"
+      query: 'node_cpu_seconds_total'
+      expected_result: "Metrics from all 4 nodes"
+      success_criteria: "Time series exist for all nodes"
+
+    - test_name: "Grafana datasource connectivity"
+      action: "Check Grafana UI → Configuration → Data Sources → Prometheus"
+      expected_result: "Green checkmark 'Data source is working'"
+
+    - test_name: "Dashboard rendering"
+      action: "Open Cluster Overview dashboard"
+      expected_result: "All panels load with data, no errors"
+      success_criteria: "Dashboard loads < 3 seconds"
+
+# OpenTofu outputs
+outputs:
+  prometheus_service_url:
+    value: "http://kube-prometheus-stack-prometheus.monitoring.svc:9090"
+    description: "Prometheus service URL (internal cluster access)"
+
+  grafana_service_url:
+    value: "http://kube-prometheus-stack-grafana.monitoring.svc:80"
+    description: "Grafana service URL (internal cluster access)"
+
+  grafana_admin_password:
+    value: "<retrieved from Secret: monitoring/kube-prometheus-stack-grafana>"
+    sensitive: true
+    retrieval_command: |
+      kubectl get secret -n monitoring kube-prometheus-stack-grafana \
+        -o jsonpath='{.data.admin-password}' | base64 -d
+
+  prometheus_port_forward:
+    value: "kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090:9090"
+    description: "Command to access Prometheus UI locally"
+
+  grafana_port_forward:
+    value: "kubectl port-forward -n monitoring svc/kube-prometheus-stack-grafana 3000:80"
+    description: "Command to access Grafana UI locally"
+
+  alertmanager_port_forward:
+    value: "kubectl port-forward -n monitoring svc/kube-prometheus-stack-alertmanager 9093:9093"
+    description: "Command to access Alertmanager UI locally"
+
+  prometheus_retention_period:
+    value: "15d"
+    description: "Metrics retention period"
+
+  prometheus_storage_size:
+    value: "20Gi"
+    description: "Prometheus persistent volume size"
+
+# Documentation requirements
+documentation:
+  required_files:
+    - "docs/adrs/006-prometheus-grafana-stack.md"
+    - "docs/runbooks/monitoring-access.md"
+    - "docs/runbooks/prometheus-queries.md"
+    - "docs/runbooks/grafana-dashboards.md"
+    - "terraform/modules/monitoring-stack/README.md"
+
+  promql_examples_required: true
+  dashboard_screenshots_recommended: true
+
+  # PromQL query examples for learning
+  promql_examples:
+    - description: "CPU usage per node"
+      query: 'sum(rate(node_cpu_seconds_total{mode!="idle"}[5m])) by (instance)'
+
+    - description: "Memory usage percentage per node"
+      query: '(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100'
+
+    - description: "Pod restart rate (detect crash loops)"
+      query: 'rate(kube_pod_container_status_restarts_total[5m]) > 0'
+
+    - description: "Etcd leader elections (stability indicator)"
+      query: 'rate(etcd_server_leader_changes_seen_total[5m])'
+
+    - description: "Top 10 pods by CPU usage"
+      query: 'topk(10, sum(rate(container_cpu_usage_seconds_total[5m])) by (pod, namespace))'
+
+    - description: "Disk space available per node"
+      query: 'node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"} * 100'
