@@ -299,7 +299,7 @@ TerraformState
 
 ## Configuration Schema
 
-### Terraform Variables (`terraform.tfvars`)
+### OpenTofu Variables (`terraform.tfvars`)
 
 ```hcl
 # Cluster configuration
