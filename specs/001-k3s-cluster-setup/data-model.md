@@ -346,7 +346,7 @@ grafana_admin_user          = "admin"
 # grafana_admin_password will be auto-generated
 ```
 
-### Terraform Outputs
+### OpenTofu Outputs
 
 ```hcl
 output "cluster_name" {
