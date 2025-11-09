@@ -151,8 +151,9 @@ for i in {1..30}; do
     sleep 1
 done
 
-# Set proper permissions on kubeconfig
-chmod 644 /etc/rancher/k3s/k3s.yaml
+# Set proper permissions on kubeconfig (secure: only root can read)
+chmod 600 /etc/rancher/k3s/k3s.yaml
+chown root:root /etc/rancher/k3s/k3s.yaml
 
 # Wait for cluster to be ready
 log "Waiting for cluster to be ready..."

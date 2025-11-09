@@ -266,7 +266,7 @@ output "kubeconfig_path" {
 1. SSH into server node: `ssh <user>@<server_ip>`
 2. Check kubeconfig exists: `sudo ls -la /etc/rancher/k3s/k3s.yaml`
 3. Verify K3s is running: `sudo systemctl status k3s`
-4. Check permissions: `sudo chmod 644 /etc/rancher/k3s/k3s.yaml`
+4. Check permissions: `sudo chmod 600 /etc/rancher/k3s/k3s.yaml` (secure: only root can read)
 
 ### Node Not Joining Cluster
 

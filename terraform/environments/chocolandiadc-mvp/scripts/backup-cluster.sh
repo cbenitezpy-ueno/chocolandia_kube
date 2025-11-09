@@ -103,7 +103,9 @@ ssh -o StrictHostKeyChecking=no -i "$SSH_KEY" "$SSH_USER@$MASTER_IP" bash <<'END
         sudo cp /var/lib/rancher/k3s/server/db/state.db /tmp/k3s-state-backup.db
     fi
 
-    sudo chmod 644 /tmp/k3s-state-backup.db
+    # Secure permissions: database contains all cluster secrets
+    sudo chmod 600 /tmp/k3s-state-backup.db
+    sudo chown $USER /tmp/k3s-state-backup.db
 ENDSSH
 
 # Download backup
