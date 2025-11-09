@@ -8,7 +8,16 @@
       "Bash(/Users/cbenitez/chocolandia_kube/.specify/scripts/bash/update-agent-context.sh:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(.specify/scripts/bash/setup-plan.sh:*)"
+      "Bash(.specify/scripts/bash/setup-plan.sh:*)",
+      "Bash(gh repo create:*)",
+      "Bash(git push:*)",
+      "SlashCommand(/speckit.plan)",
+      "SlashCommand(/speckit.tasks)",
+      "Bash(.specify/scripts/bash/check-prerequisites.sh:*)",
+      "Bash(git -C /Users/cbenitez/chocolandia_kube status:*)",
+      "Bash(git -C /Users/cbenitez/chocolandia_kube log -1 --stat)",
+      "Bash(tofu init:*)",
+      "Bash(git -C /Users/cbenitez/chocolandia_kube diff .claude/settings.local.json)"
     ],
     "deny": [],
     "ask": []
