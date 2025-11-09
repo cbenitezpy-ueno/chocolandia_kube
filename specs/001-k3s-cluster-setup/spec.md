@@ -3,7 +3,7 @@
 **Feature Branch**: `001-k3s-cluster-setup`
 **Created**: 2025-11-08
 **Status**: Draft
-**Input**: User description: "quier crear cluster, se va a llamar chocolandiadc, los nodos se van a llamar nodoX donde x es un numero y masterX, igual que nodos"
+**Input**: User description: "quiero crear cluster, se va a llamar chocolandiadc, los nodos se van a llamar nodoX donde x es un numero y masterX, igual que nodos"
 
 ## Clarifications
 
