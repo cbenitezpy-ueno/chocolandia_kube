@@ -96,7 +96,7 @@ resource "kubernetes_deployment" "pihole" {
         container {
           name  = "pihole"
           image = var.image
-          image_pull_policy = "Always"
+          image_pull_policy = "IfNotPresent"
 
           # Environment Variables
           env {
@@ -134,7 +134,7 @@ resource "kubernetes_deployment" "pihole" {
             value = "1000"
           }
 
-          # Ports
+          # Ports (no hostPort needed with hostNetwork)
           port {
             name           = "dns-tcp"
             container_port = 53
@@ -230,7 +230,7 @@ resource "kubernetes_deployment" "pihole" {
 }
 
 # ============================================================================
-# DNS Service (ClusterIP)
+# DNS Service (NodePort)
 # ============================================================================
 
 resource "kubernetes_service" "pihole_dns" {
@@ -244,7 +244,7 @@ resource "kubernetes_service" "pihole_dns" {
   }
 
   spec {
-    type = "ClusterIP"
+    type = "NodePort"
 
     selector = {
       app = "pihole"
@@ -254,6 +254,7 @@ resource "kubernetes_service" "pihole_dns" {
       name        = "dns-tcp"
       port        = 53
       target_port = 53
+      node_port   = 30053
       protocol    = "TCP"
     }
 
@@ -261,8 +262,47 @@ resource "kubernetes_service" "pihole_dns" {
       name        = "dns-udp"
       port        = 53
       target_port = 53
+      node_port   = 30053
       protocol    = "UDP"
     }
+
+    external_traffic_policy = "Local"
+  }
+
+  # Ensure deployment exists first
+  depends_on = [kubernetes_deployment.pihole]
+}
+
+# ============================================================================
+# Web Admin Service (NodePort)
+# ============================================================================
+
+resource "kubernetes_service" "pihole_web" {
+  metadata {
+    name      = "pihole-web"
+    namespace = var.namespace
+
+    labels = {
+      app = "pihole"
+    }
+  }
+
+  spec {
+    type = "NodePort"
+
+    selector = {
+      app = "pihole"
+    }
+
+    port {
+      name        = "http"
+      port        = 80
+      target_port = 80
+      node_port   = var.web_nodeport
+      protocol    = "TCP"
+    }
+
+    external_traffic_policy = "Local"
   }
 
   # Ensure deployment exists first

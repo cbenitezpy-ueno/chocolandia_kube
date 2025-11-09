@@ -27,10 +27,10 @@ Infrastructure deployment project:
 
 **Purpose**: Project initialization and module structure
 
-- [ ] T001 Create Pi-hole OpenTofu module directory structure at terraform/modules/pihole/
-- [ ] T002 [P] Create manifests directory at terraform/modules/pihole/manifests/ for Kubernetes YAML files
-- [ ] T003 [P] Create integration test directory at tests/integration/ for Pi-hole tests
-- [ ] T004 [P] Create documentation directory at docs/ for Pi-hole guides (if not exists)
+- [x] T001 Create Pi-hole OpenTofu module directory structure at terraform/modules/pihole/
+- [x] T002 [P] Create manifests directory at terraform/modules/pihole/manifests/ for Kubernetes YAML files
+- [x] T003 [P] Create integration test directory at tests/integration/ for Pi-hole tests
+- [x] T004 [P] Create documentation directory at docs/ for Pi-hole guides (if not exists)
 
 ---
 
@@ -40,12 +40,12 @@ Infrastructure deployment project:
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 Verify K3s cluster is operational and nodes are Ready (prerequisite check)
-- [ ] T006 Verify K3s local-path-provisioner is running in kube-system namespace (prerequisite check)
-- [ ] T007 Verify kubectl access and kubeconfig at terraform/environments/chocolandiadc-mvp/kubeconfig
-- [ ] T008 Set KUBECONFIG environment variable for OpenTofu kubernetes provider
-- [ ] T009 [P] Create module variables file at terraform/modules/pihole/variables.tf
-- [ ] T010 [P] Create module outputs file at terraform/modules/pihole/outputs.tf
+- [x] T005 Verify K3s cluster is operational and nodes are Ready (prerequisite check)
+- [x] T006 Verify K3s local-path-provisioner is running in kube-system namespace (prerequisite check)
+- [x] T007 Verify kubectl access and kubeconfig at terraform/environments/chocolandiadc-mvp/kubeconfig
+- [x] T008 Set KUBECONFIG environment variable for OpenTofu kubernetes provider
+- [x] T009 [P] Create module variables file at terraform/modules/pihole/variables.tf
+- [x] T010 [P] Create module outputs file at terraform/modules/pihole/outputs.tf
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 

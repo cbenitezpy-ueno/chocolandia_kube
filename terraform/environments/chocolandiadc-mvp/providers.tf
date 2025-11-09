@@ -21,6 +21,10 @@ terraform {
       source  = "hashicorp/helm"
       version = "~> 2.12"
     }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.23"
+    }
   }
 }
 
@@ -35,4 +39,12 @@ provider "helm" {
   kubernetes {
     config_path = "${path.root}/kubeconfig"
   }
+}
+
+# ============================================================================
+# Kubernetes Provider Configuration
+# ============================================================================
+
+provider "kubernetes" {
+  config_path = "${path.root}/kubeconfig"
 }
