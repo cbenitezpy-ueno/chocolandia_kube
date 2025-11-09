@@ -8,7 +8,8 @@
       "Bash(.specify/scripts/bash/update-agent-context.sh:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(.specify/scripts/bash/setup-plan.sh:*)"
+      "Bash(.specify/scripts/bash/setup-plan.sh:*)",
+      "Bash(git merge:*)"
     ],
     "deny": [],
     "ask": []
