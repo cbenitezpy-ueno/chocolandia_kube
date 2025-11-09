@@ -5,6 +5,16 @@
 **Status**: Draft
 **Input**: User description: "quier crear cluster, se va a llamar chocolandiadc, los nodos se van a llamar nodoX donde x es un numero y masterX, igual que nodos"
 
+## Clarifications
+
+### Session 2025-11-08
+
+- Q: Alcance del Homelab → A: Homelab completo: FortiGate + VLANs + Cluster K3s + servicios adicionales (DNS, storage, etc.)
+- Q: Rol del FortiGate en el Homelab → A: Edge firewall + router con VLANs (segmentación de red: management, cluster, DMZ, servicios)
+- Q: Cantidad Total de Hardware → A: 6 dispositivos: 3 Lenovo mini computers, 1 HP ProDesk mini, 1 FortiGate 100D, 1 Raspberry Pi
+- Q: Distribución de Roles de Hardware → A: 3 control-plane (3 Lenovo) + 1 worker (HP ProDesk) + Raspberry Pi para servicios auxiliares (DNS, Pi-hole, jump host)
+- Q: Gestión de FortiGate con OpenTofu → A: Todo con OpenTofu: FortiGate (VLANs, firewall, routing) + cluster K3s + servicios (IaC completo)
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Initial Cluster Bootstrap (Priority: P1)
@@ -85,45 +95,82 @@ As an infrastructure operator, I need Prometheus and Grafana deployed and config
 
 ### Functional Requirements
 
-- **FR-001**: System MUST provision a K3s cluster named "chocolandiadc" across 4 mini-PC nodes
-- **FR-002**: System MUST create control-plane nodes with hostnames master1, master2, and master3 (3 control-plane nodes for HA)
-- **FR-003**: System MUST create worker node with hostname nodo1 (1 dedicated worker node)
-- **FR-004**: System MUST configure K3s in HA mode with embedded etcd across all control-plane nodes
-- **FR-005**: System MUST ensure the Kubernetes API is accessible and load-balanced across all control-plane nodes
-- **FR-006**: System MUST deploy Prometheus for metrics collection from all cluster nodes and K3s components
-- **FR-007**: System MUST deploy Grafana with pre-configured dashboards for cluster observability
-- **FR-008**: System MUST use Terraform as the exclusive provisioning and configuration tool
-- **FR-009**: System MUST generate and securely manage the K3s cluster token for node joining
-- **FR-010**: System MUST configure network connectivity between all cluster nodes (pod network, service network)
-- **FR-011**: System MUST store Terraform state in a persistent location (local file or remote backend)
-- **FR-012**: System MUST validate cluster health after each provisioning step (nodes Ready, API responsive)
-- **FR-013**: System MUST configure kubectl context to access the chocolandiadc cluster
-- **FR-014**: System MUST implement Kubernetes RBAC with secure default permissions
-- **FR-015**: System MUST configure resource limits for Prometheus and Grafana to prevent resource exhaustion
+#### Network Infrastructure (FortiGate)
+- **FR-001**: System MUST configure FortiGate 100D with VLANs for network segmentation (management, cluster, services, DMZ)
+- **FR-002**: System MUST configure FortiGate firewall rules to allow K3s cluster communication (API, etcd, pod network)
+- **FR-003**: System MUST configure FortiGate DHCP server with static reservations for all homelab devices
+- **FR-004**: System MUST configure FortiGate routing between VLANs with appropriate security policies
+- **FR-005**: System MUST use OpenTofu with FortiOS provider to manage FortiGate configuration
+
+#### Cluster Infrastructure (K3s)
+- **FR-006**: System MUST provision a K3s cluster named "chocolandiadc" across 4 mini-PC nodes (3 Lenovo + 1 HP ProDesk)
+- **FR-007**: System MUST create control-plane nodes with hostnames master1, master2, and master3 on Lenovo mini computers (3 control-plane nodes for HA)
+- **FR-008**: System MUST create worker node with hostname nodo1 on HP ProDesk mini (1 dedicated worker node)
+- **FR-009**: System MUST configure K3s in HA mode with embedded etcd across all control-plane nodes
+- **FR-010**: System MUST ensure the Kubernetes API is accessible and load-balanced across all control-plane nodes
+
+#### Auxiliary Services (Raspberry Pi)
+- **FR-011**: System MUST configure Raspberry Pi as services node with hostname "services" for auxiliary services
+- **FR-012**: System MUST deploy Pi-hole on Raspberry Pi for network-wide DNS ad-blocking
+- **FR-013**: System MUST configure jump host/bastion on Raspberry Pi for secure SSH access to cluster nodes
+- **FR-014**: System MUST configure DNS server on Raspberry Pi for homelab internal DNS resolution
+
+#### Monitoring & Observability
+- **FR-015**: System MUST deploy Prometheus for metrics collection from all cluster nodes and K3s components
+- **FR-016**: System MUST deploy Grafana with pre-configured dashboards for cluster observability
+- **FR-017**: System MUST configure resource limits for Prometheus and Grafana to prevent resource exhaustion
+
+#### Infrastructure as Code
+- **FR-018**: System MUST use OpenTofu as the exclusive provisioning and configuration tool for all infrastructure
+- **FR-019**: System MUST store OpenTofu state in a persistent location (local file or remote backend)
+- **FR-020**: System MUST validate infrastructure health after each provisioning step (network connectivity, nodes Ready, services operational)
+
+#### Security & Access
+- **FR-021**: System MUST generate and securely manage the K3s cluster token for node joining
+- **FR-022**: System MUST configure kubectl context to access the chocolandiadc cluster
+- **FR-023**: System MUST implement Kubernetes RBAC with secure default permissions
+- **FR-024**: System MUST configure SSH key-based authentication for all nodes (no password authentication)
 
 ### Assumptions
 
-- **A-001**: All 4 mini-PCs are on the same local network with SSH access enabled
-- **A-002**: Each mini-PC has a static IP address or DHCP reservation (IPs do not change across reboots)
-- **A-003**: Mini-PCs run a Linux distribution compatible with K3s (Ubuntu, Debian, RHEL-family, or similar)
+- **A-001**: All 4 mini-PCs (3 Lenovo + 1 HP ProDesk) are on the same local network with SSH access enabled
+- **A-002**: Each mini-PC has a static IP address or DHCP reservation configured via FortiGate DHCP server (IPs do not change across reboots)
+- **A-003**: Mini-PCs run Ubuntu Server LTS (22.04 or 24.04 recommended)
 - **A-004**: Each mini-PC has sufficient resources: minimum 2 CPU cores, 4GB RAM, 20GB disk space
-- **A-005**: SSH keys for passwordless authentication are configured on all mini-PCs
-- **A-006**: Terraform is installed on the control machine (laptop/workstation) from which provisioning is executed
+- **A-005**: SSH keys for passwordless authentication are configured on all mini-PCs and Raspberry Pi
+- **A-006**: OpenTofu is installed on the control machine (laptop/workstation) from which provisioning is executed
 - **A-007**: kubectl is installed on the control machine for cluster interaction
 - **A-008**: Internet connectivity is available for downloading K3s binaries, Helm charts, and container images
-- **A-009**: The operator has root/sudo access on all mini-PCs for K3s installation
+- **A-009**: The operator has root/sudo access on all mini-PCs and Raspberry Pi for K3s installation
 - **A-010**: Cluster name "chocolandiadc" is unique and does not conflict with existing kubeconfig contexts
+- **A-011**: FortiGate 100D has management access configured and FortiOS API enabled for OpenTofu provider
+- **A-012**: Raspberry Pi runs Raspberry Pi OS or Ubuntu Server and has sufficient resources for auxiliary services (Pi-hole, DNS, jump host)
 
 ### Key Entities
 
+#### Network Infrastructure
+- **FortiGate 100D**: Edge firewall and router providing network segmentation via VLANs, firewall rules, DHCP services, and inter-VLAN routing. Managed via OpenTofu FortiOS provider.
+- **VLANs**: Network segments for traffic isolation (management VLAN for admin access, cluster VLAN for K3s nodes, services VLAN for auxiliary services, DMZ for exposed services).
+- **DHCP Reservations**: Static IP mappings configured on FortiGate for all homelab devices (mini-PCs, Raspberry Pi).
+
+#### Cluster Infrastructure
 - **Cluster (chocolandiadc)**: The logical Kubernetes cluster comprising all nodes, control-plane components, and networking. Identified by cluster name and API endpoint.
-- **Control-Plane Node (master1, master2, master3)**: Nodes running K3s control-plane components (API server, scheduler, controller manager, etcd). Participate in etcd quorum and serve the Kubernetes API.
-- **Worker Node (nodo1)**: Node running K3s agent for executing workload pods. Does not participate in control-plane or etcd operations.
+- **Control-Plane Node (master1, master2, master3)**: Lenovo mini computers running K3s control-plane components (API server, scheduler, controller manager, etcd). Participate in etcd quorum and serve the Kubernetes API.
+- **Worker Node (nodo1)**: HP ProDesk mini computer running K3s agent for executing workload pods. Does not participate in control-plane or etcd operations.
 - **K3s Cluster Token**: Shared secret used for authenticating nodes when joining the cluster. Must be securely distributed to all nodes.
 - **Etcd Cluster**: Distributed key-value store providing cluster state persistence. Runs embedded within K3s control-plane nodes. Requires 3 replicas for quorum.
+
+#### Auxiliary Services
+- **Services Node (Raspberry Pi)**: Raspberry Pi device providing auxiliary homelab services (Pi-hole DNS, jump host, internal DNS server).
+- **Pi-hole**: Network-wide DNS ad-blocking and DNS server running on Raspberry Pi.
+- **Jump Host/Bastion**: SSH bastion on Raspberry Pi for secure access to cluster nodes.
+
+#### Monitoring & Observability
 - **Prometheus Instance**: Monitoring application deployed as a pod, configured to scrape metrics from all cluster nodes and components. Stores time-series data.
 - **Grafana Instance**: Visualization application deployed as a pod, configured to query Prometheus and display dashboards. Provides web UI for observability.
-- **Terraform State**: Persistent record of managed infrastructure. Tracks which resources have been provisioned and their current configuration.
+
+#### Infrastructure as Code
+- **OpenTofu State**: Persistent record of managed infrastructure. Tracks FortiGate configuration, K3s cluster resources, and auxiliary services provisioning.
 - **Kubeconfig**: Configuration file containing cluster API endpoint, authentication credentials, and kubectl context for accessing chocolandiadc.
 
 ## Success Criteria *(mandatory)*
