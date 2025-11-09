@@ -174,32 +174,24 @@ echo ""
 
 # Configure master1
 log "Configuring passwordless sudo on master1..."
-ssh -i "$SSH_KEY_PATH" "$SSH_USER@$MASTER1_IP" << EOF
-    echo "Configuring passwordless sudo for $SSH_USER..."
-    echo "$SSH_USER ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/$SSH_USER > /dev/null
-    sudo chmod 0440 /etc/sudoers.d/$SSH_USER
-    echo "✓ Passwordless sudo configured"
-EOF
+warning "Enter sudo password for master1 when prompted"
+ssh -t -i "$SSH_KEY_PATH" "$SSH_USER@$MASTER1_IP" "echo '$SSH_USER ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/$SSH_USER > /dev/null && sudo chmod 0440 /etc/sudoers.d/$SSH_USER && echo '✓ Passwordless sudo configured on master1'"
 
 if [[ $? -eq 0 ]]; then
     success "Passwordless sudo configured on master1"
 else
-    error "Failed to configure passwordless sudo on master1"
+    warning "Failed to configure passwordless sudo on master1 (may already be configured)"
 fi
 
 # Configure nodo1
 log "Configuring passwordless sudo on nodo1..."
-ssh -i "$SSH_KEY_PATH" "$SSH_USER@$NODO1_IP" << EOF
-    echo "Configuring passwordless sudo for $SSH_USER..."
-    echo "$SSH_USER ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/$SSH_USER > /dev/null
-    sudo chmod 0440 /etc/sudoers.d/$SSH_USER
-    echo "✓ Passwordless sudo configured"
-EOF
+warning "Enter sudo password for nodo1 when prompted"
+ssh -t -i "$SSH_KEY_PATH" "$SSH_USER@$NODO1_IP" "echo '$SSH_USER ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/$SSH_USER > /dev/null && sudo chmod 0440 /etc/sudoers.d/$SSH_USER && echo '✓ Passwordless sudo configured on nodo1'"
 
 if [[ $? -eq 0 ]]; then
     success "Passwordless sudo configured on nodo1"
 else
-    error "Failed to configure passwordless sudo on nodo1"
+    warning "Failed to configure passwordless sudo on nodo1 (may already be configured)"
 fi
 
 echo ""

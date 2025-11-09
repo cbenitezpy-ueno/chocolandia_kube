@@ -36,7 +36,7 @@ locals {
   # K3s flags joined as string
   k3s_flags_str = join(" ", concat(
     var.k3s_flags,
-    [for comp in var.disable_components : "--disable=${comp}"],
+    var.node_role == "server" ? [for comp in var.disable_components : "--disable=${comp}"] : [],
     var.node_role == "server" ? ["--write-kubeconfig-mode=644"] : []
   ))
 

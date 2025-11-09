@@ -122,9 +122,9 @@ fi
 
 # Install K3s agent
 if [[ -n "$EXEC_ARGS" ]]; then
-    export INSTALL_K3S_EXEC="$EXEC_ARGS"
-    log "Running: curl -sfL $INSTALL_K3S_URL | sh -s - agent (with exec args: $EXEC_ARGS)"
-    curl -sfL "$INSTALL_K3S_URL" | sh -s - agent >> "$LOG_FILE" 2>&1 || error "K3s agent installation failed"
+    export INSTALL_K3S_EXEC="agent $EXEC_ARGS"
+    log "Running: curl -sfL $INSTALL_K3S_URL | sh (with exec: agent $EXEC_ARGS)"
+    curl -sfL "$INSTALL_K3S_URL" | sh >> "$LOG_FILE" 2>&1 || error "K3s agent installation failed"
 else
     log "Running: curl -sfL $INSTALL_K3S_URL | sh -s - agent"
     curl -sfL "$INSTALL_K3S_URL" | sh -s - agent >> "$LOG_FILE" 2>&1 || error "K3s agent installation failed"

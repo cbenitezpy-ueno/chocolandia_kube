@@ -19,7 +19,12 @@
       "Bash(tofu init:*)",
       "Bash(git -C /Users/cbenitez/chocolandia_kube diff .claude/settings.local.json)",
       "Bash(chmod:*)",
-      "Bash(tofu validate:*)"
+      "Bash(tofu validate:*)",
+      "Bash(ssh:*)",
+      "Bash(tofu destroy:*)",
+      "Bash(tofu apply:*)",
+      "Bash(/tmp/k3s-token.txt)",
+      "Bash(bash:*)"
     ],
     "deny": [],
     "ask": []
