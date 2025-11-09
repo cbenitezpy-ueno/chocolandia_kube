@@ -17,8 +17,22 @@ terraform {
       source  = "hashicorp/local"
       version = "~> 2.4"
     }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 2.12"
+    }
   }
 }
 
 # No cloud provider configuration needed for this MVP
 # K3s installation will be performed via SSH using null_resource provisioners
+
+# ============================================================================
+# Helm Provider Configuration
+# ============================================================================
+
+provider "helm" {
+  kubernetes {
+    config_path = "${path.root}/kubeconfig"
+  }
+}

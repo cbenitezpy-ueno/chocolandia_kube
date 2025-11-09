@@ -24,7 +24,13 @@
       "Bash(tofu destroy:*)",
       "Bash(tofu apply:*)",
       "Bash(/tmp/k3s-token.txt)",
-      "Bash(bash:*)"
+      "Bash(bash:*)",
+      "Bash(helm repo add:*)",
+      "Bash(helm repo update:*)",
+      "Bash(export KUBECONFIG=./kubeconfig)",
+      "Bash(kubectl get:*)",
+      "Bash(export KUBECONFIG=/Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/kubeconfig)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
