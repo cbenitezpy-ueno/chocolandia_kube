@@ -51,11 +51,11 @@ locals {
 resource "null_resource" "k3s_install" {
   # Trigger re-provisioning on configuration changes
   triggers = {
-    node_ip      = var.node_ip
-    node_role    = var.node_role
-    k3s_version  = var.k3s_version
-    k3s_flags    = local.k3s_flags_str
-    server_url   = var.server_url
+    node_ip     = var.node_ip
+    node_role   = var.node_role
+    k3s_version = var.k3s_version
+    k3s_flags   = local.k3s_flags_str
+    server_url  = var.server_url
     # Don't include join_token in triggers (it's sensitive and shouldn't force recreation)
   }
 
@@ -79,7 +79,7 @@ resource "null_resource" "k3s_install" {
       # Server installation
       "chmod +x /tmp/install-k3s.sh",
       "sudo /tmp/install-k3s.sh '${var.k3s_version}' '${local.k3s_flags_str}' '${var.node_ip}' '${local.tls_san_str}'"
-    ] : [
+      ] : [
       # Agent installation
       "chmod +x /tmp/install-k3s.sh",
       "sudo /tmp/install-k3s.sh '${var.k3s_version}' '${var.server_url}' '${var.join_token}' '${var.node_ip}' '${local.k3s_flags_str}'"
@@ -182,7 +182,7 @@ resource "null_resource" "wait_for_node_ready" {
         echo "ERROR: Node ${var.hostname} did not become Ready after 5 minutes"
         exit 1
       EOT
-    ] : [
+      ] : [
       # For agent nodes, just verify the service is running
       # (server will check node status via kubectl)
       <<-EOT

@@ -29,6 +29,7 @@ kubeconfig
 *.backup
 *.bak
 *~
+backups/
 
 # OS files
 .DS_Store

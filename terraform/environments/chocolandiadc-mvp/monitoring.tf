@@ -193,12 +193,12 @@ resource "helm_release" "kube_prometheus_stack" {
             apiVersion = 1
             providers = [
               {
-                name    = "default"
-                orgId   = 1
-                folder  = ""
-                type    = "file"
+                name            = "default"
+                orgId           = 1
+                folder          = ""
+                type            = "file"
                 disableDeletion = false
-                editable       = true
+                editable        = true
                 options = {
                   path = "/var/lib/grafana/dashboards/default"
                 }
@@ -211,18 +211,18 @@ resource "helm_release" "kube_prometheus_stack" {
         dashboards = {
           default = {
             "k3s-cluster-overview" = {
-              gnetId    = 15282 # K3s cluster monitoring dashboard
-              revision  = 1
+              gnetId     = 15282 # K3s cluster monitoring dashboard
+              revision   = 1
               datasource = "Prometheus"
             }
             "node-exporter-full" = {
-              gnetId    = 1860 # Node Exporter Full
-              revision  = 31
+              gnetId     = 1860 # Node Exporter Full
+              revision   = 31
               datasource = "Prometheus"
             }
             "kubernetes-cluster-monitoring" = {
-              gnetId    = 7249 # Kubernetes Cluster Monitoring
-              revision  = 1
+              gnetId     = 7249 # Kubernetes Cluster Monitoring
+              revision   = 1
               datasource = "Prometheus"
             }
           }

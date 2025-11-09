@@ -129,7 +129,7 @@ variable "datastore" {
 variable "disable_components" {
   description = "K3s components to disable (e.g., ['traefik', 'servicelb']). Useful for custom ingress/LB."
   type        = list(string)
-  default     = ["traefik"]  # Disable Traefik by default (will use Nginx Ingress)
+  default     = ["traefik"] # Disable Traefik by default (will use Nginx Ingress)
 }
 
 variable "tls_san" {

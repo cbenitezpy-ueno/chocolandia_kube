@@ -2,605 +2,582 @@
 
 **Feature**: 002-k3s-mvp-eero
 **Date**: 2025-11-09
-**Estimated Time**: < 10 minutes (cluster bootstrap to workload running)
+**Deployment Method**: OpenTofu (Infrastructure as Code)
+**Estimated Time**: ~15 minutes (from prerequisites to working cluster with monitoring)
 
 ## Overview
 
-This quickstart guide walks you through deploying a minimal viable K3s cluster with 2 nodes (1 control-plane + 1 worker) connected to your Eero mesh network. This is a learning environment designed to unblock Kubernetes experimentation while FortiGate 100D is being repaired.
+This quickstart guide walks you through deploying a minimal viable K3s cluster with 2 nodes (1 control-plane + 1 worker) on your Eero mesh network using OpenTofu. This is a learning environment designed to unblock Kubernetes experimentation while FortiGate hardware is being repaired.
 
 **What you'll deploy**:
-- **master1**: K3s control-plane node (single-server mode, SQLite datastore)
-- **nodo1**: K3s worker node (agent mode)
-- Test workload: nginx pod to verify cluster functionality
+- **master1** (192.168.4.101): K3s control-plane node (single-server mode, SQLite datastore)
+- **nodo1** (192.168.4.102): K3s worker node (agent mode)
+- **Monitoring Stack**: Prometheus + Grafana with 30 pre-configured dashboards
+- **Test workload**: nginx deployment to verify cluster functionality
 
 **What you'll learn**:
-- K3s installation and cluster bootstrapping
-- Kubectl basics (viewing nodes, deploying pods)
-- Troubleshooting cluster connectivity issues
+- Infrastructure as Code with OpenTofu
+- K3s cluster deployment and management
+- Kubernetes monitoring with Prometheus and Grafana
+- Cluster validation and troubleshooting
 
 ---
 
 ## Prerequisites
 
-Before starting, ensure you have:
-
 ### Hardware
 - [ ] 2 mini-PCs (Lenovo or HP ProDesk) available and powered on
-- [ ] Both mini-PCs connected to Eero mesh network via **Ethernet** (strongly recommended) or WiFi
+- [ ] Both mini-PCs connected to Eero mesh network via **Ethernet** (WiFi not recommended)
 - [ ] Ubuntu Server 22.04 LTS installed on both mini-PCs
-- [ ] Static DHCP reservations configured in Eero app (recommended to prevent IP changes)
+- [ ] Static DHCP reservations configured in Eero app
 
-**Eero Configuration** (recommended):
-1. Open Eero app → Settings → Advanced → DHCP & NAT → Reservations
-2. Add static reservations:
-   - `master1` (MAC: aa:bb:cc:dd:ee:ff) → `192.168.4.10`
-   - `nodo1` (MAC: ff:ee:dd:cc:bb:aa) → `192.168.4.11`
+**Eero Configuration** (REQUIRED for stable cluster):
+1. Open Eero app → Settings → Network Settings → Reservations & Port Forwarding
+2. Add static DHCP reservations:
+   - `master1` → `192.168.4.101`
+   - `nodo1` → `192.168.4.102`
+
+**Why required**: Without static reservations, DHCP IP changes will break cluster connectivity.
 
 ### Software on Mini-PCs
 - [ ] SSH server running on both nodes (`sudo systemctl status ssh`)
 - [ ] Passwordless SSH configured (SSH keys copied to both nodes)
-- [ ] Sudo privileges for SSH user (required for K3s installation)
+- [ ] Passwordless sudo configured for SSH user
 - [ ] Internet connectivity via Eero (test: `ping 8.8.8.8`)
 
 ### Software on Operator Laptop
-- [ ] OpenTofu 1.6+ installed (`tofu version`)
-- [ ] kubectl installed (`kubectl version --client`)
+- [ ] OpenTofu >= 1.6.0 installed (`tofu version`)
+- [ ] kubectl >= 1.28 installed (`kubectl version --client`)
+- [ ] Helm >= 3.12 installed (`helm version`)
 - [ ] SSH client available
 - [ ] Git configured with access to this repository
 
 **Verify Prerequisites**:
 ```bash
-# Test SSH access to both nodes (replace IPs with your actual IPs)
-ssh ubuntu@192.168.4.10 "hostname && whoami"  # Should return: master1, ubuntu
-ssh ubuntu@192.168.4.11 "hostname && whoami"  # Should return: nodo1, ubuntu
+# Test SSH access to both nodes
+ssh chocolim@192.168.4.101 "hostname && whoami"  # Should return: master1, chocolim
+ssh chocolim@192.168.4.102 "hostname && whoami"  # Should return: nodo1, chocolim
 
 # Verify OpenTofu and kubectl
 tofu version  # Should show: OpenTofu v1.6.x
 kubectl version --client  # Should show: Client Version v1.28+
+helm version  # Should show: version.BuildInfo{Version:"v3.12+"}
 ```
 
 ---
 
-## Step 1: Bootstrap Control-Plane Node (master1)
+## Step 1: Configure SSH Access
 
-**Objective**: Install K3s server on master1, verify API server is running, retrieve cluster token for worker join.
-
-### 1.1 SSH to master1
+Set up passwordless SSH authentication to both nodes:
 
 ```bash
-ssh ubuntu@192.168.4.10
+# Generate SSH key for K3s cluster (if not already exists)
+ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_k3s -N ""
+
+# Copy public key to both nodes
+ssh-copy-id -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.101
+ssh-copy-id -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.102
+
+# Test SSH access (should not prompt for password)
+ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.101 "hostname"
+# Expected output: master1
+
+ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.102 "hostname"
+# Expected output: nodo1
 ```
 
-### 1.2 Install K3s Server (Single-Server Mode)
-
-Run the K3s installation script with single-server flags:
-
+**Configure passwordless sudo on each node**:
 ```bash
-curl -sfL https://get.k3s.io | sh -s - server \
-  --cluster-init=false \
-  --disable traefik \
-  --tls-san 192.168.4.10
-```
+# On master1
+ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.101
+echo "chocolim ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/chocolim
+sudo chmod 0440 /etc/sudoers.d/chocolim
+exit
 
-**Flag explanations**:
-- `--cluster-init=false`: Disables HA mode, uses SQLite datastore (not etcd)
-- `--disable traefik`: Disables built-in Traefik ingress controller (saves resources)
-- `--tls-san 192.168.4.10`: Adds master1 IP to API server TLS certificate (allows external kubectl access)
+# On nodo1
+ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.102
+echo "chocolim ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/chocolim
+sudo chmod 0440 /etc/sudoers.d/chocolim
+exit
 
-**Expected output**:
-```
-[INFO]  Finding release for channel stable
-[INFO]  Using v1.28.5+k3s1 as release
-[INFO]  Downloading hash https://github.com/k3s-io/k3s/releases/download/v1.28.5+k3s1/sha256sum-amd64.txt
-[INFO]  Downloading binary https://github.com/k3s-io/k3s/releases/download/v1.28.5+k3s1/k3s
-[INFO]  Verifying binary download
-[INFO]  Installing k3s to /usr/local/bin/k3s
-[INFO]  Skipping installation of SELinux RPM
-[INFO]  Creating /usr/local/bin/kubectl symlink to k3s
-[INFO]  Creating /usr/local/bin/crictl symlink to k3s
-[INFO]  Creating /usr/local/bin/ctr symlink to k3s
-[INFO]  Creating killall script /usr/local/bin/k3s-killall.sh
-[INFO]  Creating uninstall script /usr/local/bin/k3s-uninstall.sh
-[INFO]  env: Creating environment file /etc/systemd/system/k3s.service.env
-[INFO]  systemd: Creating service file /etc/systemd/system/k3s.service
-[INFO]  systemd: Enabling k3s unit
-Created symlink /etc/systemd/system/multi-user.target.wants/k3s.service → /etc/systemd/system/k3s.service.
-[INFO]  systemd: Starting k3s
-```
-
-Installation takes **2-3 minutes** (downloading K3s binary + container images).
-
-### 1.3 Verify K3s Server is Running
-
-```bash
-# Check K3s service status
-sudo systemctl status k3s
-
-# Verify node is Ready (may take 30-60 seconds)
-sudo k3s kubectl get nodes
-```
-
-**Expected output**:
-```
-NAME      STATUS   ROLES                  AGE   VERSION
-master1   Ready    control-plane,master   45s   v1.28.5+k3s1
-```
-
-**Troubleshooting**:
-- If service failed to start: `sudo journalctl -u k3s -f`
-- If node is NotReady: Wait 60 seconds and retry (CNI initialization delay)
-- If connection refused: Check firewall rules (`sudo ufw status`)
-
-### 1.4 Retrieve Cluster Token
-
-The cluster token is needed for worker nodes to join. Retrieve it:
-
-```bash
-sudo cat /var/lib/rancher/k3s/server/token
-```
-
-**Example token**:
-```
-K10abc123def456ghi789jkl012mno345pqr678stu901vwx234yza567::server:bcd890efg123hij456klm789nop012qrs
-```
-
-**Save this token**—you'll need it in Step 2.
-
-### 1.5 Logout from master1
-
-```bash
-exit  # Return to operator laptop
+# Test sudo access (should not prompt for password)
+ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.101 "sudo whoami"
+# Expected output: root
 ```
 
 ---
 
-## Step 2: Join Worker Node (nodo1)
-
-**Objective**: Install K3s agent on nodo1, configure it to join the cluster, verify both nodes appear in `kubectl get nodes`.
-
-### 2.1 SSH to nodo1
+## Step 2: Clone Repository and Configure
 
 ```bash
-ssh ubuntu@192.168.4.11
+# Clone the repository
+git clone https://github.com/cbenitezpy-ueno/chocolandia_kube.git
+cd chocolandia_kube
+
+# Switch to feature branch
+git checkout 002-k3s-mvp-eero
+
+# Navigate to environment directory
+cd terraform/environments/chocolandiadc-mvp
 ```
 
-### 2.2 Install K3s Agent (Join Cluster)
-
-Run the K3s installation script with agent configuration:
-
+**Create terraform.tfvars configuration**:
 ```bash
-# Replace <TOKEN> with the token from Step 1.4
-# Replace 192.168.4.10 with your master1 IP if different
+# Copy example configuration
+cp terraform.tfvars.example terraform.tfvars
 
-export K3S_URL=https://192.168.4.10:6443
-export K3S_TOKEN="K10abc123def456ghi789jkl012mno345pqr678stu901vwx234yza567::server:bcd890efg123hij456klm789nop012qrs"
-
-curl -sfL https://get.k3s.io | sh -s - agent \
-  --node-label role=worker
+# Edit with your actual values
+vim terraform.tfvars
 ```
 
-**Environment variable explanations**:
-- `K3S_URL`: Points to master1 API server (must be accessible from nodo1)
-- `K3S_TOKEN`: Cluster join token from master1
+**terraform.tfvars content** (update with your values):
+```hcl
+cluster_name = "chocolandiadc-mvp"
+k3s_version  = "v1.28.3+k3s1"
 
-**Agent flag explanations**:
-- `--node-label role=worker`: Adds custom label to node (helps with pod scheduling)
+# Master node configuration
+master1_hostname = "master1"
+master1_ip       = "192.168.4.101"
 
-**Expected output**:
-```
-[INFO]  Finding release for channel stable
-[INFO]  Using v1.28.5+k3s1 as release
-[INFO]  Downloading hash https://github.com/k3s-io/k3s/releases/download/v1.28.5+k3s1/sha256sum-amd64.txt
-[INFO]  Downloading binary https://github.com/k3s-io/k3s/releases/download/v1.28.5+k3s1/k3s
-[INFO]  Verifying binary download
-[INFO]  Installing k3s to /usr/local/bin/k3s
-[INFO]  Creating /usr/local/bin/kubectl symlink to k3s
-[INFO]  Creating /usr/local/bin/crictl symlink to k3s
-[INFO]  Creating /usr/local/bin/ctr symlink to k3s
-[INFO]  Creating killall script /usr/local/bin/k3s-killall.sh
-[INFO]  Creating uninstall script /usr/local/bin/k3s-agent-uninstall.sh
-[INFO]  env: Creating environment file /etc/systemd/system/k3s-agent.service.env
-[INFO]  systemd: Creating service file /etc/systemd/system/k3s-agent.service
-[INFO]  systemd: Enabling k3s-agent unit
-Created symlink /etc/systemd/system/multi-user.target.wants/k3s-agent.service → /etc/systemd/system/k3s-agent.service.
-[INFO]  systemd: Starting k3s-agent
-```
+# Worker node configuration
+nodo1_hostname   = "nodo1"
+nodo1_ip         = "192.168.4.102"
 
-Installation takes **1-2 minutes**.
+# SSH configuration
+ssh_user             = "chocolim"
+ssh_private_key_path = "~/.ssh/id_ed25519_k3s"
+ssh_port             = 22
 
-### 2.3 Verify K3s Agent is Running
-
-```bash
-# Check K3s agent service status
-sudo systemctl status k3s-agent
-```
-
-**Expected output**:
-```
-● k3s-agent.service - Lightweight Kubernetes
-     Loaded: loaded (/etc/systemd/system/k3s-agent.service; enabled; vendor preset: enabled)
-     Active: active (running) since ...
-```
-
-**Troubleshooting**:
-- If connection refused: Verify master1 is accessible (`ping 192.168.4.10`)
-- If token invalid: Re-retrieve token from master1 (Step 1.4)
-- If certificate errors: Verify `--tls-san` flag was used in Step 1.2
-
-### 2.4 Logout from nodo1
-
-```bash
-exit  # Return to operator laptop
+# K3s configuration
+disable_components = ["traefik"]  # Disable Traefik ingress controller
+k3s_additional_flags = []
 ```
 
 ---
 
-## Step 3: Verify Cluster from Operator Laptop
-
-**Objective**: Configure kubectl on your laptop to access the cluster, verify both nodes are Ready, deploy a test workload.
-
-### 3.1 Copy Kubeconfig from master1
+## Step 3: Deploy Cluster with OpenTofu
 
 ```bash
-# Copy kubeconfig from master1 to your laptop
-scp ubuntu@192.168.4.10:/etc/rancher/k3s/k3s.yaml ~/.kube/config
+# Ensure you're in the environment directory
+cd terraform/environments/chocolandiadc-mvp
 
-# Modify kubeconfig to use master1's Eero IP (replace 127.0.0.1 with actual IP)
-sed -i.bak 's/127.0.0.1/192.168.4.10/g' ~/.kube/config
+# Initialize OpenTofu (downloads providers)
+tofu init
 
-# Verify kubeconfig is valid
-kubectl config view
+# Expected output:
+# OpenTofu has been successfully initialized!
 ```
 
-**Expected output** (truncated):
-```yaml
-apiVersion: v1
-clusters:
-- cluster:
-    certificate-authority-data: LS0tLS1...
-    server: https://192.168.4.10:6443  # Should be master1 IP, not 127.0.0.1
-  name: default
-contexts:
-- context:
-    cluster: default
-    user: default
-  name: default
-current-context: default
+**Review deployment plan**:
+```bash
+tofu plan
+
+# Review the plan output:
+# - 2 null_resource for K3s installation (master1, nodo1)
+# - 1 helm_release for kube-prometheus-stack
+# - Kubeconfig generation
+# - Expected: Plan: X to add, 0 to change, 0 to destroy
 ```
 
-### 3.2 Verify Both Nodes are Ready
+**Deploy the cluster**:
+```bash
+tofu apply
 
+# Type 'yes' when prompted
+
+# Expected output after ~5 minutes:
+# Apply complete! Resources: X added, 0 changed, 0 destroyed.
+#
+# Outputs:
+# cluster_endpoint = "https://192.168.4.101:6443"
+# grafana_url = "http://192.168.4.101:30000"
+# kubeconfig_path = "./kubeconfig"
+# ...
+```
+
+**What OpenTofu does**:
+1. SSHs to master1 and installs K3s server
+2. Retrieves kubeconfig and cluster join token from master1
+3. SSHs to nodo1 and installs K3s agent (joins cluster)
+4. Deploys Prometheus + Grafana monitoring stack via Helm
+5. Saves kubeconfig locally for kubectl access
+
+---
+
+## Step 4: Verify Cluster Deployment
+
+**Export kubeconfig**:
+```bash
+export KUBECONFIG=$(pwd)/kubeconfig
+
+# Verify environment variable
+echo $KUBECONFIG
+# Expected: /Users/.../chocolandia_kube/terraform/environments/chocolandiadc-mvp/kubeconfig
+```
+
+**Check node status**:
 ```bash
 kubectl get nodes -o wide
+
+# Expected output:
+# NAME      STATUS   ROLES                  AGE   VERSION        INTERNAL-IP      OS-IMAGE
+# master1   Ready    control-plane,master   5m    v1.28.3+k3s1   192.168.4.101    Ubuntu 22.04 LTS
+# nodo1     Ready    <none>                 3m    v1.28.3+k3s1   192.168.4.102    Ubuntu 22.04 LTS
 ```
 
-**Expected output**:
-```
-NAME      STATUS   ROLES                  AGE     VERSION        INTERNAL-IP     EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
-master1   Ready    control-plane,master   5m30s   v1.28.5+k3s1   192.168.4.10    <none>        Ubuntu 22.04.3 LTS   5.15.0-91-generic   containerd://1.7.11-k3s2
-nodo1     Ready    <none>                 3m15s   v1.28.5+k3s1   192.168.4.11    <none>        Ubuntu 22.04.3 LTS   5.15.0-91-generic   containerd://1.7.11-k3s2
-```
-
-**Success criteria**:
-- Both nodes show `STATUS: Ready`
-- `master1` has role `control-plane,master`
-- `nodo1` has role `<none>` (worker node, no special role)
-- Both nodes on same K3s version
-
-**Troubleshooting**:
-- If nodes NotReady: Check kubelet logs on nodes (`sudo journalctl -u k3s -f` or `sudo journalctl -u k3s-agent -f`)
-- If connection refused from laptop: Verify kubeconfig server IP matches master1 Eero IP
-- If certificate errors: Re-run Step 1.2 with `--tls-san` flag
-
-### 3.3 Deploy Test Workload (nginx Pod)
-
-Deploy a simple nginx pod to verify cluster functionality:
-
+**Check all pods**:
 ```bash
-# Create nginx deployment
-kubectl create deployment nginx --image=nginx:alpine
+kubectl get pods -A
 
-# Verify pod is Running
-kubectl get pods -o wide
+# Expected output: All pods in Running or Completed state
+# Key namespaces to verify:
+# - kube-system: coredns, metrics-server, local-path-provisioner
+# - monitoring: prometheus, grafana, alertmanager, node-exporter
 ```
 
-**Expected output** (after 30-60 seconds):
-```
-NAME                     READY   STATUS    RESTARTS   AGE   IP          NODE    NOMINATED NODE   READINESS GATES
-nginx-7c6d8d8d8d-5x2z9   1/1     Running   0          45s   10.42.1.2   nodo1   <none>           <none>
-```
-
-**Success criteria**:
-- Pod shows `STATUS: Running`
-- Pod scheduled on `nodo1` (worker node)
-- Pod has IP from pod CIDR (10.42.x.x)
-
-**Troubleshooting**:
-- If pod Pending: Check node resources (`kubectl describe node nodo1`)
-- If pod ImagePullBackOff: Check internet connectivity on nodo1 (`ssh ubuntu@192.168.4.11 "ping 8.8.8.8"`)
-- If pod CrashLoopBackOff: Check pod logs (`kubectl logs <pod-name>`)
-
-### 3.4 Verify nginx is Accessible
-
+**Check monitoring stack**:
 ```bash
-# Expose nginx via NodePort (accessible from Eero network)
-kubectl expose deployment nginx --port=80 --type=NodePort
+kubectl get pods -n monitoring
 
-# Get NodePort assigned
-kubectl get svc nginx
-```
-
-**Expected output**:
-```
-NAME    TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
-nginx   NodePort   10.43.123.45    <none>        80:30123/TCP   10s
-```
-
-Note the NodePort (e.g., `30123` in this example).
-
-**Test access from laptop**:
-```bash
-# Access nginx via nodo1 IP + NodePort
-curl http://192.168.4.11:30123
-
-# Expected output: nginx welcome page HTML
-```
-
-**Expected output**:
-```html
-<!DOCTYPE html>
-<html>
-<head>
-<title>Welcome to nginx!</title>
-...
-```
-
-**Cleanup test workload**:
-```bash
-kubectl delete deployment nginx
-kubectl delete svc nginx
+# Expected output (7 pods):
+# NAME                                                   READY   STATUS
+# alertmanager-kube-prometheus-stack-alertmanager-0      2/2     Running
+# kube-prometheus-stack-grafana-XXXXX                   3/3     Running
+# kube-prometheus-stack-kube-state-metrics-XXXXX        1/1     Running
+# kube-prometheus-stack-operator-XXXXX                  1/1     Running
+# kube-prometheus-stack-prometheus-node-exporter-XXX    1/1     Running  (on master1)
+# kube-prometheus-stack-prometheus-node-exporter-XXX    1/1     Running  (on nodo1)
+# prometheus-kube-prometheus-stack-prometheus-0          2/2     Running
 ```
 
 ---
 
-## Expected Timeline
+## Step 5: Access Grafana
 
-| Step | Duration | Cumulative |
-|------|----------|------------|
-| Prerequisites verification | 2 min | 2 min |
-| Step 1: Bootstrap master1 | 3 min | 5 min |
-| Step 2: Join nodo1 | 2 min | 7 min |
-| Step 3: Verify cluster + deploy test workload | 3 min | **10 min** |
+**Get Grafana admin password**:
+```bash
+kubectl get secret -n monitoring kube-prometheus-stack-grafana \
+  -o jsonpath='{.data.admin-password}' | base64 -d && echo
 
-**Total time to functional cluster with test workload**: < 10 minutes
+# Copy the password output
+```
+
+**Access Grafana UI**:
+1. Open browser: http://192.168.4.101:30000
+2. Login with credentials:
+   - **Username**: `admin`
+   - **Password**: (from command above)
+3. Navigate to Dashboards → Browse
+4. Explore pre-configured dashboards:
+   - **K3S cluster monitoring**: Overview of cluster health
+   - **Node Exporter Full**: Detailed node metrics (CPU, memory, disk, network)
+   - **Kubernetes Cluster Monitoring**: Pod and deployment metrics
+
+**Expected dashboards** (30 total):
+- Kubernetes resource usage (compute, networking, persistent volumes)
+- Prometheus and Alertmanager overviews
+- Node exporter metrics
+- CoreDNS performance
 
 ---
 
-## Troubleshooting Common Issues
+## Step 6: Deploy Test Workload
 
-### Issue 1: Nodes Show NotReady Status
+Run the included test script to deploy nginx:
 
-**Symptoms**:
-```
-NAME      STATUS     ROLES                  AGE   VERSION
-master1   NotReady   control-plane,master   2m    v1.28.5+k3s1
-```
-
-**Diagnosis**:
 ```bash
-# Check K3s service logs
-ssh ubuntu@192.168.4.10 "sudo journalctl -u k3s -n 50"
+cd terraform/environments/chocolandiadc-mvp
 
-# Check kubelet logs
-ssh ubuntu@192.168.4.10 "sudo journalctl -u k3s --since '5 minutes ago' | grep -i error"
+bash scripts/deploy-test-workload.sh $(pwd)/kubeconfig
+
+# Expected output:
+# [TIMESTAMP] Deploying test workload to chocolandiadc-mvp cluster
+# [TIMESTAMP] Creating test-workload namespace...
+# [TIMESTAMP] SUCCESS: Namespace test-workload created
+# [TIMESTAMP] Deploying nginx (2 replicas)...
+# [TIMESTAMP] SUCCESS: nginx deployment created
+# [TIMESTAMP] Waiting for pods to be Ready (timeout: 120s)...
+# [TIMESTAMP] SUCCESS: All nginx pods are Ready (2/2)
+# [TIMESTAMP] Creating LoadBalancer service...
+# [TIMESTAMP] SUCCESS: Service created
+# [TIMESTAMP] Testing service connectivity...
+# [TIMESTAMP] SUCCESS: Service is accessible (HTTP 200)
+# [TIMESTAMP] =========================================
+# [TIMESTAMP] SUCCESS: Test workload deployed
 ```
 
-**Common Causes**:
-1. **CNI not initialized**: Wait 60 seconds and retry (`kubectl get nodes`)
-2. **Firewall blocking traffic**: Disable UFW temporarily (`sudo ufw disable`) or allow ports:
-   ```bash
-   sudo ufw allow 6443/tcp  # API server
-   sudo ufw allow 10250/tcp  # Kubelet
-   sudo ufw allow 8472/udp  # Flannel VXLAN
-   ```
-3. **Eero network connectivity issue**: Verify IP connectivity between nodes (`ping 192.168.4.10` from nodo1)
-
-**Resolution**: Address underlying issue, restart K3s service:
+**Verify test workload manually**:
 ```bash
-sudo systemctl restart k3s  # On master1
-sudo systemctl restart k3s-agent  # On nodo1
+export KUBECONFIG=$(pwd)/kubeconfig
+
+# Check nginx pods
+kubectl get pods -n test-workload -o wide
+
+# Expected output:
+# NAME                     READY   STATUS    NODE
+# nginx-XXXXX              1/1     Running   master1
+# nginx-XXXXX              1/1     Running   nodo1
+
+# Check service
+kubectl get svc -n test-workload
+
+# Get service ClusterIP and test
+SERVICE_IP=$(kubectl get svc -n test-workload nginx-service -o jsonpath='{.spec.clusterIP}')
+kubectl run curl-test --image=curlimages/curl --rm -it --restart=Never -- curl -s http://$SERVICE_IP
+
+# Expected output: HTML from nginx welcome page
 ```
 
 ---
 
-### Issue 2: kubectl Connection Refused
+## Step 7: Run Integration Tests
 
-**Symptoms**:
-```
-The connection to the server 192.168.4.10:6443 was refused - did you specify the right host or port?
-```
+Run Prometheus and Grafana integration tests:
 
-**Diagnosis**:
 ```bash
-# Verify kubeconfig server URL
-kubectl config view | grep server
+cd /Users/cbenitez/chocolandia_kube
 
-# Test API server connectivity
-curl -k https://192.168.4.10:6443/version
+# Test Prometheus
+bash tests/integration/test-prometheus.sh \
+  $(pwd)/terraform/environments/chocolandiadc-mvp/kubeconfig
+
+# Expected output:
+# SUCCESS: Prometheus integration test PASSED
+# - 19 active scrape targets
+# - Both nodes (master1, nodo1) being scraped
+# - CPU and memory metrics queries working
+
+# Test Grafana
+bash tests/integration/test-grafana.sh \
+  $(pwd)/terraform/environments/chocolandiadc-mvp/kubeconfig \
+  192.168.4.101
+
+# Expected output:
+# SUCCESS: Grafana integration test PASSED
+# - Grafana accessible via NodePort 30000 (HTTP 200)
+# - API health: database OK
+# - 30 dashboards available
 ```
-
-**Common Causes**:
-1. **Kubeconfig still has 127.0.0.1**: Re-run `sed -i 's/127.0.0.1/192.168.4.10/g' ~/.kube/config`
-2. **Master1 API server not running**: Check `ssh ubuntu@192.168.4.10 "sudo systemctl status k3s"`
-3. **Firewall blocking port 6443**: Allow API server port (see Issue 1)
-4. **WiFi connectivity issue**: Master1 on WiFi may have intermittent connectivity; switch to Ethernet
-
-**Resolution**: Fix kubeconfig, verify K3s service, check firewall rules.
 
 ---
 
-### Issue 3: Worker Node Cannot Join Cluster
+## Step 8: Explore the Cluster
 
-**Symptoms**:
-```
-[ERROR]  Failed to join cluster: Get "https://192.168.4.10:6443/version": dial tcp 192.168.4.10:6443: connect: connection refused
-```
+Now that your cluster is running, try these commands:
 
-**Diagnosis**:
 ```bash
-# From nodo1, test master1 API server connectivity
-ssh ubuntu@192.168.4.11 "curl -k https://192.168.4.10:6443/version"
+export KUBECONFIG=/Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/kubeconfig
+
+# List all namespaces
+kubectl get namespaces
+
+# View cluster info
+kubectl cluster-info
+
+# Check resource usage
+kubectl top nodes
+kubectl top pods -A
+
+# View events (useful for troubleshooting)
+kubectl get events -A --sort-by='.lastTimestamp' | tail -20
+
+# Access Prometheus UI (port-forward)
+kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090:9090
+# Open browser: http://localhost:9090
+# Try query: up{job="kubernetes-nodes"}
+
+# View K3s logs on master1 (via SSH)
+ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.101 \
+  "sudo journalctl -u k3s -n 50 --no-pager"
 ```
-
-**Common Causes**:
-1. **Master1 not reachable from nodo1**: Verify network connectivity (`ping 192.168.4.10` from nodo1)
-2. **Incorrect K3S_URL**: Verify environment variable has correct IP
-3. **Invalid cluster token**: Re-retrieve token from master1 (Step 1.4)
-4. **TLS certificate issue**: Verify master1 was started with `--tls-san 192.168.4.10`
-
-**Resolution**: Verify master1 is accessible, re-run agent installation with correct token and URL.
 
 ---
 
-### Issue 4: Pods Stuck in Pending State
+## Troubleshooting
 
-**Symptoms**:
-```
-NAME                     READY   STATUS    RESTARTS   AGE
-nginx-7c6d8d8d8d-5x2z9   0/1     Pending   0          5m
-```
+### Issue: Nodes Not Ready
 
-**Diagnosis**:
+**Check node status**:
 ```bash
-# Check why pod is pending
-kubectl describe pod <pod-name>
-
-# Check node resources
+kubectl get nodes
+kubectl describe node master1
 kubectl describe node nodo1
 ```
 
-**Common Causes**:
-1. **No worker nodes available**: Only master1 present (nodo1 failed to join)
-2. **Insufficient resources**: Worker node has insufficient CPU/memory
-3. **Node taints**: Master node has NoSchedule taint (expected; workloads should go to nodo1)
+**Check K3s service status**:
+```bash
+# On master1
+ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.101 \
+  "sudo systemctl status k3s"
 
-**Resolution**:
-- If nodo1 missing: Complete Step 2 to join worker node
-- If resources exhausted: Check node capacity (`kubectl describe node nodo1`)
-- If taints blocking: Workloads should schedule on nodo1 (not master1)
+# On nodo1
+ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.102 \
+  "sudo systemctl status k3s-agent"
+```
+
+**Restart K3s if needed**:
+```bash
+# On master1
+ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.101 \
+  "sudo systemctl restart k3s"
+
+# On nodo1
+ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.102 \
+  "sudo systemctl restart k3s-agent"
+```
+
+### Issue: Grafana Not Accessible
+
+**Check Grafana pod status**:
+```bash
+kubectl get pods -n monitoring | grep grafana
+kubectl logs -n monitoring deployment/kube-prometheus-stack-grafana
+```
+
+**Verify service**:
+```bash
+kubectl get svc -n monitoring kube-prometheus-stack-grafana
+
+# Should show TYPE: NodePort, PORT(S): 80:30000/TCP
+```
+
+**Test from node itself**:
+```bash
+ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.101 \
+  "curl -s http://localhost:30000/api/health | jq"
+
+# Expected: {"database": "ok"}
+```
+
+### Issue: IP Address Changed
+
+If node IPs change (DHCP lease expired):
+
+1. Update Eero DHCP reservations to correct IPs
+2. Reboot nodes to get reserved IPs
+3. Update terraform.tfvars with new IPs
+4. Re-run `tofu apply`
+
+See `docs/runbooks/troubleshooting-eero-network.md` for detailed troubleshooting.
 
 ---
 
-### Issue 5: Eero Network Connectivity Issues
+## Backup and Recovery
 
-**Symptoms**:
-- Nodes intermittently NotReady
-- Pod network unreachable from operator laptop
-- Slow image pulls
+**Create backups before making changes**:
 
-**Diagnosis**:
 ```bash
-# Check Eero connectivity from nodes
-ssh ubuntu@192.168.4.10 "ping -c 5 8.8.8.8"
-ssh ubuntu@192.168.4.11 "ping -c 5 8.8.8.8"
+cd terraform/environments/chocolandiadc-mvp
 
-# Check inter-node connectivity
-ssh ubuntu@192.168.4.10 "ping -c 5 192.168.4.11"
-ssh ubuntu@192.168.4.11 "ping -c 5 192.168.4.10"
+# Backup OpenTofu state and cluster token
+bash scripts/backup-state.sh
+
+# Backup complete cluster (SQLite DB, manifests, PV data)
+bash scripts/backup-cluster.sh
+
+# Backups stored in: backups/
+# - backups/terraform-state-TIMESTAMP.tar.gz
+# - backups/cluster-token-TIMESTAMP.txt
+# - backups/kubeconfig-TIMESTAMP.yaml
+# - backups/k3s-state-db-TIMESTAMP.db
+# - backups/manifests-TIMESTAMP/
+# - backups/grafana-TIMESTAMP/
 ```
 
-**Common Causes**:
-1. **WiFi connection instability**: Nodes on WiFi experiencing packet loss
-2. **Eero mesh handoff**: Node switching between Eero nodes (common with WiFi)
-3. **DHCP IP change**: Node IP changed after reboot (no static DHCP reservation)
+---
 
-**Resolution**:
-- **Short-term**: Switch nodes to Ethernet for stable connectivity
-- **Long-term**: Configure static DHCP reservations in Eero app (see Prerequisites)
+## Cleanup
+
+To destroy the cluster (when migrating to Feature 001):
+
+```bash
+cd terraform/environments/chocolandiadc-mvp
+
+# Create final backup first!
+bash scripts/backup-state.sh
+bash scripts/backup-cluster.sh
+
+# Destroy all resources
+tofu destroy
+
+# Type 'yes' when prompted
+
+# This will:
+# - Uninstall K3s from both nodes
+# - Remove kubeconfig file
+# - Clean up all deployed resources
+```
 
 ---
 
 ## Next Steps
 
-Cluster is now operational. What's next:
+Now that your cluster is running:
 
-1. **Explore Kubernetes Basics**:
+1. **Explore Grafana Dashboards**: http://192.168.4.101:30000
+   - Review K3s cluster metrics
+   - Monitor node resource usage
+   - Explore pod and container metrics
+
+2. **Deploy Custom Workloads**:
    ```bash
-   kubectl get all --all-namespaces  # View all resources
-   kubectl run test --image=busybox --command -- sleep 3600  # Run test pod
-   kubectl exec -it test -- sh  # Shell into pod
+   kubectl create deployment my-app --image=nginx
+   kubectl expose deployment my-app --port=80 --type=ClusterIP
    ```
 
-2. **Deploy Monitoring Stack** (User Story 2):
-   - Install Prometheus + Grafana via Helm
-   - Configure scrape targets for cluster nodes
-   - Access Grafana dashboards for cluster health
+3. **Learn Kubernetes Basics**:
+   - Pods, Deployments, Services
+   - ConfigMaps and Secrets
+   - PersistentVolumes and PersistentVolumeClaims
 
-3. **Review Migration Documentation** (User Story 3):
-   - Read `docs/runbooks/migration-to-feature-001.md` (when created)
-   - Understand steps to migrate to FortiGate VLAN architecture
-   - Plan for HA control-plane deployment
+4. **Plan Migration to Feature 001**:
+   - Read: `docs/runbooks/migration-to-feature-001.md`
+   - Understand HA architecture with FortiGate
+   - Plan workload migration strategy
 
-4. **Experiment with Workloads**:
-   - Deploy stateful applications (PostgreSQL, Redis)
-   - Test PersistentVolumes (local-path provisioner)
-   - Learn pod networking, services, ingress
+5. **Security Best Practices**:
+   - Read: `docs/security-checklist.md`
+   - Change Grafana admin password (IMPORTANT)
+   - Review SSH key permissions
+   - Never commit sensitive files to Git
 
 ---
 
-## Cleanup (Cluster Teardown)
+## Additional Resources
 
-To remove the cluster and start fresh:
-
-### On nodo1 (Worker Node)
-
-```bash
-ssh ubuntu@192.168.4.11
-sudo /usr/local/bin/k3s-agent-uninstall.sh
-exit
-```
-
-### On master1 (Control-Plane Node)
-
-```bash
-ssh ubuntu@192.168.4.10
-sudo /usr/local/bin/k3s-uninstall.sh
-exit
-```
-
-### On Operator Laptop
-
-```bash
-# Remove kubeconfig
-rm ~/.kube/config
-```
-
-**Cleanup verification**:
-```bash
-# K3s binary should be removed
-ssh ubuntu@192.168.4.10 "which k3s"  # Should return: command not found
-ssh ubuntu@192.168.4.11 "which k3s"  # Should return: command not found
-```
+- **Detailed README**: `/Users/cbenitez/chocolandia_kube/terraform/README.md`
+- **Feature Specification**: `specs/002-k3s-mvp-eero/spec.md`
+- **Architecture Design**: `specs/002-k3s-mvp-eero/architecture.md`
+- **Migration Runbook**: `docs/runbooks/migration-to-feature-001.md`
+- **Troubleshooting**: `docs/runbooks/troubleshooting-eero-network.md`
+- **Security Checklist**: `docs/security-checklist.md`
+- **K3s Documentation**: https://docs.k3s.io
+- **Prometheus Documentation**: https://prometheus.io/docs/
+- **Grafana Documentation**: https://grafana.com/docs/
 
 ---
 
 ## Summary
 
-You have successfully deployed a 2-node K3s cluster on Eero mesh network:
+✅ **What you accomplished**:
+- Deployed 2-node K3s cluster using Infrastructure as Code (OpenTofu)
+- Installed Prometheus + Grafana monitoring stack
+- Verified cluster health with integration tests
+- Deployed test workload to validate functionality
+- Learned Kubernetes and K3s basics
 
-- **master1** (192.168.4.10): Control-plane node, single-server mode, SQLite datastore
-- **nodo1** (192.168.4.11): Worker node for workload execution
-- **kubectl access**: Configured from operator laptop
-- **Test workload**: nginx pod deployed and verified
+🎉 **Your cluster is ready for learning and experimentation!**
 
-**Timeline**: Cluster bootstrap completed in < 10 minutes.
+**Cluster Details**:
+- **API Endpoint**: https://192.168.4.101:6443
+- **Grafana**: http://192.168.4.101:30000
+- **Prometheus**: Port-forward to localhost:9090
+- **Kubeconfig**: `terraform/environments/chocolandiadc-mvp/kubeconfig`
 
-**Learning outcomes**:
-- Understand K3s installation process (server vs agent)
-- Configure kubectl for remote cluster access
-- Deploy and troubleshoot basic Kubernetes workloads
-- Diagnose common cluster connectivity issues
+**Remember**: This is a **temporary MVP environment**. Migrate to Feature 001 (HA cluster with FortiGate) when hardware is available.
 
-**Next steps**: Proceed to User Story 2 (monitoring deployment) or start experimenting with Kubernetes workloads.
+---
 
-For detailed migration planning, see `docs/runbooks/migration-to-feature-001.md` (to be created).
+**Version**: 2.0 (OpenTofu Deployment)
+**Last Updated**: 2025-11-09
+**Status**: ✅ Fully Operational

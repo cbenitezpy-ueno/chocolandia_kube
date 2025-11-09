@@ -55,11 +55,11 @@ output "kubeconfig_command" {
 output "validation_commands" {
   description = "Commands to validate cluster deployment"
   value = {
-    check_nodes           = "kubectl --kubeconfig=${path.module}/kubeconfig get nodes -o wide"
-    check_pods            = "kubectl --kubeconfig=${path.module}/kubeconfig get pods -A"
-    validate_single_node  = "bash ${path.module}/scripts/validate-single-node.sh ${path.module}/kubeconfig"
-    validate_cluster      = "bash ${path.module}/scripts/validate-cluster.sh ${path.module}/kubeconfig"
-    deploy_test_workload  = "bash ${path.module}/scripts/deploy-test-workload.sh ${path.module}/kubeconfig"
+    check_nodes          = "kubectl --kubeconfig=${path.module}/kubeconfig get nodes -o wide"
+    check_pods           = "kubectl --kubeconfig=${path.module}/kubeconfig get pods -A"
+    validate_single_node = "bash ${path.module}/scripts/validate-single-node.sh ${path.module}/kubeconfig"
+    validate_cluster     = "bash ${path.module}/scripts/validate-cluster.sh ${path.module}/kubeconfig"
+    deploy_test_workload = "bash ${path.module}/scripts/deploy-test-workload.sh ${path.module}/kubeconfig"
   }
 }
 
@@ -81,7 +81,7 @@ output "ssh_commands" {
 
 output "next_steps" {
   description = "Recommended next steps after cluster deployment"
-  value = <<-EOT
+  value       = <<-EOT
     1. Export kubeconfig:
        export KUBECONFIG=${path.module}/kubeconfig
 

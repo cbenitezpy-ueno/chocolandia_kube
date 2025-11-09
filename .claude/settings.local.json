@@ -30,7 +30,8 @@
       "Bash(export KUBECONFIG=./kubeconfig)",
       "Bash(kubectl get:*)",
       "Bash(export KUBECONFIG=/Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/kubeconfig)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(tofu fmt:*)"
     ],
     "deny": [],
     "ask": []

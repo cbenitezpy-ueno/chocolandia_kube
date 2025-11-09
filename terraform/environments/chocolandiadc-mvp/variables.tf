@@ -96,7 +96,7 @@ variable "ssh_port" {
 variable "disable_components" {
   description = "K3s components to disable (e.g., traefik, servicelb)"
   type        = list(string)
-  default     = ["traefik"]  # Disable Traefik (will use Nginx Ingress later)
+  default     = ["traefik"] # Disable Traefik (will use Nginx Ingress later)
 }
 
 variable "k3s_additional_flags" {
