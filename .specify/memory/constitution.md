@@ -19,7 +19,7 @@ Sync Impact Report:
   * Primary tool: OpenTofu (replaces Terraform)
   * Network: FortiGate with VLANs (management, cluster, services, DMZ)
   * Auxiliary services: Raspberry Pi (Pi-hole, DNS, jump host)
-  * Scope: Homelab completo (not just K3s cluster)
+  * Scope: Complete homelab (not just K3s cluster)
 - Follow-up TODOs:
   * Regenerate plan.md with OpenTofu and FortiGate architecture
   * Regenerate tasks.md with network infrastructure phase
