@@ -1,7 +1,37 @@
 {
   "permissions": {
     "allow": [
-      "Bash(talosctl:*)"
+      "Bash(talosctl:*)",
+      "Bash(SHORT_NAME=\"k3s-cluster-setup\" git ls-remote:*)",
+      "Bash(SHORT_NAME=k3s-cluster-setup find:*)",
+      "Bash(/Users/cbenitez/chocolandia_kube/.specify/scripts/bash/create-new-feature.sh:*)",
+      "Bash(/Users/cbenitez/chocolandia_kube/.specify/scripts/bash/update-agent-context.sh:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(.specify/scripts/bash/setup-plan.sh:*)",
+      "Bash(gh repo create:*)",
+      "Bash(git push:*)",
+      "SlashCommand(/speckit.plan)",
+      "SlashCommand(/speckit.tasks)",
+      "Bash(.specify/scripts/bash/check-prerequisites.sh:*)",
+      "Bash(git -C /Users/cbenitez/chocolandia_kube status:*)",
+      "Bash(git -C /Users/cbenitez/chocolandia_kube log -1 --stat)",
+      "Bash(tofu init:*)",
+      "Bash(git -C /Users/cbenitez/chocolandia_kube diff .claude/settings.local.json)",
+      "Bash(chmod:*)",
+      "Bash(tofu validate:*)",
+      "Bash(ssh:*)",
+      "Bash(tofu destroy:*)",
+      "Bash(tofu apply:*)",
+      "Bash(/tmp/k3s-token.txt)",
+      "Bash(bash:*)",
+      "Bash(helm repo add:*)",
+      "Bash(helm repo update:*)",
+      "Bash(export KUBECONFIG=./kubeconfig)",
+      "Bash(kubectl get:*)",
+      "Bash(export KUBECONFIG=/Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/kubeconfig)",
+      "Bash(curl:*)",
+      "Bash(tofu fmt:*)"
     ],
     "deny": [],
     "ask": []
