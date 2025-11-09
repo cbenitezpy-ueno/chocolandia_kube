@@ -1,0 +1,390 @@
+# Node Configuration Contract: K3s MVP - 2-Node Cluster
+#
+# This schema defines the expected structure for individual node configuration
+# used by OpenTofu k3s-node module to provision control-plane and worker nodes.
+#
+# File purpose: Define node-level settings (hostname, IP, role, SSH, resources)
+# Used by: terraform/modules/k3s-node/variables.tf
+# Related: cluster-config.yaml (defines cluster-level configuration)
+
+---
+# Schema version for contract evolution tracking
+schema_version: "1.0.0"
+
+# Node identity and metadata
+node:
+  # Node hostname (must be unique within cluster)
+  # Used for /etc/hostname and Kubernetes node name
+  # Must be lowercase alphanumeric with hyphens
+  hostname:
+    type: string
+    pattern: "^[a-z0-9-]+$"
+    required: true
+    description: "Unique node hostname"
+    examples:
+      - "master1" (control-plane node)
+      - "nodo1" (worker node)
+
+  # K3s node role
+  # - server: Control-plane node (API server, scheduler, controller manager)
+  # - agent: Worker node (runs workload pods only)
+  role:
+    type: enum
+    values: [server, agent]
+    required: true
+    description: "K3s node role"
+
+  # Human-readable node description
+  description:
+    type: string
+    required: false
+    description: "Node purpose or notes"
+    example: "Primary control-plane node for MVP cluster"
+
+# Network configuration (Eero connectivity)
+network:
+  # Static or DHCP IP address from Eero network
+  # Recommendation: Use Eero static DHCP reservation to prevent IP changes
+  ip_address:
+    type: string
+    pattern: "^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$"
+    required: true
+    description: "Node IP address on Eero network"
+    examples:
+      - "192.168.4.10" (master1)
+      - "192.168.4.11" (nodo1)
+
+  # NIC MAC address (for Eero static DHCP reservation)
+  # Format: xx:xx:xx:xx:xx:xx (lowercase hex, colon-separated)
+  mac_address:
+    type: string
+    pattern: "^([0-9a-f]{2}:){5}[0-9a-f]{2}$"
+    required: true
+    description: "Network interface MAC address"
+    example: "aa:bb:cc:dd:ee:ff"
+
+  # Connection type to Eero mesh network
+  # - ethernet: Wired connection via Ethernet cable (recommended for stability)
+  # - wifi: Wireless connection via WiFi (acceptable for learning, not production)
+  connection_type:
+    type: enum
+    values: [ethernet, wifi]
+    required: true
+    description: "Network connectivity method"
+    default: ethernet
+    recommendations:
+      - "Use ethernet for control-plane nodes (master1)"
+      - "WiFi acceptable for worker nodes but Ethernet preferred"
+
+  # Subnet CIDR (must match cluster-config.yaml network.subnet)
+  subnet:
+    type: string
+    pattern: "^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}/\\d{1,2}$"
+    required: true
+    description: "Network subnet (from Eero)"
+    example: "192.168.4.0/24"
+
+  # Gateway IP (must match cluster-config.yaml network.gateway)
+  gateway:
+    type: string
+    pattern: "^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$"
+    required: true
+    description: "Default gateway (Eero router)"
+    example: "192.168.4.1"
+
+  # DNS servers (must match cluster-config.yaml network.dns_servers)
+  dns_servers:
+    type: array
+    items:
+      type: string
+      pattern: "^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$"
+    required: true
+    description: "DNS resolvers"
+    example: ["192.168.4.1"]
+
+# SSH access configuration (for OpenTofu provisioning)
+ssh:
+  # SSH username for remote access
+  # Must have sudo privileges for K3s installation
+  user:
+    type: string
+    required: true
+    description: "SSH username with sudo privileges"
+    examples:
+      - "ubuntu" (Ubuntu Server default)
+      - "cbenitez" (custom user)
+
+  # SSH private key path on operator laptop
+  # Used by OpenTofu SSH provisioner to connect to node
+  private_key_path:
+    type: string
+    required: true
+    description: "Path to SSH private key"
+    example: "/Users/cbenitez/.ssh/id_rsa"
+
+  # SSH public key path (for initial setup if needed)
+  public_key_path:
+    type: string
+    required: false
+    description: "Path to SSH public key"
+    example: "/Users/cbenitez/.ssh/id_rsa.pub"
+
+  # SSH port (default: 22)
+  port:
+    type: integer
+    min: 1
+    max: 65535
+    required: false
+    description: "SSH listening port"
+    default: 22
+
+  # SSH connection timeout (seconds)
+  timeout:
+    type: integer
+    min: 10
+    max: 300
+    required: false
+    description: "SSH connection timeout in seconds"
+    default: 30
+
+# Hardware resources (informational, used for capacity planning)
+resources:
+  # CPU cores available on node
+  cpu_cores:
+    type: integer
+    min: 2
+    required: true
+    description: "Number of CPU cores"
+    recommendations:
+      - "Minimum 2 cores for agent nodes"
+      - "Minimum 2 cores for server nodes (4 recommended)"
+
+  # RAM in gigabytes
+  memory_gb:
+    type: integer
+    min: 4
+    required: true
+    description: "RAM in GB"
+    recommendations:
+      - "Minimum 4GB for agent nodes"
+      - "Minimum 4GB for server nodes (8GB recommended)"
+
+  # Disk space in gigabytes
+  disk_gb:
+    type: integer
+    min: 20
+    required: true
+    description: "Available disk space in GB"
+    recommendations:
+      - "Minimum 20GB for agent nodes"
+      - "Minimum 20GB for server nodes (50GB recommended for logs/images)"
+
+# Operating system configuration
+os:
+  # Operating system distribution
+  distribution:
+    type: enum
+    values: [ubuntu, debian, centos, rhel]
+    required: true
+    description: "Linux distribution"
+    default: ubuntu
+
+  # OS version
+  version:
+    type: string
+    required: true
+    description: "OS version"
+    examples:
+      - "22.04" (Ubuntu Server 22.04 LTS)
+      - "24.04" (Ubuntu Server 24.04 LTS)
+
+  # Architecture (K3s supports amd64, arm64, armhf)
+  architecture:
+    type: enum
+    values: [amd64, arm64, armhf]
+    required: true
+    description: "CPU architecture"
+    default: amd64
+
+# K3s configuration (node-specific)
+k3s:
+  # K3s version (must match cluster-config.yaml cluster.version)
+  version:
+    type: string
+    pattern: "^v1\\.\\d+\\.\\d+\\+k3s\\d+$"
+    required: true
+    description: "K3s binary version"
+    example: "v1.28.5+k3s1"
+
+  # K3s installation script URL
+  install_script_url:
+    type: string
+    required: false
+    description: "K3s installation script URL"
+    default: "https://get.k3s.io"
+
+  # Custom K3s flags (role-specific)
+  # Server flags (if role: server):
+  #   - "--cluster-init=false" (single-server mode, SQLite)
+  #   - "--disable traefik" (disable Traefik ingress)
+  #   - "--disable servicelb" (disable Klipper LoadBalancer)
+  #   - "--tls-san <ip>" (add IP to API server certificate)
+  # Agent flags (if role: agent):
+  #   - "--node-label role=worker" (add node label)
+  #   - "--node-label tier=compute" (custom label)
+  custom_flags:
+    type: string
+    required: false
+    description: "Additional K3s flags (role-specific)"
+    examples:
+      server: "--cluster-init=false --disable traefik --tls-san 192.168.4.10"
+      agent: "--node-label role=worker --node-label tier=compute"
+
+  # K3s cluster join token (required for agent nodes only)
+  # Retrieved from server node at /var/lib/rancher/k3s/server/token
+  cluster_token:
+    type: string
+    required: false
+    description: "Cluster join token (agent nodes only)"
+    constraints:
+      - "Required if role: agent"
+      - "Not used if role: server"
+    example: "K10abc123...::server:xyz789..."
+
+  # K3s server URL (required for agent nodes only)
+  # Format: https://<server-ip>:6443
+  server_url:
+    type: string
+    pattern: "^https://\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}:6443$"
+    required: false
+    description: "K3s server API endpoint (agent nodes only)"
+    constraints:
+      - "Required if role: agent"
+      - "Not used if role: server"
+    example: "https://192.168.4.10:6443"
+
+# Validation rules (cross-field constraints)
+validation:
+  rules:
+    - name: "Server role does not require cluster_token or server_url"
+      condition: "node.role == 'server' AND (k3s.cluster_token IS NULL AND k3s.server_url IS NULL)"
+
+    - name: "Agent role requires cluster_token and server_url"
+      condition: "node.role == 'agent' AND (k3s.cluster_token IS NOT NULL AND k3s.server_url IS NOT NULL)"
+
+    - name: "IP address must be within subnet"
+      condition: "network.ip_address IS IN network.subnet"
+
+    - name: "Server nodes should use Ethernet (WiFi not recommended)"
+      condition: "node.role == 'server' AND network.connection_type == 'ethernet' (WARNING if wifi)"
+
+    - name: "Minimum resources for server nodes"
+      condition: "node.role == 'server' AND (resources.cpu_cores >= 2 AND resources.memory_gb >= 4 AND resources.disk_gb >= 20)"
+
+    - name: "Minimum resources for agent nodes"
+      condition: "node.role == 'agent' AND (resources.cpu_cores >= 2 AND resources.memory_gb >= 4 AND resources.disk_gb >= 20)"
+
+# Example configurations (valid node configs for MVP)
+examples:
+  # Control-plane node (master1)
+  server_node:
+    node:
+      hostname: master1
+      role: server
+      description: "Primary control-plane node for chocolandiadc-mvp cluster"
+
+    network:
+      ip_address: 192.168.4.10
+      mac_address: "aa:bb:cc:dd:ee:ff"
+      connection_type: ethernet
+      subnet: 192.168.4.0/24
+      gateway: 192.168.4.1
+      dns_servers: [192.168.4.1]
+
+    ssh:
+      user: ubuntu
+      private_key_path: /Users/cbenitez/.ssh/id_rsa
+      port: 22
+      timeout: 30
+
+    resources:
+      cpu_cores: 4
+      memory_gb: 8
+      disk_gb: 128
+
+    os:
+      distribution: ubuntu
+      version: "22.04"
+      architecture: amd64
+
+    k3s:
+      version: v1.28.5+k3s1
+      install_script_url: https://get.k3s.io
+      custom_flags: "--cluster-init=false --disable traefik --tls-san 192.168.4.10"
+      # cluster_token and server_url NOT needed for server role
+
+  # Worker node (nodo1)
+  agent_node:
+    node:
+      hostname: nodo1
+      role: agent
+      description: "Worker node for workload execution"
+
+    network:
+      ip_address: 192.168.4.11
+      mac_address: "ff:ee:dd:cc:bb:aa"
+      connection_type: ethernet
+      subnet: 192.168.4.0/24
+      gateway: 192.168.4.1
+      dns_servers: [192.168.4.1]
+
+    ssh:
+      user: ubuntu
+      private_key_path: /Users/cbenitez/.ssh/id_rsa
+      port: 22
+      timeout: 30
+
+    resources:
+      cpu_cores: 4
+      memory_gb: 8
+      disk_gb: 128
+
+    os:
+      distribution: ubuntu
+      version: "22.04"
+      architecture: amd64
+
+    k3s:
+      version: v1.28.5+k3s1
+      install_script_url: https://get.k3s.io
+      custom_flags: "--node-label role=worker --node-label tier=compute"
+      cluster_token: "K10abc123...::server:xyz789..."  # Retrieved from master1
+      server_url: "https://192.168.4.10:6443"  # Points to master1
+
+# Integration with cluster-config.yaml
+cluster_integration:
+  requirements:
+    - "node.network.subnet MUST match cluster-config.yaml network.subnet"
+    - "node.network.gateway MUST match cluster-config.yaml network.gateway"
+    - "node.network.dns_servers MUST match cluster-config.yaml network.dns_servers"
+    - "node.k3s.version MUST match cluster-config.yaml cluster.version"
+    - "node.k3s.server_url (if agent) MUST match cluster-config.yaml api.endpoint"
+
+# Migration notes for feature 001 (FortiGate + HA)
+migration_to_feature_001:
+  changes:
+    - field: network.subnet
+      from: 192.168.4.0/24 (Eero)
+      to: 10.100.20.0/24 (FortiGate Cluster VLAN)
+    - field: network.gateway
+      from: 192.168.4.1 (Eero)
+      to: 10.100.20.1 (FortiGate VLAN interface)
+    - field: network.connection_type
+      from: ethernet or wifi (Eero)
+      to: ethernet only (FortiGate VLAN requires wired connection)
+    - field: node.role
+      from: 1 server + 1 agent
+      to: 3 servers (master1, master2, master3) + 1 agent (nodo1)
+    - field: k3s.custom_flags (server)
+      from: "--cluster-init=false" (single-server)
+      to: "--cluster-init" (HA mode with etcd)

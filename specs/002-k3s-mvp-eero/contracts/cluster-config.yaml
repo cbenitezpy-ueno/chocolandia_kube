@@ -1,0 +1,258 @@
+# Cluster Configuration Contract: K3s MVP - 2-Node Cluster
+#
+# This schema defines the expected structure for cluster configuration
+# used by OpenTofu modules to provision the chocolandiadc-mvp cluster.
+#
+# File purpose: Define cluster-level settings (name, mode, version, networking)
+# Used by: terraform/environments/chocolandiadc-mvp/main.tf
+# Related: node-config.yaml (defines individual node configuration)
+
+---
+# Schema version for contract evolution tracking
+schema_version: "1.0.0"
+
+# Cluster identity and metadata
+cluster:
+  # Cluster name (used in kubeconfig context and resource naming)
+  # Must be lowercase alphanumeric with hyphens
+  # Example: chocolandiadc-mvp
+  name:
+    type: string
+    pattern: "^[a-z0-9-]+$"
+    required: true
+    description: "Unique cluster identifier"
+
+  # K3s cluster mode
+  # - single-server: 1 control-plane node, SQLite datastore (MVP)
+  # - ha: 3+ control-plane nodes, embedded etcd (production)
+  mode:
+    type: enum
+    values: [single-server, ha]
+    required: true
+    description: "Cluster HA configuration"
+    default: single-server
+
+  # K3s version to install (must match across all nodes)
+  # Format: v1.28.x+k3s1 (major.minor.patch+k3s-release)
+  # Recommendation: Use latest stable v1.28+ for Kubernetes 1.28 features
+  version:
+    type: string
+    pattern: "^v1\\.\\d+\\.\\d+\\+k3s\\d+$"
+    required: true
+    description: "K3s binary version"
+    example: "v1.28.5+k3s1"
+
+  # Datastore backend for cluster state
+  # - sqlite: Embedded SQLite (single-server mode only)
+  # - etcd: Embedded etcd (HA mode only)
+  datastore:
+    type: enum
+    values: [sqlite, etcd]
+    required: true
+    description: "Backend datastore type"
+    constraints:
+      - "sqlite requires mode: single-server"
+      - "etcd requires mode: ha"
+
+# Network configuration (Eero mesh network specifics)
+network:
+  # Network provider type
+  # - eero-flat: Eero mesh network without VLANs (MVP)
+  # - fortigate-vlan: FortiGate with VLAN segmentation (production)
+  provider:
+    type: enum
+    values: [eero-flat, fortigate-vlan]
+    required: true
+    description: "Network infrastructure provider"
+    default: eero-flat
+
+  # Subnet CIDR for Eero network (all cluster nodes on this subnet)
+  # Example: 192.168.4.0/24 (typical Eero default)
+  subnet:
+    type: string
+    pattern: "^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}/\\d{1,2}$"
+    required: true
+    description: "Eero network CIDR"
+    example: "192.168.4.0/24"
+
+  # Gateway IP (Eero primary node)
+  gateway:
+    type: string
+    pattern: "^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$"
+    required: true
+    description: "Default gateway (Eero router)"
+    example: "192.168.4.1"
+
+  # DNS servers (Eero DNS relay)
+  dns_servers:
+    type: array
+    items:
+      type: string
+      pattern: "^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$"
+    required: true
+    description: "DNS resolvers for cluster nodes"
+    example: ["192.168.4.1"]
+
+  # Kubernetes pod CIDR (internal pod network)
+  # Must NOT overlap with Eero subnet
+  pod_cidr:
+    type: string
+    pattern: "^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}/\\d{1,2}$"
+    required: true
+    description: "Pod network CIDR (non-overlapping with Eero)"
+    example: "10.42.0.0/16"
+    constraints:
+      - "Must not overlap with network.subnet"
+
+  # Kubernetes service CIDR (ClusterIP services)
+  # Must NOT overlap with Eero subnet or pod CIDR
+  service_cidr:
+    type: string
+    pattern: "^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}/\\d{1,2}$"
+    required: true
+    description: "Service network CIDR (non-overlapping)"
+    example: "10.43.0.0/16"
+    constraints:
+      - "Must not overlap with network.subnet"
+      - "Must not overlap with network.pod_cidr"
+
+# Kubernetes API configuration
+api:
+  # API server endpoint (control-plane node IP)
+  # In single-server mode, this is master1 IP address
+  # Format: https://<master1-ip>:6443
+  endpoint:
+    type: string
+    pattern: "^https://\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}:6443$"
+    required: true
+    description: "Kubernetes API server URL"
+    example: "https://192.168.4.10:6443"
+
+  # API server listening port (K3s default: 6443)
+  port:
+    type: integer
+    min: 1024
+    max: 65535
+    required: false
+    description: "API server port"
+    default: 6443
+
+# K3s feature flags and disabled components
+k3s:
+  # Disable Traefik ingress controller (optional, saves resources)
+  disable_traefik:
+    type: boolean
+    required: false
+    description: "Disable built-in Traefik (use own ingress)"
+    default: true
+
+  # Disable ServiceLB (Klipper-lb, optional)
+  disable_servicelb:
+    type: boolean
+    required: false
+    description: "Disable built-in LoadBalancer (use MetalLB or external)"
+    default: false
+
+  # Additional K3s server flags (passed to install script)
+  # Example: "--tls-san 192.168.4.10 --tls-san master1.local"
+  server_flags:
+    type: string
+    required: false
+    description: "Custom K3s server flags"
+    example: "--tls-san 192.168.4.10"
+
+  # Additional K3s agent flags (passed to install script)
+  # Example: "--node-label role=worker --node-label tier=compute"
+  agent_flags:
+    type: string
+    required: false
+    description: "Custom K3s agent flags"
+    example: "--node-label role=worker"
+
+# OpenTofu state backend configuration
+state:
+  # State backend type
+  # - local: Local file (terraform.tfstate in environment directory)
+  # - remote: Remote backend (S3, Terraform Cloud, etc.)
+  backend:
+    type: enum
+    values: [local, remote]
+    required: true
+    description: "OpenTofu state storage backend"
+    default: local
+
+  # Local state file path (if backend: local)
+  local_path:
+    type: string
+    required: false
+    description: "Path to terraform.tfstate file"
+    example: "terraform/environments/chocolandiadc-mvp/terraform.tfstate"
+    constraints:
+      - "Required if backend: local"
+
+# Validation rules (cross-field constraints)
+validation:
+  rules:
+    - name: "Single-server mode requires SQLite"
+      condition: "cluster.mode == 'single-server' AND cluster.datastore == 'sqlite'"
+
+    - name: "HA mode requires etcd"
+      condition: "cluster.mode == 'ha' AND cluster.datastore == 'etcd'"
+
+    - name: "Single-server mode requires exactly 2 nodes"
+      condition: "cluster.mode == 'single-server' AND (count(server_nodes) == 1 AND count(agent_nodes) == 1)"
+
+    - name: "Pod CIDR must not overlap with Eero subnet"
+      condition: "network.pod_cidr NOT OVERLAPS network.subnet"
+
+    - name: "Service CIDR must not overlap with Eero subnet or pod CIDR"
+      condition: "network.service_cidr NOT OVERLAPS network.subnet AND network.service_cidr NOT OVERLAPS network.pod_cidr"
+
+# Example configuration (valid cluster config for MVP)
+example:
+  cluster:
+    name: chocolandiadc-mvp
+    mode: single-server
+    version: v1.28.5+k3s1
+    datastore: sqlite
+
+  network:
+    provider: eero-flat
+    subnet: 192.168.4.0/24
+    gateway: 192.168.4.1
+    dns_servers: [192.168.4.1]
+    pod_cidr: 10.42.0.0/16
+    service_cidr: 10.43.0.0/16
+
+  api:
+    endpoint: https://192.168.4.10:6443
+    port: 6443
+
+  k3s:
+    disable_traefik: true
+    disable_servicelb: false
+    server_flags: "--tls-san 192.168.4.10"
+    agent_flags: "--node-label role=worker"
+
+  state:
+    backend: local
+    local_path: terraform/environments/chocolandiadc-mvp/terraform.tfstate
+
+# Migration notes for feature 001 (FortiGate + HA)
+migration_to_feature_001:
+  changes:
+    - field: cluster.mode
+      from: single-server
+      to: ha
+    - field: cluster.datastore
+      from: sqlite
+      to: etcd
+    - field: network.provider
+      from: eero-flat
+      to: fortigate-vlan
+    - field: network.subnet
+      from: 192.168.4.0/24
+      to: 10.100.20.0/24 (Cluster VLAN)
+    - field: state.backend
+      from: local
+      to: remote (S3 + DynamoDB)
