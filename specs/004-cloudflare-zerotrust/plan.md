@@ -7,7 +7,7 @@
 
 ## Summary
 
-Deploy Cloudflare Tunnel connector (cloudflared) as a Kubernetes deployment in the K3s cluster to provide secure remote access to internal services (Pi-hole, future services) without exposing public ports. Integrate with Cloudflare Access using Google OAuth for authentication. All infrastructure defined as OpenTofu modules with Kubernetes manifests (YAML) for deployment.
+Deploy Cloudflare Tunnel connector (cloudflared) as a Kubernetes deployment in the K3s cluster to provide secure remote access to internal services (Pi-hole, future services) without exposing public ports. Integrate with Cloudflare Access using Google OAuth for authentication. All Cloudflare infrastructure (tunnel, ingress routes, Access policies, DNS records) defined as Terraform modules alongside Kubernetes manifests.
 
 ## Technical Context
 
@@ -17,6 +17,8 @@ Deploy Cloudflare Tunnel connector (cloudflared) as a Kubernetes deployment in t
 - Kubernetes 1.28+ (K3s cluster)
 - Cloudflare account with Zero Trust plan (free tier sufficient)
 - Domain name managed by Cloudflare DNS
+- Cloudflare Terraform provider (~> 4.0)
+- Cloudflare API Token (with permissions: Account.Cloudflare Tunnel:Edit, Account.Access:Edit, Zone.DNS:Edit, Zone.Zone Settings:Read)
 **Storage**: Kubernetes Secret (tunnel token), ConfigMap (tunnel config file - ingress rules)
 **Testing**: kubectl integration tests, manual connectivity tests from external networks, OpenTofu validate
 **Target Platform**: K3s cluster (3 control-plane + 1 worker node, homelab environment)
@@ -29,6 +31,7 @@ Deploy Cloudflare Tunnel connector (cloudflared) as a Kubernetes deployment in t
 - Zero public ports exposed on home router
 - Must integrate with existing Pi-hole service
 - Must work with Eero network (no VLAN segmentation on homelab network currently)
+- All Cloudflare resources MUST be managed via Terraform (Constitution Principle II compliance)
 - **Tunnel Creation Method** (RESOLVED): Dashboard/remotely-managed tunnels (Cloudflare 2024 recommendation, stateless, HA-friendly)
 - **DNS Domain** (USER PROVIDED): User will provide domain name managed by Cloudflare DNS
 - **Initial Services** (RESOLVED): Pi-hole (confirmed) + future services (Grafana, Homepage) via extensible ingress rules
@@ -45,7 +48,7 @@ Deploy Cloudflare Tunnel connector (cloudflared) as a Kubernetes deployment in t
 ✅ **PASS**: Cloudflare Tunnel deployment defined in OpenTofu module (Kubernetes provider). All manifests (Secret, ConfigMap, Deployment, Service) managed as IaC. Tunnel configuration stored in ConfigMap for version control.
 
 ### II. GitOps Workflow
-✅ **PASS**: All changes via Git commits. OpenTofu plan reviewed before apply. Tunnel token stored as Secret (not in Git). ConfigMap for tunnel config versioned in Git.
+✅ **PASS**: All changes via Git commits. Cloudflare infrastructure (tunnel, routes, Access policies, DNS) fully managed in Terraform. Zero manual dashboard configuration. OpenTofu plan reviewed before apply. Tunnel token stored as Secret (not in Git). ConfigMap for tunnel config versioned in Git.
 
 ### III. Container-First Development
 ✅ **PASS**: cloudflared runs as container (cloudflare/cloudflared:latest). Stateless deployment - tunnel config via ConfigMap, credentials via Secret mount. Health checks (liveness/readiness probes) mandatory for tunnel connectivity validation.
@@ -123,33 +126,27 @@ specs/[###-feature]/
 terraform/
 └── modules/
     └── cloudflare-tunnel/
-        ├── main.tf                    # OpenTofu module entry (Kubernetes resources)
+        ├── main.tf                    # OpenTofu module entry (Kubernetes resources inline)
+        ├── cloudflare.tf              # Cloudflare Terraform resources (tunnel, config, Access, DNS)
         ├── variables.tf               # Module inputs (tunnel_token, service_mappings, etc.)
         ├── outputs.tf                 # Module outputs (deployment status, service endpoints)
-        ├── manifests/
-        │   ├── secret.yaml           # Tunnel token Secret (template)
-        │   ├── configmap.yaml        # Tunnel config file (ingress rules)
-        │   ├── deployment.yaml       # cloudflared Deployment
-        │   └── service.yaml          # Optional: metrics service (P3)
-        └── README.md                  # Module documentation
+        └── README.md                  #Module documentation
 
 terraform/environments/chocolandiadc-mvp/
 ├── cloudflare-tunnel.tf               # Environment-specific tunnel configuration
+├── cloudflare-access.tf               # Access policies and applications
+├── cloudflare-dns.tf                  # DNS CNAME records
 ├── terraform.tfvars                   # Environment variables (NOT committed - contains secrets)
 └── terraform.tfvars.example           # Example variables file (template)
 
 scripts/
-├── create-tunnel.sh                   # Helper script: Create tunnel via Cloudflare API/CLI
-├── configure-access.sh                # Helper script: Configure Cloudflare Access policies
 └── test-tunnel.sh                     # Integration test script (connectivity validation)
 ```
 
-**Structure Decision**: Infrastructure-as-Code structure following existing project patterns (terraform/modules/ for reusable modules, terraform/environments/ for environment-specific configs). Kubernetes manifests managed via OpenTofu (kubernetes_manifest resources or kubectl provider). Helper scripts for one-time Cloudflare setup (tunnel creation, Access configuration).
+**Structure Decision**: Infrastructure-as-Code structure following existing project patterns (terraform/modules/ for reusable modules, terraform/environments/ for environment-specific configs). Kubernetes manifests managed via OpenTofu (kubernetes_manifest resources or kubectl provider). All Cloudflare resources (tunnel, Access, DNS) managed as Terraform resources.
 
 ## Complexity Tracking
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|
-| Monitoring deferred to P3 | MVP focuses on core connectivity | Adding Prometheus integration upfront increases initial complexity. P3 story provides learning path for observability after core functionality validated. |
-| Single replica (P1/P2) | Faster MVP delivery, simpler initial deployment | Multiple replicas require coordination testing and LoadBalancer service. Single replica sufficient for learning tunnel mechanics. P3 story explicitly addresses HA. |
-| No FortiGate integration | Eero network limitation (no VLAN support) | Cannot implement VLAN segmentation with current home network equipment. Cloudflare Zero Trust provides alternative security model (authentication-based vs network-based). Future enhancement when FortiGate deployed. |
+| Single replica (P1/P2) | Faster MVP delivery | Multiple replicas require coordination testing. P3 explicitly addresses HA. |

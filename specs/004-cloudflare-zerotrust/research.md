@@ -10,82 +10,113 @@ This research document captures architectural decisions for deploying Cloudflare
 
 ---
 
-## Decision 1: Tunnel Creation Method - CLI vs Dashboard
+## Decision 1: Tunnel Creation Method - Terraform vs Dashboard
 
-**Question**: Should Cloudflare Tunnels be created using CLI (locally-managed) or Dashboard (remotely-managed) approach for IaC/automated deployment?
+**Question**: Should Cloudflare Tunnels be created using Terraform (IaC) or Dashboard (manual) approach for automated deployment?
 
 **Options Considered**:
 
-1. **Dashboard/Remotely-Managed Tunnels**
+1. **Terraform-Managed Tunnels**
    - **Pros**:
-     - Stateless deployment - no local credential files needed beyond token
-     - Ingress rules configured via web UI or API (no config file in pod)
-     - Simpler Kubernetes deployment - only tunnel token required in Secret
-     - Easier management and visibility through Zero Trust dashboard
-     - Recommended by Cloudflare for Kubernetes deployments (2024 docs)
-     - Multiple replicas can use same tunnel token without coordination
+     - Full GitOps compliance - tunnel creation in version control
+     - Infrastructure as code - no manual dashboard steps
+     - Reproducible deployments - `tofu apply` recreates entire infrastructure
+     - Automated secret generation - tunnel credentials managed by Terraform
+     - Aligns with Constitution Principle II (GitOps Workflow)
+     - Single source of truth for all infrastructure
    - **Cons**:
-     - Initial tunnel creation requires manual dashboard interaction
-     - Ingress rule changes require dashboard/API access (not in Git)
-     - Less "infrastructure as code" for routing rules
+     - Requires Cloudflare API token configuration
+     - More complex initial setup vs one-time dashboard click
+     - Terraform state contains sensitive tunnel credentials (must be secured)
    - **Implementation**:
-     - Create tunnel once in Cloudflare Zero Trust dashboard → Networks → Tunnels
-     - Copy tunnel token from dashboard
-     - Store token in Kubernetes Secret
-     - Deploy cloudflared with token only (no config file needed)
-     - Manage ingress routes via dashboard or Cloudflare API
+     - Use `cloudflare_tunnel` Terraform resource
+     - Generate tunnel secret via `random_password` resource
+     - Output tunnel token for Kubernetes Secret creation
+     - All tunnel lifecycle managed via `tofu apply/destroy`
 
-2. **CLI/Locally-Managed Tunnels**
+2. **Dashboard/Remotely-Managed Tunnels**
+   - **Pros**:
+     - Simpler initial setup - GUI-driven tunnel creation
+     - Visual management and monitoring in Zero Trust dashboard
+     - No Terraform provider configuration needed
+   - **Cons**:
+     - Violates GitOps principles - manual dashboard interaction required
+     - Not reproducible - tunnel creation not in version control
+     - Breaks Constitution Principle II (GitOps Workflow)
+     - Manual secret copying from dashboard prone to errors
+   - **Implementation**:
+     - Create tunnel once in Cloudflare Zero Trust dashboard
+     - Manually copy tunnel token to `.tfvars` file
+     - Manual cleanup if infrastructure needs to be torn down
+
+3. **CLI/Locally-Managed Tunnels**
    - **Pros**:
      - Full GitOps workflow - tunnel config file version-controlled
-     - Ingress rules defined in YAML ConfigMap (infrastructure as code)
-     - No dashboard interaction needed after initial tunnel creation
-     - Configuration changes via Git commits
+     - No dashboard interaction needed
    - **Cons**:
      - Requires cert.pem and credentials.json files
-     - More complex Secret management (multiple files vs single token)
      - Deprecated approach - Cloudflare recommends remotely-managed tunnels
-     - Config file must be mounted to cloudflared pod
-     - More difficult to manage multiple replicas (config file sync)
+     - More complex Secret management
    - **Implementation**:
      - `cloudflared tunnel create my-tunnel` → generates credentials.json
      - Store credentials.json in Kubernetes Secret
-     - Create ConfigMap with tunnel config.yaml (ingress rules)
-     - Mount both Secret and ConfigMap to cloudflared pod
 
-**Decision**: **Dashboard/Remotely-Managed Tunnels (Option 1)**
+**Decision**: **Terraform-Managed Tunnels (Option 1)**
 
 **Rationale**:
-- **Cloudflare recommendation**: Official 2024 Kubernetes documentation explicitly recommends remotely-managed tunnels as the modern approach
-- **Stateless deployment**: Aligns with Kubernetes best practices (single token Secret vs multiple credential files)
-- **Simpler operations**: Tunnel token is the only credential needed; no cert.pem or config file management
-- **HA-friendly**: Multiple cloudflared replicas can use identical tunnel token without configuration sync issues
-- **Visibility**: Zero Trust dashboard provides real-time tunnel health, connection metrics, and traffic analytics
-- **Hybrid IaC approach**: While ingress routes are managed via dashboard/API (not pure GitOps), the cloudflared Deployment/Secret/ConfigMap are still version-controlled in OpenTofu
-- **Learning value**: Understanding cloud-native tunnel management (API-driven config) vs legacy file-based config
+- **Constitution compliance**: Full adherence to Principle II (GitOps Workflow) - zero manual dashboard configuration
+- **Infrastructure as code**: Tunnel creation, configuration, and lifecycle entirely in Terraform
+- **Reproducibility**: Complete environment can be recreated via `tofu apply` without manual steps
+- **Automation**: Tunnel secret automatically generated and managed by Terraform
+- **Single source of truth**: All Cloudflare resources (tunnel, DNS, Access policies) in version control
+- **Security**: Tunnel credentials never manually copied - generated and stored by Terraform
+- **Learning value**: Understanding Terraform provider patterns, API-driven infrastructure management
 
 **Alternatives Considered and Rejected**:
-- **Pure CLI approach**: Rejected because it's the legacy method. Cloudflare docs state: "The legacy method is dependent on files on your disk to be present/set in the right way/permissions to function, while the new method is entirely stateless and can be re-setup & configured remotely"
-- **Terraform-managed ingress routes**: Rejected for MVP simplicity. Could be added later via `cloudflare_tunnel_config` Terraform resource for full IaC compliance
+- **Dashboard/manual approach**: Rejected because it violates Constitution Principle II (GitOps Workflow) and requires manual steps that cannot be version-controlled
+- **CLI approach**: Rejected because it's the legacy method and requires file-based credential management
 
 **Implementation Notes**:
-1. **Tunnel Creation** (one-time manual step):
-   - Navigate to Cloudflare Zero Trust → Networks → Tunnels → Create a tunnel
-   - Choose "Cloudflared" connector type
-   - Name tunnel: `chocolandia-k3s-tunnel`
-   - Copy tunnel token from dashboard (format: `eyJhIjoiXXX...`)
-   - Document tunnel ID for reference
+1. **Tunnel Creation** (Terraform resource):
+   ```hcl
+   # Generate random tunnel secret
+   resource "random_password" "tunnel_secret" {
+     length  = 64
+     special = false
+   }
 
-2. **Kubernetes Secret**:
-   ```yaml
-   apiVersion: v1
-   kind: Secret
-   metadata:
-     name: cloudflared-token
-     namespace: cloudflare-system
-   type: Opaque
-   stringData:
-     token: <TUNNEL_TOKEN_FROM_DASHBOARD>
+   # Create Cloudflare Tunnel
+   resource "cloudflare_tunnel" "chocolandia_tunnel" {
+     account_id = var.cloudflare_account_id
+     name       = "chocolandia-k3s-tunnel"
+     secret     = base64sha256(random_password.tunnel_secret.result)
+   }
+
+   # Output tunnel token for Kubernetes Secret
+   output "tunnel_token" {
+     value     = cloudflare_tunnel.chocolandia_tunnel.tunnel_token
+     sensitive = true
+   }
+
+   output "tunnel_id" {
+     value = cloudflare_tunnel.chocolandia_tunnel.id
+   }
+   ```
+
+2. **Kubernetes Secret** (created by Terraform):
+   ```hcl
+   resource "kubernetes_secret" "cloudflared_token" {
+     metadata {
+       name      = "cloudflared-token"
+       namespace = "cloudflare-system"
+     }
+
+     data = {
+       token = cloudflare_tunnel.chocolandia_tunnel.tunnel_token
+     }
+
+     type = "Opaque"
+   }
    ```
 
 3. **Deployment Command**:
@@ -107,15 +138,41 @@ This research document captures architectural decisions for deploying Cloudflare
            key: token
    ```
 
-4. **Ingress Route Configuration** (via dashboard):
-   - After cloudflared pod is running, configure Public Hostnames in dashboard
-   - Example: `pihole.example.com` → `http://pihole-web.default.svc.cluster.local:80`
-   - Alternative: Use Cloudflare API (`POST /accounts/:account_id/tunnels/:tunnel_id/configurations`) for automation
+4. **Required Terraform Variables**:
+   ```hcl
+   variable "cloudflare_account_id" {
+     description = "Cloudflare Account ID"
+     type        = string
+   }
 
-5. **Token Security**:
-   - Store token in `.tfvars` file (excluded from Git via `.gitignore`)
+   variable "cloudflare_api_token" {
+     description = "Cloudflare API Token with Tunnel:Edit permissions"
+     type        = string
+     sensitive   = true
+   }
+   ```
+
+5. **Cloudflare Provider Configuration**:
+   ```hcl
+   terraform {
+     required_providers {
+       cloudflare = {
+         source  = "cloudflare/cloudflare"
+         version = "~> 4.0"
+       }
+     }
+   }
+
+   provider "cloudflare" {
+     api_token = var.cloudflare_api_token
+   }
+   ```
+
+6. **Token Security**:
+   - Store API token in `.tfvars` file (excluded from Git via `.gitignore`)
    - Example: `terraform.tfvars.example` → `terraform.tfvars` (local only)
-   - OpenTofu creates Secret from variable: `sensitive = true`
+   - Terraform manages tunnel token lifecycle automatically
+   - Never manually copy credentials from dashboard
 
 ---
 
@@ -371,146 +428,462 @@ This research document captures architectural decisions for deploying Cloudflare
 
 **Options Considered**:
 
-1. **Dashboard-Only Configuration** (no config file)
+1. **Terraform-Only Configuration** (cloudflare_tunnel_config resource)
+   - **Pros**: Full GitOps compliance, version-controlled ingress rules, infrastructure as code, automated updates via `tofu apply`
+   - **Cons**: More complex than dashboard GUI, requires Cloudflare API knowledge, catch-all rule mandatory
+   - **Approach**: Use `cloudflare_tunnel_config` Terraform resource to manage ingress rules as code
+   - **Example**: All routing rules defined in `.tf` files, applied via Terraform
+
+2. **Dashboard-Only Configuration** (no config file)
    - **Pros**: Simple, GUI-driven, real-time updates, no ConfigMap needed
-   - **Cons**: Not version-controlled (not GitOps), manual changes only, no IaC
+   - **Cons**: Not version-controlled (not GitOps), manual changes only, no IaC, violates Constitution Principle II
    - **Approach**: Configure "Public Hostnames" in Zero Trust dashboard → Tunnels → `chocolandia-k3s-tunnel` → Configure
    - **Example**: `pihole.example.com` → `http://pihole-web.default.svc.cluster.local:80`
 
-2. **ConfigMap-Based Configuration** (locally-managed tunnel)
-   - **Pros**: Version-controlled ingress rules, GitOps-friendly, infrastructure as code
-   - **Cons**: Requires locally-managed tunnel (rejected in Decision 1), config file must be mounted to pod
+3. **ConfigMap-Based Configuration** (locally-managed tunnel)
+   - **Pros**: Version-controlled ingress rules, GitOps-friendly
+   - **Cons**: Requires locally-managed tunnel (rejected in Decision 1), deprecated approach, config file must be mounted to pod
    - **Approach**: Create ConfigMap with `config.yaml` containing ingress rules, mount to cloudflared pod
-   - **Example**:
-     ```yaml
-     ingress:
-       - hostname: pihole.example.com
-         service: http://pihole-web.default.svc.cluster.local:80
-       - hostname: grafana.example.com
-         service: http://grafana.monitoring.svc.cluster.local:3000
-       - service: http_status:404  # Catch-all rule (required)
-     ```
 
-3. **Hybrid Approach** (remotely-managed tunnel + API automation)
-   - **Pros**: Best of both worlds - remotely-managed simplicity + API-driven IaC, config changes via Terraform/scripts
-   - **Cons**: More complex (requires Cloudflare API knowledge), not pure GitOps (API mutations), learning curve
-   - **Approach**: Use Cloudflare API `POST /accounts/:account_id/tunnels/:tunnel_id/configurations` to update ingress rules programmatically
-   - **Terraform resource**: `cloudflare_tunnel_config` (manages ingress routes as code)
-
-**Decision**: **Dashboard-Only Configuration (Option 1) for MVP, with migration path to Hybrid Approach (Option 3)**
+**Decision**: **Terraform-Only Configuration (Option 1)**
 
 **Rationale**:
-- **Alignment with Decision 1**: Remotely-managed tunnels use dashboard/API for ingress config (not config files)
-- **MVP simplicity**: Dashboard GUI is fastest path to working tunnel (learning priority)
-- **Low service count**: 2-5 services initially (Pi-hole + future services), manual management acceptable
-- **Migration path**: When service count grows (>5), introduce Terraform `cloudflare_tunnel_config` resource for IaC compliance
-- **Constitution trade-off**: Principle II (GitOps Workflow) partially violated but documented with clear upgrade path
-- **Learning progression**: Phase 1 (dashboard) teaches tunnel mechanics, Phase 2 (API/Terraform) teaches automation
+- **Constitution compliance**: Full adherence to Principle II (GitOps Workflow) - all ingress routes in version control
+- **Infrastructure as code**: Ingress rules defined in `.tf` files alongside tunnel creation
+- **Reproducibility**: Complete routing configuration recreated via `tofu apply`
+- **Automation**: Route changes via Git commits and Terraform apply (no manual dashboard clicks)
+- **Single source of truth**: All Cloudflare configuration (tunnel, routes, DNS, Access) managed together
+- **Alignment with Decision 1**: Terraform manages tunnel creation, so routes should also be Terraform-managed
+- **Learning value**: Understanding Terraform for complex resource configurations, API-driven infrastructure
 
 **Alternatives Considered and Rejected**:
-- **ConfigMap approach**: Rejected because it requires locally-managed tunnel (Decision 1 chose remotely-managed)
-- **Immediate API automation**: Rejected for MVP to reduce initial complexity (Cloudflare API learning curve)
+- **Dashboard-only approach**: Rejected because it violates Constitution Principle II (GitOps Workflow) and creates configuration drift between IaC and reality
+- **ConfigMap approach**: Rejected because it requires locally-managed tunnel (Decision 1 chose Terraform-managed)
 - **Multiple tunnels (one per service)**: Rejected because single tunnel supports multiple ingress rules, reducing overhead
 
 **Implementation Notes**:
 
-1. **Dashboard Configuration** (MVP - Phase 1):
-   - Navigate to: Zero Trust → Networks → Tunnels → `chocolandia-k3s-tunnel` → Configure
-   - Click **Add a public hostname**:
-     - **Subdomain**: `pihole`
-     - **Domain**: `example.com` (select from Cloudflare-managed domains)
-     - **Type**: HTTP
-     - **URL**: `pihole-web.default.svc.cluster.local:80`
-     - **TLS Verification**: Disabled (internal cluster service, no TLS cert)
-   - Repeat for additional services:
-     - `grafana.example.com` → `grafana.monitoring.svc.cluster.local:3000`
-     - `home.example.com` → `homepage.default.svc.cluster.local:8080`
-   - **Important**: No catch-all rule needed for dashboard-managed tunnels (Cloudflare handles 404 automatically)
+1. **Terraform Configuration** (cloudflare_tunnel_config resource):
+   ```hcl
+   resource "cloudflare_tunnel_config" "chocolandia_config" {
+     account_id = var.cloudflare_account_id
+     tunnel_id  = cloudflare_tunnel.chocolandia_tunnel.id
 
-2. **Ingress Rule Structure** (multiple services):
+     config {
+       # Pi-hole admin interface
+       ingress_rule {
+         hostname = "pihole.${var.cloudflare_zone_name}"
+         service  = "http://pihole-web.default.svc.cluster.local:80"
+       }
+
+       # Future service examples
+       ingress_rule {
+         hostname = "grafana.${var.cloudflare_zone_name}"
+         service  = "http://grafana.monitoring.svc.cluster.local:3000"
+       }
+
+       ingress_rule {
+         hostname = "home.${var.cloudflare_zone_name}"
+         service  = "http://homepage.default.svc.cluster.local:8080"
+       }
+
+       # Required catch-all rule (must be last)
+       ingress_rule {
+         service = "http_status:404"
+       }
+     }
+   }
+   ```
+
+2. **Catch-All Rule Requirement**:
+   - **MANDATORY**: Terraform `cloudflare_tunnel_config` requires final catch-all rule
+   - **Purpose**: Handles requests that don't match any hostname
+   - **Options**:
+     - `http_status:404` - Return 404 for unmatched requests (recommended)
+     - `http_status:503` - Return 503 service unavailable
+     - `http://fallback-service:80` - Route to default service
+   - **Error if missing**: Terraform apply will fail without catch-all rule
+
+3. **Ingress Rule Structure** (multiple services):
 
    | Public Hostname | Internal Service | Protocol | TLS Verification |
    |----------------|------------------|----------|------------------|
-   | `pihole.example.com` | `pihole-web.default.svc.cluster.local:80` | HTTP | No |
-   | `grafana.example.com` | `grafana.monitoring.svc.cluster.local:3000` | HTTP | No |
-   | `home.example.com` | `homepage.default.svc.cluster.local:8080` | HTTP | No |
+   | `pihole.chocolandiadc.com` | `pihole-web.default.svc.cluster.local:80` | HTTP | No |
+   | `grafana.chocolandiadc.com` | `grafana.monitoring.svc.cluster.local:3000` | HTTP | No |
+   | `home.chocolandiadc.com` | `homepage.default.svc.cluster.local:8080` | HTTP | No |
 
-3. **DNS Automatic Configuration**:
-   - Cloudflare automatically creates CNAME records when public hostname is added:
-     - `pihole.example.com` → `<tunnel-id>.cfargotunnel.com`
-     - `grafana.example.com` → `<tunnel-id>.cfargotunnel.com`
-   - No manual DNS configuration needed (zero-touch DNS management)
-
-4. **Path-Based Routing** (alternative to hostname-based):
-   - **Not supported** in dashboard-managed tunnels directly
-   - **Workaround**: Use Kubernetes Ingress controller (e.g., nginx-ingress) inside cluster:
-     - Cloudflare Tunnel → nginx-ingress (single entry point)
-     - nginx-ingress routes by path: `/pihole` → pihole service, `/grafana` → grafana service
-   - **Use case**: Reduces number of public hostnames (e.g., `services.example.com/pihole`, `services.example.com/grafana`)
-   - **Trade-off**: Adds nginx-ingress complexity, deferred to future enhancement
-
-5. **Service Discovery Patterns** (Kubernetes DNS):
+4. **Service Discovery Patterns** (Kubernetes DNS):
    - **Same namespace**: `http://service-name:port` (e.g., `http://pihole-web:80`)
    - **Cross-namespace**: `http://service-name.namespace.svc.cluster.local:port` (e.g., `http://grafana.monitoring.svc.cluster.local:3000`)
    - **External service**: `http://external-ip:port` (e.g., `http://192.168.4.100:8080` for non-Kubernetes service)
 
-6. **TLS Termination Options**:
+5. **TLS Termination Options**:
    - **Cloudflare edge** (default, recommended):
      - User → Cloudflare edge (TLS) → Tunnel (encrypted) → Internal service (HTTP)
      - Public traffic encrypted, internal cluster traffic unencrypted (acceptable for homelab)
    - **End-to-end TLS** (optional, for sensitive services):
      - User → Cloudflare edge (TLS) → Tunnel (encrypted) → Internal service (HTTPS)
      - Requires TLS cert on internal service (cert-manager, self-signed, etc.)
-     - Enable "TLS Verification" in dashboard (must trust internal CA)
+     - Configure in Terraform: `origin_server_name = "service.namespace.svc.cluster.local"`
 
-7. **Traffic Routing Behavior**:
+6. **Traffic Routing Behavior**:
    - **Top-to-bottom matching**: Cloudflare matches hostname against ingress rules in order configured
-   - **Wildcard support**: `*.example.com` routes all subdomains to same service (e.g., `alpha.example.com`, `beta.example.com`)
-   - **Path regex** (dashboard limitation): Not supported in dashboard; requires config file (hybrid approach)
+   - **Wildcard support**: `*.chocolandiadc.com` routes all subdomains to same service
+   - **Path-based routing**: Supported via `path` parameter in `ingress_rule` block
 
-8. **Migration to Terraform Automation** (Phase 2 - future enhancement):
-   - **Terraform resource**:
-     ```hcl
-     resource "cloudflare_tunnel_config" "chocolandia_tunnel" {
-       account_id = var.cloudflare_account_id
-       tunnel_id  = cloudflare_tunnel.chocolandia_tunnel.id
-
-       config {
-         ingress_rule {
-           hostname = "pihole.example.com"
-           service  = "http://pihole-web.default.svc.cluster.local:80"
-         }
-         ingress_rule {
-           hostname = "grafana.example.com"
-           service  = "http://grafana.monitoring.svc.cluster.local:3000"
-         }
-         ingress_rule {
-           service = "http_status:404"  # Catch-all required
-         }
-       }
-     }
-     ```
-   - **Advantages**: GitOps-compliant, version-controlled ingress rules, automated updates via `tofu apply`
-   - **When to migrate**: When service count exceeds 5, or when team collaboration requires review/approval workflow for routing changes
-
-9. **Testing Ingress Rules**:
-   - **Manual test**: `curl -H "Host: pihole.example.com" http://localhost:8080` (from cloudflared pod)
-   - **External test**: Browse to `https://pihole.example.com` (should prompt for Cloudflare Access login)
+7. **Testing Ingress Rules**:
+   - **Manual test**: `curl -H "Host: pihole.chocolandiadc.com" http://localhost:8080` (from cloudflared pod)
+   - **External test**: Browse to `https://pihole.chocolandiadc.com` (should prompt for Cloudflare Access login)
    - **Troubleshooting**: Check tunnel logs: `kubectl logs -n cloudflare-system deployment/cloudflared`
+   - **Terraform validation**: `tofu plan` will validate ingress rule syntax before apply
 
-10. **Advanced Configuration** (for specific services):
-    - **HTTP Headers** (add/modify/remove):
-      - Use case: Add `X-Forwarded-For` for client IP logging
-      - Limitation: Dashboard doesn't support header manipulation; requires config file (hybrid approach)
-    - **WebSocket Support**:
-      - Automatically enabled for all HTTP/HTTPS services
-      - No additional configuration needed
-    - **SSH/RDP Tunneling** (TCP services):
-      - Requires `cloudflared access` on client side
-      - Use case: SSH to cluster nodes via tunnel (security risk, not recommended for homelab)
-    - **Load Balancing** (across multiple services):
-      - Use case: Blue/green deployments, A/B testing
-      - Limitation: Not supported in single tunnel; requires multiple tunnels or external LB
+8. **Advanced Configuration** (for specific services):
+   - **WebSocket Support**:
+     - Automatically enabled for all HTTP/HTTPS services
+     - No additional configuration needed
+   - **HTTP/2 Support**:
+     - Enabled by default for HTTPS services
+   - **Connection Timeout**:
+     - Configure via `connect_timeout` and `tls_timeout` in config block
+     - Default: 30 seconds
+
+---
+
+## Decision 5: Cloudflare Access Policies Management - Terraform vs Dashboard
+
+**Question**: How should Cloudflare Access applications and policies be configured to protect services with authentication?
+
+**Options Considered**:
+
+1. **Terraform-Managed Access Policies**
+   - **Pros**: Full GitOps compliance, version-controlled policies, infrastructure as code, automated policy updates
+   - **Cons**: More complex than dashboard GUI, requires understanding of Access policy structure
+   - **Approach**: Use `cloudflare_access_application`, `cloudflare_access_policy`, `cloudflare_access_identity_provider` Terraform resources
+   - **Example**: All Access configuration in `.tf` files
+
+2. **Dashboard-Only Configuration**
+   - **Pros**: Simple GUI-driven setup, visual policy builder
+   - **Cons**: Not version-controlled, manual changes only, no IaC, violates Constitution Principle II
+   - **Approach**: Configure applications and policies via Zero Trust dashboard
+   - **Example**: Manual creation of applications and email-based policies
+
+**Decision**: **Terraform-Managed Access Policies (Option 1)**
+
+**Rationale**:
+- **Constitution compliance**: Full adherence to Principle II (GitOps Workflow) - all Access policies in version control
+- **Infrastructure as code**: Access applications, policies, and identity providers defined in `.tf` files
+- **Reproducibility**: Complete Access configuration recreated via `tofu apply`
+- **Security audit trail**: Policy changes tracked in Git history
+- **Alignment with Decisions 1 & 4**: All Cloudflare configuration managed via Terraform
+- **Policy consistency**: Reusable policy definitions across multiple applications
+- **Learning value**: Understanding identity-based access control, OAuth integration via IaC
+
+**Alternatives Considered and Rejected**:
+- **Dashboard-only approach**: Rejected because it violates Constitution Principle II and creates security policy drift
+
+**Implementation Notes**:
+
+1. **Google OAuth Identity Provider** (Terraform resource):
+   ```hcl
+   resource "cloudflare_access_identity_provider" "google_oauth" {
+     account_id = var.cloudflare_account_id
+     name       = "Google OAuth (Personal Accounts)"
+     type       = "google"
+
+     config {
+       client_id     = var.google_oauth_client_id
+       client_secret = var.google_oauth_client_secret
+     }
+   }
+   ```
+
+2. **Access Application** (protecting services):
+   ```hcl
+   resource "cloudflare_access_application" "homelab_services" {
+     zone_id                   = var.cloudflare_zone_id
+     name                      = "Homelab Services"
+     domain                    = "*.chocolandiadc.com"
+     type                      = "self_hosted"
+     session_duration          = "24h"
+     auto_redirect_to_identity = true  # Skip login page if only one auth method
+
+     # Optional: CORS headers for API services
+     cors_headers {
+       allowed_origins = ["https://*.chocolandiadc.com"]
+       allow_all_methods = true
+       allow_all_headers = true
+       allow_credentials = true
+       max_age           = 86400
+     }
+   }
+   ```
+
+3. **Access Policy - Email Whitelist** (allow specific users):
+   ```hcl
+   resource "cloudflare_access_policy" "allow_admins" {
+     application_id = cloudflare_access_application.homelab_services.id
+     zone_id        = var.cloudflare_zone_id
+     name           = "Allow Homelab Admins"
+     precedence     = 1
+     decision       = "allow"
+
+     include {
+       email = [
+         "cbenitez@gmail.com",
+         # Add additional allowed emails here
+       ]
+     }
+   }
+   ```
+
+4. **Access Policy - Multiple Users** (using email list variable):
+   ```hcl
+   variable "allowed_admin_emails" {
+     description = "List of admin email addresses allowed to access homelab services"
+     type        = list(string)
+     default     = ["cbenitez@gmail.com"]
+   }
+
+   resource "cloudflare_access_policy" "allow_admins" {
+     application_id = cloudflare_access_application.homelab_services.id
+     zone_id        = var.cloudflare_zone_id
+     name           = "Allow Homelab Admins"
+     precedence     = 1
+     decision       = "allow"
+
+     include {
+       email = var.allowed_admin_emails
+     }
+   }
+   ```
+
+5. **Per-Service Access Application** (granular control):
+   ```hcl
+   # Pi-hole specific access
+   resource "cloudflare_access_application" "pihole" {
+     zone_id          = var.cloudflare_zone_id
+     name             = "Pi-hole Admin Dashboard"
+     domain           = "pihole.chocolandiadc.com"
+     type             = "self_hosted"
+     session_duration = "24h"
+   }
+
+   resource "cloudflare_access_policy" "pihole_admins_only" {
+     application_id = cloudflare_access_application.pihole.id
+     zone_id        = var.cloudflare_zone_id
+     name           = "Pi-hole Admins Only"
+     precedence     = 1
+     decision       = "allow"
+
+     include {
+       email = ["cbenitez@gmail.com"]  # Restricted access
+     }
+   }
+   ```
+
+6. **Access Groups** (reusable policy building blocks):
+   ```hcl
+   # Define reusable access groups
+   resource "cloudflare_access_group" "homelab_admins" {
+     account_id = var.cloudflare_account_id
+     name       = "Homelab Admins"
+
+     include {
+       email = ["cbenitez@gmail.com"]
+     }
+   }
+
+   resource "cloudflare_access_group" "homelab_users" {
+     account_id = var.cloudflare_account_id
+     name       = "Homelab Users"
+
+     include {
+       email = [
+         "cbenitez@gmail.com",
+         "family@gmail.com",
+         "friend@gmail.com"
+       ]
+     }
+   }
+
+   # Use groups in policies
+   resource "cloudflare_access_policy" "use_groups" {
+     application_id = cloudflare_access_application.homelab_services.id
+     zone_id        = var.cloudflare_zone_id
+     name           = "Allow via Groups"
+     precedence     = 1
+     decision       = "allow"
+
+     include {
+       group = [cloudflare_access_group.homelab_admins.id]
+     }
+   }
+   ```
+
+7. **Required Variables**:
+   ```hcl
+   variable "cloudflare_zone_id" {
+     description = "Cloudflare Zone ID for chocolandiadc.com domain"
+     type        = string
+   }
+
+   variable "google_oauth_client_id" {
+     description = "Google OAuth Client ID from Google Cloud Console"
+     type        = string
+   }
+
+   variable "google_oauth_client_secret" {
+     description = "Google OAuth Client Secret"
+     type        = string
+     sensitive   = true
+   }
+   ```
+
+8. **Session Management**:
+   - **Application Token Expiration**: 24 hours (configurable via `session_duration`)
+   - **Automatic Token Refresh**: Handled by Cloudflare when global token is valid
+   - **Policy Changes**: Take effect immediately (existing tokens invalidated within 1 minute)
+
+9. **Security Best Practices**:
+   - **Principle of least privilege**: Define separate applications/policies for sensitive services
+   - **Email validation**: Only add verified email addresses to policies
+   - **Regular audits**: Review Access Logs via Terraform or dashboard
+   - **MFA enforcement**: Enabled automatically if user's Google account has MFA configured
+
+---
+
+## Decision 6: DNS Records Management - Terraform vs Dashboard
+
+**Question**: How should DNS CNAME records for tunnel endpoints be configured?
+
+**Options Considered**:
+
+1. **Terraform-Managed DNS Records**
+   - **Pros**: Full GitOps compliance, version-controlled DNS, infrastructure as code, automated DNS updates
+   - **Cons**: Requires understanding of Cloudflare DNS resource syntax
+   - **Approach**: Use `cloudflare_record` Terraform resource to create CNAME records
+   - **Example**: All DNS records defined in `.tf` files
+
+2. **Dashboard Auto-Configuration**
+   - **Pros**: Automatic CNAME creation when adding public hostnames, zero configuration
+   - **Cons**: Not version-controlled, manual cleanup needed when routes removed, violates Constitution Principle II
+   - **Approach**: Cloudflare automatically creates CNAMEs when public hostnames added to tunnel
+   - **Example**: Dashboard manages DNS records implicitly
+
+3. **Manual Dashboard Configuration**
+   - **Pros**: Simple GUI-driven DNS management
+   - **Cons**: Not version-controlled, manual changes only, error-prone, violates Constitution Principle II
+   - **Approach**: Manually create CNAME records in Cloudflare DNS dashboard
+   - **Example**: Point pihole.chocolandiadc.com to tunnel CNAME
+
+**Decision**: **Terraform-Managed DNS Records (Option 1)**
+
+**Rationale**:
+- **Constitution compliance**: Full adherence to Principle II (GitOps Workflow) - all DNS records in version control
+- **Infrastructure as code**: DNS records defined in `.tf` files alongside tunnel and routing configuration
+- **Reproducibility**: Complete DNS configuration recreated via `tofu apply`
+- **Consistency**: DNS records and tunnel routes defined together (single source of truth)
+- **Alignment with Decisions 1, 4, 5**: All Cloudflare configuration managed via Terraform
+- **Cleanup automation**: `tofu destroy` removes DNS records automatically
+- **Learning value**: Understanding DNS-as-code, Terraform resource dependencies
+
+**Alternatives Considered and Rejected**:
+- **Auto-configuration approach**: Rejected because it creates DNS records outside of version control and requires manual cleanup
+- **Manual dashboard approach**: Rejected because it violates Constitution Principle II and is error-prone
+
+**Implementation Notes**:
+
+1. **CNAME Record for Tunnel** (Terraform resource):
+   ```hcl
+   resource "cloudflare_record" "pihole_cname" {
+     zone_id = var.cloudflare_zone_id
+     name    = "pihole"
+     value   = "${cloudflare_tunnel.chocolandia_tunnel.id}.cfargotunnel.com"
+     type    = "CNAME"
+     proxied = true  # Enable Cloudflare proxy (orange cloud)
+     comment = "Managed by Terraform - Pi-hole admin interface via Cloudflare Tunnel"
+   }
+   ```
+
+2. **Multiple Service CNAMEs** (DRY approach using for_each):
+   ```hcl
+   locals {
+     tunnel_services = {
+       "pihole"  = "Pi-hole admin interface"
+       "grafana" = "Grafana monitoring dashboard"
+       "home"    = "Homepage application"
+     }
+   }
+
+   resource "cloudflare_record" "tunnel_services" {
+     for_each = local.tunnel_services
+
+     zone_id = var.cloudflare_zone_id
+     name    = each.key
+     value   = "${cloudflare_tunnel.chocolandia_tunnel.id}.cfargotunnel.com"
+     type    = "CNAME"
+     proxied = true
+     comment = "Managed by Terraform - ${each.value} via Cloudflare Tunnel"
+   }
+   ```
+
+3. **Wildcard CNAME** (for dynamic services):
+   ```hcl
+   resource "cloudflare_record" "wildcard_services" {
+     zone_id = var.cloudflare_zone_id
+     name    = "*"  # Matches *.chocolandiadc.com
+     value   = "${cloudflare_tunnel.chocolandia_tunnel.id}.cfargotunnel.com"
+     type    = "CNAME"
+     proxied = true
+     comment = "Managed by Terraform - All services via Cloudflare Tunnel"
+   }
+   ```
+
+4. **Proxied vs DNS-Only**:
+   - **Proxied (recommended)**: `proxied = true`
+     - Enables Cloudflare CDN, DDoS protection, WAF, Access policies
+     - Hides origin IP address
+     - Required for Cloudflare Access to work
+   - **DNS-Only**: `proxied = false`
+     - Bypasses Cloudflare features
+     - Not recommended for tunnel endpoints
+
+5. **TTL Configuration**:
+   ```hcl
+   resource "cloudflare_record" "pihole_cname" {
+     zone_id = var.cloudflare_zone_id
+     name    = "pihole"
+     value   = "${cloudflare_tunnel.chocolandia_tunnel.id}.cfargotunnel.com"
+     type    = "CNAME"
+     proxied = true
+     ttl     = 1  # Auto (proxied records always use TTL=1)
+   }
+   ```
+   - **Proxied records**: TTL automatically set to 1 (automatic)
+   - **DNS-only records**: Can configure custom TTL (300-86400 seconds)
+
+6. **Resource Dependencies**:
+   ```hcl
+   resource "cloudflare_record" "pihole_cname" {
+     zone_id = var.cloudflare_zone_id
+     name    = "pihole"
+     value   = "${cloudflare_tunnel.chocolandia_tunnel.id}.cfargotunnel.com"
+     type    = "CNAME"
+     proxied = true
+
+     # Explicit dependency ensures tunnel exists before DNS record
+     depends_on = [cloudflare_tunnel.chocolandia_tunnel]
+   }
+   ```
+
+7. **DNS Verification**:
+   - **Terraform output**: `tofu apply` shows created DNS records
+   - **Manual verification**: `dig pihole.chocolandiadc.com CNAME`
+   - **Expected result**: `pihole.chocolandiadc.com. 300 IN CNAME <tunnel-id>.cfargotunnel.com.`
+
+8. **DNS Record Cleanup**:
+   - **Automatic**: `tofu destroy` removes all DNS records
+   - **Manual removal**: Never delete DNS records manually in dashboard (causes Terraform state drift)
 
 ---
 
@@ -518,28 +891,41 @@ This research document captures architectural decisions for deploying Cloudflare
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| **Tunnel Creation Method** | Dashboard/Remotely-Managed | Cloudflare recommendation, stateless deployment, HA-friendly, simpler Secret management |
+| **Tunnel Creation Method** | Terraform-Managed (cloudflare_tunnel) | Full GitOps compliance, reproducible deployments, zero manual dashboard steps |
 | **Resource Limits** | 100Mi-200Mi memory, 100m-500m CPU | Cloudflare best practice, prevents resource overconsumption, sufficient for homelab traffic |
 | **Health Probes** | Liveness + Readiness on `/ready` port 2000 | Automatic failure recovery, aligns with K8s best practices, enables P3 HA monitoring |
-| **OAuth Provider** | Google (Personal Gmail Accounts) | Free, simple setup, sufficient security for homelab, no Workspace subscription needed |
-| **Access Policies** | Email-based whitelist | Granular control, easy management for 1-10 users, supports future Access Groups |
+| **OAuth Provider** | Google (Personal Gmail Accounts) via Terraform | Free, simple setup, sufficient security for homelab, no Workspace subscription needed |
+| **Access Policies** | Terraform-Managed (cloudflare_access_policy) | Version-controlled policies, security audit trail, GitOps compliance |
 | **Session Duration** | 24 hours (application + global tokens) | Balances security (daily re-auth) with usability (not too frequent) |
-| **Ingress Configuration** | Dashboard-Only (MVP) → Terraform API (future) | Fast MVP delivery, migration path to GitOps when service count grows |
-| **Routing Pattern** | Hostname-based (separate subdomain per service) | DNS simplicity, no path-rewriting complexity, Cloudflare auto-manages DNS CNAMEs |
+| **Ingress Configuration** | Terraform-Only (cloudflare_tunnel_config) | Full GitOps compliance, version-controlled routing, automated updates |
+| **Routing Pattern** | Hostname-based (separate subdomain per service) | DNS simplicity, no path-rewriting complexity |
+| **DNS Records** | Terraform-Managed (cloudflare_record) | Version-controlled DNS, automated cleanup, single source of truth |
 | **TLS Termination** | Cloudflare edge only (HTTP to internal services) | Adequate security for homelab, avoids cert-manager complexity in MVP |
 
+**Prerequisites**:
+- **Cloudflare Account**: Active Cloudflare account with chocolandiadc.com domain configured
+- **Cloudflare Account ID**: Found in Cloudflare Dashboard → Account Home
+- **Cloudflare Zone ID**: Found in Cloudflare Dashboard → Domain Overview → API section
+- **Cloudflare API Token**: Created with following permissions:
+  - Account:Cloudflare Tunnel:Edit
+  - Zone:DNS:Edit
+  - Account:Access:Apps and Policies:Edit
+  - Account:Access:Organizations, Identity Providers, and Groups:Edit
+- **Google OAuth Credentials**: OAuth 2.0 Client ID and Client Secret from Google Cloud Console
+- **Domain**: chocolandiadc.com domain active in Cloudflare (DNS managed by Cloudflare)
+
 **Constitution Alignment**:
-- ✅ **Principle I (IaC/OpenTofu)**: Cloudflared Deployment/Secret/ConfigMap managed via OpenTofu; ingress routes deferred to future Terraform automation
-- ✅ **Principle II (GitOps)**: Partial compliance - Deployment config in Git, ingress routes in dashboard (upgrade path documented)
+- ✅ **Principle I (IaC/OpenTofu)**: All infrastructure (Cloudflared Deployment, Secrets, Cloudflare resources) managed via OpenTofu/Terraform
+- ✅ **Principle II (GitOps)**: FULL compliance - All Cloudflare configuration (tunnel, routes, DNS, Access policies) in version control, zero manual dashboard configuration
 - ✅ **Principle III (Container-First)**: cloudflared container with health probes and resource limits
 - ⚠️ **Principle IV (Observability)**: Metrics endpoint configured (port 2000), Prometheus integration deferred to P3 story
-- ✅ **Principle V (Security Hardening)**: Google OAuth + email policies, tunnel token in Secret, no public ports exposed
+- ✅ **Principle V (Security Hardening)**: Google OAuth + Terraform-managed policies, tunnel token in Secret, no public ports exposed, all credentials in version-controlled .tfvars
 - ⚠️ **Principle VI (High Availability)**: Single replica in MVP (P1/P2), HA addressed in P3 story
-- ⚠️ **Principle IX (Network-First Security)**: Cloudflare Zero Trust replaces traditional network perimeter (identity-based vs network-based security)
+- ✅ **Principle IX (Network-First Security)**: Cloudflare Zero Trust replaces traditional network perimeter (identity-based vs network-based security)
 
 **Trade-offs Accepted**:
-1. **Ingress routes not in Git** (MVP): Deferred to maintain dashboard simplicity for learning; Terraform automation planned for Phase 2
-2. **Single replica** (P1/P2): Acceptable for homelab learning; multi-replica HA tested in P3 story
-3. **No Prometheus integration** (MVP): Metrics endpoint ready but integration deferred to P3; focus on core connectivity first
+1. **Single replica** (P1/P2): Acceptable for homelab learning; multi-replica HA tested in P3 story
+2. **No Prometheus integration** (MVP): Metrics endpoint ready but integration deferred to P3; focus on core connectivity first
+3. **Terraform state security**: State file contains sensitive credentials (tunnel token, API token); must be stored securely (future: migrate to remote backend with encryption)
 
 **Next Phase**: Proceed to Phase 1 (Design) to generate `data-model.md`, `contracts/`, and `quickstart.md` based on these architectural decisions.
