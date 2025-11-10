@@ -8,17 +8,17 @@ module "pihole" {
   admin_password = var.pihole_admin_password
 
   # DNS Configuration
-  timezone     = "America/New_York"  # Adjust to your timezone
-  upstream_dns = "1.1.1.1;8.8.8.8"   # Cloudflare + Google DNS
+  timezone     = "America/New_York" # Adjust to your timezone
+  upstream_dns = "1.1.1.1;8.8.8.8"  # Cloudflare + Google DNS
 
   # Kubernetes Configuration
   namespace = "default"
   image     = "pihole/pihole:latest"
-  replicas  = 1  # MVP: Single pod
+  replicas  = 1 # MVP: Single pod
 
   # Storage Configuration
   storage_size  = "2Gi"
-  storage_class = "local-path"  # K3s default
+  storage_class = "local-path" # K3s default
 
   # Resource Limits
   cpu_request    = "100m"
@@ -28,7 +28,7 @@ module "pihole" {
 
   # Service Configuration
   web_nodeport = 30001
-  node_ips     = ["192.168.4.101", "192.168.4.102"]  # master1, nodo1
+  node_ips     = ["192.168.4.101", "192.168.4.102"] # master1, nodo1
 }
 
 # ============================================================================

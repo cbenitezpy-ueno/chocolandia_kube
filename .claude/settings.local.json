@@ -61,7 +61,10 @@
       "Bash(git config:*)",
       "Bash(.specify/scripts/bash/update-agent-context.sh:*)",
       "Bash(git -C /Users/cbenitez/chocolandia_kube add .claude/settings.local.json)",
-      "Bash(git -C /Users/cbenitez/chocolandia_kube commit -m \"chore: Update Claude settings with auto-approve commands from Feature 004\n\nAdded auto-approve patterns:\n- git config:* (for commit configuration)\n- .specify/scripts/bash/update-agent-context.sh:* (for agent context updates)\n\nThese commands are safe to auto-approve as they''re part of the feature planning workflow.\")"
+      "Bash(git -C /Users/cbenitez/chocolandia_kube commit -m \"chore: Update Claude settings with auto-approve commands from Feature 004\n\nAdded auto-approve patterns:\n- git config:* (for commit configuration)\n- .specify/scripts/bash/update-agent-context.sh:* (for agent context updates)\n\nThese commands are safe to auto-approve as they''re part of the feature planning workflow.\")",
+      "Bash(kubectl --kubeconfig=./kubeconfig get:*)",
+      "Bash(tofu import:*)",
+      "Bash(kubectl --kubeconfig=./kubeconfig logs:*)"
     ],
     "deny": [],
     "ask": []

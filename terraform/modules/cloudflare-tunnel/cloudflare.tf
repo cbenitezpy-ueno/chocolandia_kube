@@ -96,6 +96,7 @@ resource "cloudflare_zero_trust_access_application" "services" {
 
   # Auto-redirect to identity provider
   auto_redirect_to_identity = true
+  allowed_idps              = [cloudflare_zero_trust_access_identity_provider.google_oauth.id]
 
   # Enable CORS
   cors_headers {

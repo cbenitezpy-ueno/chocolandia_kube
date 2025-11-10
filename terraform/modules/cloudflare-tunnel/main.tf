@@ -104,8 +104,9 @@ resource "kubernetes_deployment" "cloudflared" {
         # ====================================================================
 
         container {
-          name  = "cloudflared"
-          image = var.cloudflared_image
+          name              = "cloudflared"
+          image             = var.cloudflared_image
+          image_pull_policy = "IfNotPresent"
 
           # Command: run tunnel with credentials from secret
           args = [
@@ -211,6 +212,11 @@ resource "kubernetes_deployment" "cloudflared" {
           run_as_non_root = true
           run_as_user     = 65532
           fs_group        = 65532
+        }
+
+        # DNS Configuration (prevents DNS loop during initial image pull)
+        dns_config {
+          nameservers = ["8.8.8.8", "1.1.1.1"]
         }
 
         # Restart policy
