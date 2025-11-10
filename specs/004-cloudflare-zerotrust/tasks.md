@@ -36,15 +36,15 @@
 **Goal**: Gather external resources and configure base Terraform
 **Estimated Time**: 90-120 minutes
 
-- [ ] T007 [P] Document manual step: Create Cloudflare API Token with Account.Tunnel:Edit, Account.Access:Edit, Zone.DNS:Edit permissions in `/Users/cbenitez/chocolandia_kube/docs/004-cloudflare-tunnel/SETUP.md` (~15 min)
-- [ ] T008 [P] Document manual step: Retrieve Cloudflare Account ID and Zone ID for chocolandiadc.com in `/Users/cbenitez/chocolandia_kube/docs/004-cloudflare-tunnel/SETUP.md` (~10 min)
-- [ ] T009 Create `/Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/terraform.tfvars.example` with placeholder values for API token, account ID, zone ID, authorized emails (~15 min)
-- [ ] T010 Create actual `/Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/terraform.tfvars` file locally (NOT committed) with real values (~10 min)
-- [ ] T011 Create `/Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/providers.tf` with Cloudflare provider (~> 4.0) and Kubernetes provider configuration (~20 min)
-- [ ] T012 Create `/Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/versions.tf` with Terraform >= 1.6 and required provider versions (~10 min)
-- [ ] T013 Run `tofu init` in environments/chocolandiadc-mvp/ to initialize providers and verify configuration (~10 min)
-- [ ] T014 Document manual step: Configure Google OAuth application in Google Cloud Console (OAuth 2.0 Client ID) and record Client ID/Secret in `/Users/cbenitez/chocolandia_kube/docs/004-cloudflare-tunnel/SETUP.md` (~20 min)
-- [ ] T015 Add Google OAuth Client ID and Client Secret to `/Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/terraform.tfvars` (~5 min)
+- [X] T007 [P] Document manual step: Create Cloudflare API Token with Account.Tunnel:Edit, Account.Access:Edit, Zone.DNS:Edit permissions in `/Users/cbenitez/chocolandia_kube/docs/004-cloudflare-tunnel/SETUP.md` (~15 min)
+- [X] T008 [P] Document manual step: Retrieve Cloudflare Account ID and Zone ID for chocolandiadc.com in `/Users/cbenitez/chocolandia_kube/docs/004-cloudflare-tunnel/SETUP.md` (~10 min)
+- [X] T009 Create `/Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/terraform.tfvars.example` with placeholder values for API token, account ID, zone ID, authorized emails (~15 min)
+- [ ] T010 **MANUAL STEP** Create actual `/Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/terraform.tfvars` file locally (NOT committed) with real values (~10 min)
+- [X] T011 Create `/Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/providers.tf` with Cloudflare provider (~> 4.0) and Kubernetes provider configuration (~20 min)
+- [X] T012 Create `/Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/versions.tf` with Terraform >= 1.6 and required provider versions (~10 min)
+- [ ] T013 **MANUAL STEP** Run `tofu init` in environments/chocolandiadc-mvp/ to initialize providers and verify configuration (~10 min)
+- [X] T014 Document manual step: Configure Google OAuth application in Google Cloud Console (OAuth 2.0 Client ID) and record Client ID/Secret in `/Users/cbenitez/chocolandia_kube/docs/004-cloudflare-tunnel/SETUP.md` (~20 min)
+- [ ] T015 **MANUAL STEP** Add Google OAuth Client ID and Client Secret to `/Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/terraform.tfvars` (~5 min)
 
 **Validation**: tofu init succeeds, terraform.tfvars exists locally, SETUP.md documents all manual steps
 
