@@ -121,47 +121,63 @@ curl -X GET "https://api.cloudflare.com/client/v4/zones?name=chocolandiadc.com" 
    - Go to [https://console.cloud.google.com/](https://console.cloud.google.com/)
    - Create a new project or select existing: `chocolandia-homelab-access`
 
-2. **Enable APIs** (if not already enabled):
-   - Navigate to **APIs & Services** → **Library**
-   - Search and enable: **Google+ API** (for profile/email access)
-
-3. **Configure OAuth Consent Screen**:
+2. **Configure OAuth Consent Screen** (PRIMERO esto, antes de crear el Client ID):
    - Navigate to **APIs & Services** → **OAuth consent screen**
    - **User Type**: Select **External** (allows any Gmail account)
    - Click **Create**
-   - Fill in required fields:
+   - **Página 1 - App information**:
      - **App name**: `Chocolandia Homelab Services`
-     - **User support email**: `cbenitez@gmail.com` (or your email)
+     - **User support email**: `cbenitez@gmail.com` (tu email)
+     - **App logo**: (opcional, puedes dejar vacío)
+     - **Application home page**: (opcional, puedes dejar vacío)
+     - **Application privacy policy link**: (opcional, puedes dejar vacío)
+     - **Application terms of service link**: (opcional, puedes dejar vacío)
+     - **Authorized domains**: (opcional, puedes dejar vacío)
      - **Developer contact email**: `cbenitez@gmail.com`
-   - **Scopes**: Click **Add or Remove Scopes**
-     - Add: `email`, `profile`, `openid` (should be pre-selected)
-   - **Test users** (required before publishing):
-     - Add `cbenitez@gmail.com` and any other authorized emails
-   - Click **Save and Continue** through remaining steps
+   - Click **Save and Continue**
+
+   - **Página 2 - Scopes**:
+     - **NO NECESITAS AGREGAR SCOPES MANUALMENTE**
+     - Los scopes básicos (email, profile, openid) se incluyen automáticamente
+     - Simplemente click **Save and Continue** (deja esta página vacía)
+
+   - **Página 3 - Test users**:
+     - Click **Add Users**
+     - Add `cbenitez@gmail.com` y cualquier otro email que quieras autorizar
+     - Click **Save and Continue**
+
+   - **Página 4 - Summary**:
+     - Review y click **Back to Dashboard**
+
    - **Publishing status**:
-     - Leave as **Testing** if only using with test users (<100 users)
-     - OR click **Publish App** to allow any Gmail user (requires Google verification if requesting sensitive scopes)
+     - Puedes dejar como **Testing** (permite hasta 100 test users)
+     - NO necesitas publicar la app para uso personal/homelab
+
+3. **Get Your Cloudflare Team Name** (necesitas esto ANTES de crear el Client ID):
+   - Ve a Cloudflare Dashboard → **Zero Trust** → **Settings** → **Custom Pages**
+   - En la parte superior verás tu **Team domain**: `<your-team-name>.cloudflareaccess.com`
+   - Anota tu team name (ej: `chocolandia`, `homelab`, etc.)
+   - Lo necesitarás para los redirect URIs
 
 4. **Create OAuth 2.0 Client ID**:
    - Navigate to **APIs & Services** → **Credentials**
    - Click **Create Credentials** → **OAuth 2.0 Client ID**
+   - Si te pide configurar OAuth consent screen primero, regresa al paso 2
    - **Application type**: Select **Web application**
    - **Name**: `Cloudflare Access - Homelab`
    - **Authorized JavaScript origins**:
-     - Add: `https://<your-team-name>.cloudflareaccess.com`
-     - Replace `<your-team-name>` with your Cloudflare Zero Trust team name
-     - Find your team name at: Cloudflare Dashboard → Zero Trust → Settings → Custom Pages → Team domain
+     - Click **Add URI**
+     - Add: `https://<tu-team-name>.cloudflareaccess.com`
+     - Ejemplo: `https://chocolandia.cloudflareaccess.com`
    - **Authorized redirect URIs**:
-     - Add: `https://<your-team-name>.cloudflareaccess.com/cdn-cgi/access/callback`
+     - Click **Add URI**
+     - Add: `https://<tu-team-name>.cloudflareaccess.com/cdn-cgi/access/callback`
+     - Ejemplo: `https://chocolandia.cloudflareaccess.com/cdn-cgi/access/callback`
    - Click **Create**
-   - **CRITICAL**: Copy **Client ID** and **Client Secret** immediately
-
-5. **Verify Redirect URI**:
-   - To find your exact redirect URI:
-     - Go to Cloudflare Dashboard → Zero Trust → Settings → Authentication
-     - Click **Add new** under Login methods
-     - Select **Google** (don't save yet, just note the redirect URI shown)
-     - Copy the exact redirect URI displayed
+   - **CRÍTICO**: Copia inmediatamente:
+     - **Client ID** (formato: `123456789012-abc123def456.apps.googleusercontent.com`)
+     - **Client Secret** (formato: `GOCSPX-ABC123DEF456`)
+   - Guárdalos en un lugar seguro (los necesitarás en terraform.tfvars)
 
 ---
 
