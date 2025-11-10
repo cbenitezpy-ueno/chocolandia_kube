@@ -66,7 +66,8 @@
       "Bash(tofu import:*)",
       "Bash(kubectl --kubeconfig=./kubeconfig logs:*)",
       "Bash(open https://grafana.chocolandiadc.com)",
-      "Bash(tofu show:*)"
+      "Bash(tofu show:*)",
+      "Bash(git -C /Users/cbenitez/chocolandia_kube diff terraform/environments/chocolandiadc-mvp/terraform.tfvars)"
     ],
     "deny": [],
     "ask": []
