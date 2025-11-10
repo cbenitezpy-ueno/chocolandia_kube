@@ -20,12 +20,12 @@
 **Goal**: Create project structure and scaffolding
 **Estimated Time**: 60-90 minutes
 
-- [ ] T001 Create Terraform module directory structure at `/Users/cbenitez/chocolandia_kube/terraform/modules/cloudflare-tunnel/` (~10 min)
-- [ ] T002 Create environment directory at `/Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/` (~5 min)
-- [ ] T003 Create scripts directory and test skeleton at `/Users/cbenitez/chocolandia_kube/scripts/test-tunnel.sh` with executable permissions (~10 min)
-- [ ] T004 Create documentation directory at `/Users/cbenitez/chocolandia_kube/docs/004-cloudflare-tunnel/` (~5 min)
-- [ ] T005 Create `.gitignore` entries for `/Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/terraform.tfvars` and `.terraform/` directories (~5 min)
-- [ ] T006 Initialize Git tracking and commit setup phase changes (~10 min)
+- [X] T001 Create Terraform module directory structure at `/Users/cbenitez/chocolandia_kube/terraform/modules/cloudflare-tunnel/` (~10 min)
+- [X] T002 Create environment directory at `/Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/` (~5 min)
+- [X] T003 Create scripts directory and test skeleton at `/Users/cbenitez/chocolandia_kube/scripts/test-tunnel.sh` with executable permissions (~10 min)
+- [X] T004 Create documentation directory at `/Users/cbenitez/chocolandia_kube/docs/004-cloudflare-tunnel/` (~5 min)
+- [X] T005 Create `.gitignore` entries for `/Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/terraform.tfvars` and `.terraform/` directories (~5 min)
+- [X] T006 Initialize Git tracking and commit setup phase changes (~10 min)
 
 **Validation**: All directories exist, .gitignore configured, test-tunnel.sh is executable
 
