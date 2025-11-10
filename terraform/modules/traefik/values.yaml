@@ -1,0 +1,137 @@
+# Traefik Helm Chart Values
+# Feature 005: Traefik Ingress Controller
+# HA configuration with MetalLB LoadBalancer integration
+
+# Deployment configuration
+deployment:
+  replicas: 2  # HA: 2 replicas for fault tolerance
+
+# Pod Disruption Budget for HA
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1  # At least 1 replica always running during disruptions
+
+# Service configuration
+service:
+  type: LoadBalancer  # MetalLB assigns external IP
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: "192.168.4.201"  # Static IP from MetalLB pool
+  externalTrafficPolicy: Local  # Preserve source IP
+
+# Ports configuration
+ports:
+  web:
+    port: 80
+    expose:
+      default: true
+    exposedPort: 80
+  websecure:
+    port: 443
+    expose:
+      default: true
+    exposedPort: 443
+    # TLS is enabled by default
+  metrics:
+    port: 9100
+    expose:
+      default: false  # Internal only, not exposed via LoadBalancer
+
+# Prometheus metrics
+metrics:
+  prometheus:
+    enabled: true
+    entryPoint: metrics
+
+# Dashboard
+dashboard:
+  enabled: true
+
+# API
+api:
+  dashboard: true
+  insecure: false  # Don't expose on entrypoint
+
+# Resource limits
+resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "500m"
+    memory: "256Mi"
+
+# Health checks
+readinessProbe:
+  httpGet:
+    path: /ping
+    port: 9000
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 2
+  successThreshold: 1
+  failureThreshold: 3
+
+livenessProbe:
+  httpGet:
+    path: /ping
+    port: 9000
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 2
+  successThreshold: 1
+  failureThreshold: 3
+
+# Logs
+logs:
+  general:
+    level: INFO
+  access:
+    enabled: true
+    format: common
+
+# Providers
+providers:
+  kubernetesCRD:
+    enabled: true
+    allowCrossNamespace: true
+  kubernetesIngress:
+    enabled: true
+    publishedService:
+      enabled: true
+
+# Additional arguments
+additionalArguments:
+  - "--ping=true"
+  - "--ping.entrypoint=traefik"
+
+# Pod anti-affinity to spread replicas across nodes
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - traefik
+          topologyKey: kubernetes.io/hostname
+
+# Security context
+securityContext:
+  capabilities:
+    drop: [ALL]
+    add: [NET_BIND_SERVICE]
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+
+# RBAC
+rbac:
+  enabled: true
+
+# Service Account
+serviceAccount:
+  create: true
