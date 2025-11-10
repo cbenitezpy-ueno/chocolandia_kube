@@ -1,0 +1,20 @@
+# whoami IngressRoute
+# Feature 005: Traefik Ingress Controller
+# HTTP routing example using Traefik CRD
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: whoami
+  namespace: default
+  labels:
+    app: whoami
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`whoami.chocolandiadc.local`)
+      kind: Rule
+      services:
+        - name: whoami
+          port: 80
