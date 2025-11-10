@@ -27,11 +27,13 @@ Your API Token must have the following permissions:
 
 | Permission Type | Scope | Access Level |
 |----------------|-------|--------------|
-| Account | Cloudflare Tunnel | Edit |
+| Account | **Zero Trust** | Edit |
 | Account | Access: Apps and Policies | Edit |
 | Account | Access: Organizations, Identity Providers, and Groups | Edit |
 | Zone | DNS | Edit |
 | Zone | Zone Settings | Read |
+
+**NOTA IMPORTANTE**: En la interfaz de Cloudflare, "Cloudflare Tunnel" aparece como "**Zero Trust**" en la sección de Account permissions. Son lo mismo.
 
 ### Creation Steps
 
@@ -46,8 +48,8 @@ Your API Token must have the following permissions:
 
 3. **Configure Permissions**:
    - **Token name**: `Terraform - Cloudflare Tunnel Management`
-   - **Permissions**:
-     - Account → Cloudflare Tunnel → Edit
+   - **Permissions** (busca exactamente estos nombres):
+     - Account → **Zero Trust** → Edit (este es el permiso para Cloudflare Tunnel)
      - Account → Access: Apps and Policies → Edit
      - Account → Access: Organizations, Identity Providers, and Groups → Edit
      - Zone → DNS → Edit
