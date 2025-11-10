@@ -53,8 +53,8 @@ resource "cloudflare_record" "tunnel_dns" {
   for_each = { for rule in var.ingress_rules : rule.hostname => rule }
 
   zone_id = var.cloudflare_zone_id
-  name    = split(".${var.domain_name}", each.value.hostname)[0]    # Extract subdomain (e.g., "pihole" from "pihole.chocolandiadc.com")
-  content = cloudflare_zero_trust_tunnel_cloudflared.main.cname     # Point to tunnel CNAME (e.g., "<tunnel-id>.cfargotunnel.com")
+  name    = split(".${var.domain_name}", each.value.hostname)[0] # Extract subdomain (e.g., "pihole" from "pihole.chocolandiadc.com")
+  content = cloudflare_zero_trust_tunnel_cloudflared.main.cname  # Point to tunnel CNAME (e.g., "<tunnel-id>.cfargotunnel.com")
   type    = "CNAME"
   proxied = true # Enable Cloudflare proxy (orange cloud) for DDoS protection + caching
   ttl     = 1    # Auto TTL when proxied=true
@@ -100,7 +100,7 @@ resource "cloudflare_zero_trust_access_application" "services" {
 
   # Enable CORS
   cors_headers {
-    allowed_origins = ["https://${each.value.hostname}"]
+    allowed_origins   = ["https://${each.value.hostname}"]
     allow_all_methods = true
     allow_all_headers = true
     allow_credentials = true
@@ -124,7 +124,7 @@ resource "cloudflare_zero_trust_access_policy" "email_authorization" {
 
   # Include rule: allow specified email addresses using Google OAuth
   include {
-    email       = var.authorized_emails
+    email        = var.authorized_emails
     login_method = [cloudflare_zero_trust_access_identity_provider.google_oauth.id]
   }
 }

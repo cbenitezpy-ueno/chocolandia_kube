@@ -94,8 +94,8 @@ resource "kubernetes_deployment" "pihole" {
 
       spec {
         container {
-          name  = "pihole"
-          image = var.image
+          name              = "pihole"
+          image             = var.image
           image_pull_policy = "IfNotPresent"
 
           # Environment Variables
