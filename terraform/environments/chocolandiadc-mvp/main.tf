@@ -129,3 +129,34 @@ resource "null_resource" "wait_for_cluster_ready" {
     EOT
   }
 }
+
+# ============================================================================
+# Cloudflare Zero Trust Tunnel (Feature 004)
+# ============================================================================
+
+module "cloudflare_tunnel" {
+  source = "../../modules/cloudflare-tunnel"
+
+  # Cloudflare Configuration
+  tunnel_name           = var.tunnel_name
+  cloudflare_account_id = var.cloudflare_account_id
+  cloudflare_zone_id    = var.cloudflare_zone_id
+  domain_name           = var.domain_name
+
+  # Kubernetes Configuration
+  namespace     = var.tunnel_namespace
+  replica_count = var.replica_count
+
+  # Ingress Rules
+  ingress_rules = var.ingress_rules
+
+  # Access Control
+  google_oauth_client_id     = var.google_oauth_client_id
+  google_oauth_client_secret = var.google_oauth_client_secret
+  authorized_emails          = var.authorized_emails
+
+  # Ensure cluster is ready before deploying tunnel
+  depends_on = [
+    null_resource.wait_for_cluster_ready
+  ]
+}

@@ -25,6 +25,14 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = "~> 2.23"
     }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 4.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6"
+    }
   }
 }
 
@@ -48,3 +56,17 @@ provider "helm" {
 provider "kubernetes" {
   config_path = "${path.root}/kubeconfig"
 }
+
+# ============================================================================
+# Cloudflare Provider Configuration (Feature 004)
+# ============================================================================
+
+provider "cloudflare" {
+  api_token = var.cloudflare_api_token
+}
+
+# ============================================================================
+# Random Provider Configuration (Feature 004)
+# ============================================================================
+
+provider "random" {}

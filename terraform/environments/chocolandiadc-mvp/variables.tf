@@ -104,3 +104,76 @@ variable "k3s_additional_flags" {
   type        = list(string)
   default     = []
 }
+
+# ============================================================================
+# Cloudflare Zero Trust Configuration (Feature 004)
+# ============================================================================
+
+variable "cloudflare_api_token" {
+  description = "Cloudflare API token with Tunnel, Access, and DNS permissions"
+  type        = string
+  sensitive   = true
+}
+
+variable "cloudflare_account_id" {
+  description = "Cloudflare Account ID"
+  type        = string
+}
+
+variable "cloudflare_zone_id" {
+  description = "Cloudflare Zone ID for chocolandiadc.com"
+  type        = string
+}
+
+variable "domain_name" {
+  description = "Cloudflare-managed domain name"
+  type        = string
+  default     = "chocolandiadc.com"
+}
+
+variable "google_oauth_client_id" {
+  description = "Google OAuth 2.0 Client ID"
+  type        = string
+}
+
+variable "google_oauth_client_secret" {
+  description = "Google OAuth 2.0 Client Secret"
+  type        = string
+  sensitive   = true
+}
+
+variable "authorized_emails" {
+  description = "List of email addresses authorized to access protected services"
+  type        = list(string)
+}
+
+variable "tunnel_name" {
+  description = "Cloudflare Tunnel name"
+  type        = string
+  default     = "chocolandiadc-tunnel"
+}
+
+variable "tunnel_namespace" {
+  description = "Kubernetes namespace for Cloudflare Tunnel deployment"
+  type        = string
+  default     = "cloudflare-tunnel"
+}
+
+variable "replica_count" {
+  description = "Number of cloudflared replicas (1 for MVP, 2+ for HA)"
+  type        = number
+  default     = 1
+
+  validation {
+    condition     = var.replica_count >= 1
+    error_message = "Replica count must be at least 1."
+  }
+}
+
+variable "ingress_rules" {
+  description = "List of ingress rules mapping public hostnames to internal services"
+  type = list(object({
+    hostname = string
+    service  = string
+  }))
+}

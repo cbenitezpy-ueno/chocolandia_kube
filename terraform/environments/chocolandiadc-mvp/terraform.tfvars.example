@@ -1,0 +1,74 @@
+# Cloudflare Zero Trust Tunnel Configuration
+# ==================================================
+# This file serves as a template for terraform.tfvars (which is .gitignored)
+# Copy this file to terraform.tfvars and fill in your actual values
+
+# Cloudflare API Configuration
+# ------------------------------
+# Create API token at: https://dash.cloudflare.com/profile/api-tokens
+# Required permissions:
+#   - Account: Cloudflare Tunnel (Edit)
+#   - Account: Access: Apps and Policies (Edit)
+#   - Account: Access: Organizations, Identity Providers, and Groups (Edit)
+#   - Zone: DNS (Edit)
+#   - Zone: Zone Settings (Read)
+cloudflare_api_token = "your-api-token-here"
+
+# Find at: Cloudflare Dashboard → Accounts → Account ID (right sidebar)
+cloudflare_account_id = "your-account-id-here"
+
+# Find at: Cloudflare Dashboard → Select Domain → Zone ID (right sidebar under API section)
+cloudflare_zone_id = "your-zone-id-here"
+
+# Your Cloudflare-managed domain
+domain_name = "chocolandiadc.com"
+
+# Google OAuth Configuration
+# ------------------------------
+# Create at: https://console.cloud.google.com/apis/credentials
+# Application type: Web application
+# Authorized redirect URI: https://<team-name>.cloudflareaccess.com/cdn-cgi/access/callback
+google_oauth_client_id     = "your-google-client-id.apps.googleusercontent.com"
+google_oauth_client_secret = "your-google-client-secret"
+
+# Access Control
+# ------------------------------
+# List of email addresses authorized to access protected services
+# Users must authenticate via Google OAuth
+authorized_emails = [
+  "your-email@gmail.com",
+  # Add additional authorized emails below
+  # "family-member@gmail.com",
+  # "friend@gmail.com",
+]
+
+# Tunnel Configuration
+# ------------------------------
+# Human-readable tunnel name (will appear in Cloudflare Zero Trust dashboard)
+tunnel_name = "chocolandiadc-tunnel"
+
+# Kubernetes namespace for tunnel deployment
+tunnel_namespace = "cloudflare-tunnel"
+
+# Number of cloudflared replicas (1 for MVP, 2+ for HA)
+replica_count = 1
+
+# Ingress Rules
+# ------------------------------
+# Maps public hostnames to internal Kubernetes services
+# Format: { hostname = "subdomain.domain.com", service = "http://service-name.namespace.svc.cluster.local:port" }
+ingress_rules = [
+  {
+    hostname = "pihole.chocolandiadc.com"
+    service  = "http://pihole-web.pihole.svc.cluster.local:80"
+  },
+  {
+    hostname = "grafana.chocolandiadc.com"
+    service  = "http://grafana.monitoring.svc.cluster.local:3000"
+  },
+  # Add additional services here
+  # {
+  #   hostname = "service.chocolandiadc.com"
+  #   service  = "http://service-name.namespace.svc.cluster.local:port"
+  # },
+]
