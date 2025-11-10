@@ -122,13 +122,9 @@ resource "cloudflare_zero_trust_access_policy" "email_authorization" {
   precedence     = 1
   decision       = "allow"
 
-  # Include rule: allow specified email addresses
+  # Include rule: allow specified email addresses using Google OAuth
   include {
-    email = var.authorized_emails
-  }
-
-  # Require rule: must use Google OAuth
-  require {
-    auth_method = cloudflare_zero_trust_access_identity_provider.google_oauth.id
+    email       = var.authorized_emails
+    login_method = [cloudflare_zero_trust_access_identity_provider.google_oauth.id]
   }
 }
