@@ -76,6 +76,40 @@ output "ssh_commands" {
 }
 
 # ============================================================================
+# Cloudflare Tunnel Outputs (Feature 004)
+# ============================================================================
+
+output "tunnel_id" {
+  description = "Cloudflare Tunnel ID"
+  value       = module.cloudflare_tunnel.tunnel_id
+}
+
+output "tunnel_cname" {
+  description = "Cloudflare Tunnel CNAME target"
+  value       = module.cloudflare_tunnel.tunnel_cname
+}
+
+output "tunnel_namespace" {
+  description = "Kubernetes namespace where cloudflared is deployed"
+  value       = module.cloudflare_tunnel.namespace
+}
+
+output "service_urls" {
+  description = "Public URLs for exposed services"
+  value       = module.cloudflare_tunnel.service_urls
+}
+
+output "dns_records" {
+  description = "Created DNS CNAME records"
+  value       = module.cloudflare_tunnel.dns_records
+}
+
+output "access_applications" {
+  description = "Cloudflare Access Application IDs"
+  value       = module.cloudflare_tunnel.access_application_ids
+}
+
+# ============================================================================
 # Next Steps
 # ============================================================================
 
@@ -100,5 +134,12 @@ output "next_steps" {
     6. SSH to nodes:
        Master: ssh ${var.ssh_user}@${var.master1_ip}
        Worker: ssh ${var.ssh_user}@${var.nodo1_ip}
+
+    7. Verify Cloudflare Tunnel (Feature 004):
+       kubectl --kubeconfig=${path.module}/kubeconfig get pods -n cloudflare-tunnel
+       kubectl --kubeconfig=${path.module}/kubeconfig logs -n cloudflare-tunnel -l app=cloudflared
+
+    8. Access protected services:
+       ${join("\n       ", [for name, url in module.cloudflare_tunnel.service_urls : "${name}: ${url}"])}
   EOT
 }
