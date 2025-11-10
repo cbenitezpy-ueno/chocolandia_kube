@@ -245,3 +245,32 @@ resource "kubernetes_deployment" "cloudflared" {
     create_before_destroy = true
   }
 }
+
+# ============================================================================
+# Pod Disruption Budget
+# ============================================================================
+
+# Ensure at least 1 pod is always available during voluntary disruptions
+# (e.g., node drains, updates, scaling operations)
+resource "kubernetes_pod_disruption_budget_v1" "cloudflared" {
+  metadata {
+    name      = "cloudflared-pdb"
+    namespace = kubernetes_namespace.cloudflare_tunnel.metadata[0].name
+
+    labels = {
+      "app.kubernetes.io/name"       = "cloudflare-tunnel"
+      "app.kubernetes.io/component"  = "pdb"
+      "app.kubernetes.io/managed-by" = "terraform"
+    }
+  }
+
+  spec {
+    min_available = 1
+
+    selector {
+      match_labels = {
+        "app" = "cloudflared"
+      }
+    }
+  }
+}
