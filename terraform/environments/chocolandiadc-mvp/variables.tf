@@ -209,3 +209,9 @@ variable "cert_manager_enable_metrics" {
   type        = bool
   default     = true
 }
+
+variable "cert_manager_enable_servicemonitor" {
+  description = "Enable ServiceMonitor for Prometheus Operator (requires Prometheus Operator)"
+  type        = bool
+  default     = true
+}

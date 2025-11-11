@@ -43,6 +43,12 @@ variable "enable_metrics" {
   default     = true
 }
 
+variable "enable_servicemonitor" {
+  description = "Enable ServiceMonitor for Prometheus Operator (requires Prometheus Operator)"
+  type        = bool
+  default     = false
+}
+
 # High availability configuration
 variable "controller_replicas" {
   description = "Number of cert-manager controller replicas"

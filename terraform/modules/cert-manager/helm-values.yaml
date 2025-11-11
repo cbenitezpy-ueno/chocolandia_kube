@@ -105,12 +105,14 @@ cainjector:
 prometheus:
   enabled: ${enable_metrics}
   servicemonitor:
-    enabled: false  # Set to true if Prometheus Operator is deployed
+    enabled: ${enable_servicemonitor}
     prometheusInstance: default
     targetPort: 9402
     path: /metrics
     interval: 60s
     scrapeTimeout: 30s
+    labels:
+      release: kube-prometheus-stack
 
 # Security context
 securityContext:

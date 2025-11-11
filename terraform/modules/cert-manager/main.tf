@@ -46,6 +46,7 @@ resource "helm_release" "cert_manager" {
       cainjector_cpu_limit      = var.cainjector_cpu_limit
       cainjector_memory_limit   = var.cainjector_memory_limit
       enable_metrics            = var.enable_metrics
+      enable_servicemonitor     = var.enable_servicemonitor
     })
   ]
 

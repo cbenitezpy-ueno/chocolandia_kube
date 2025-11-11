@@ -19,7 +19,8 @@ module "cert_manager" {
   enable_production = var.cert_manager_enable_production
 
   # Monitoring configuration
-  enable_metrics = var.cert_manager_enable_metrics
+  enable_metrics        = var.cert_manager_enable_metrics
+  enable_servicemonitor = var.cert_manager_enable_servicemonitor
 
   # High availability configuration (homelab: single replica)
   controller_replicas = 1
