@@ -3,7 +3,7 @@
 **Feature**: 006-cert-manager
 **Branch**: `006-cert-manager`
 **Generated**: 2025-11-11
-**Total Tasks**: 79
+**Total Tasks**: 96
 
 This document provides a complete, ordered task breakdown for implementing cert-manager with Let's Encrypt integration.
 
@@ -14,18 +14,18 @@ This document provides a complete, ordered task breakdown for implementing cert-
 Tasks are organized by user story (from spec.md) to enable independent implementation and testing:
 
 - **Phase 1**: Setup (4 tasks) - Project initialization
-- **Phase 2**: Foundational (6 tasks) - Blocking prerequisites
-- **Phase 3**: User Story 1 - Deploy cert-manager (P1, MVP) - 15 tasks
-- **Phase 4**: User Story 2 - Configure Let's Encrypt Staging Issuer (P1, MVP) - 11 tasks
-- **Phase 5**: User Story 3 - Configure Let's Encrypt Production Issuer (P2) - 10 tasks
+- **Phase 2**: Foundational (7 tasks) - Blocking prerequisites [UPDATED: +1 firewall check]
+- **Phase 3**: User Story 1 - Deploy cert-manager (P1, MVP) - 21 tasks [UPDATED: +1 logging validation]
+- **Phase 4**: User Story 2 - Configure Let's Encrypt Staging Issuer (P1, MVP) - 13 tasks
+- **Phase 5**: User Story 3 - Configure Let's Encrypt Production Issuer (P2) - 13 tasks
 - **Phase 6**: User Story 4 - Integrate with Traefik Ingress (P2) - 12 tasks
-- **Phase 7**: User Story 5 - Configure Certificate Renewal (P3) - 8 tasks
+- **Phase 7**: User Story 5 - Configure Certificate Renewal (P3) - 9 tasks [UPDATED: +1 renewBefore validation]
 - **Phase 8**: User Story 6 - Enable Prometheus Metrics (P3) - 7 tasks
 - **Phase 9**: Polish & Cross-Cutting Concerns - 6 tasks
 
-**MVP Scope**: Phase 1-4 (46 tasks, ~90 minutes) - Includes cert-manager deployment and staging certificate validation
+**MVP Scope**: Phase 1-4 (48 tasks, ~95 minutes) - Includes cert-manager deployment and staging certificate validation
 
-**Full Feature**: All phases (79 tasks, ~150 minutes)
+**Full Feature**: All phases (96 tasks, ~160 minutes)
 
 ---
 
@@ -83,12 +83,13 @@ Phase 1 (Setup) → Phase 2 (Foundational)
 
 - [ ] T005 Verify K3s cluster is running and accessible via kubectl
 - [ ] T006 Verify Traefik ingress controller is deployed and healthy (Feature 005 dependency)
+- [ ] T006A Verify port 80 HTTP traffic is accessible from internet via Cloudflare Tunnel: curl -I http://chocolandiadc.com (validates ACME HTTP-01 prerequisite)
 - [ ] T007 [P] Create versions.tf with required providers (Helm, Kubernetes) at terraform/modules/cert-manager/versions.tf
 - [ ] T008 [P] Create variables.tf with module input variables at terraform/modules/cert-manager/variables.tf
 - [ ] T009 [P] Create outputs.tf with module output values at terraform/modules/cert-manager/outputs.tf
 - [ ] T010 Run tofu fmt and tofu validate on module scaffolding
 
-**Sequential Dependencies**: T005-T006 must complete first (verify prerequisites), then T007-T009 [P], then T010
+**Sequential Dependencies**: T005-T006A must complete first (verify prerequisites), then T007-T009 [P], then T010
 
 ---
 
@@ -142,12 +143,13 @@ Phase 1 (Setup) → Phase 2 (Foundational)
 - [ ] T028 [US1] Verify webhook ValidatingWebhookConfiguration exists: kubectl get validatingwebhookconfiguration cert-manager-webhook
 - [ ] T029 [US1] Verify webhook service is reachable: kubectl get svc -n cert-manager cert-manager-webhook
 - [ ] T030 [US1] Check cert-manager controller logs for errors: kubectl logs -n cert-manager -l app=cert-manager --tail=50
+- [ ] T030A [US1] Verify structured logging format (JSON): kubectl logs -n cert-manager -l app=cert-manager --tail=10 | grep -E '^\{' (validates FR-013)
 
 **Parallel Opportunities**:
 - T011-T012 can run in parallel (different sections of config)
 - T014-T017 can run in parallel (different resource configurations)
 - T018-T021 can run in parallel (independent probe configs)
-- T026-T029 can run in parallel after deployment (independent validations)
+- T026-T030A can run in parallel after deployment (independent validations)
 
 ---
 
@@ -290,6 +292,7 @@ Phase 1 (Setup) → Phase 2 (Foundational)
 ### Renewal Configuration
 
 - [ ] T071 [P] [US5] Verify default renewBefore setting in Certificate resources (should be 720h = 30 days)
+- [ ] T071A [P] [US5] Validate renewBefore configuration is explicitly set: kubectl get certificate test-cert-staging -o jsonpath='{.spec.renewBefore}' (validates SC-005)
 - [ ] T072 [P] [US5] Document renewal configuration in terraform/modules/cert-manager/README.md
 - [ ] T073 [US5] Install cmctl CLI tool for manual certificate operations (brew install cmctl or download binary)
 
@@ -303,6 +306,7 @@ Phase 1 (Setup) → Phase 2 (Foundational)
 
 **Parallel Opportunities**:
 - T071-T072 can run in parallel (documentation and verification)
+- T071A can run independently (explicit renewBefore validation)
 - T076-T078 can run in parallel after renewal (independent validations)
 
 ---
@@ -375,12 +379,16 @@ Before marking feature complete, verify all success criteria from spec.md:
 - [ ] **SC-002**: Staging certificate issued within 5 min ✅ (T040)
 - [ ] **SC-003**: Production certificate issued and browser-trusted ✅ (T057)
 - [ ] **SC-004**: IngressRoute annotation auto-provisions cert ✅ (T068)
-- [ ] **SC-005**: Renewal configured 30 days before expiry ✅ (T078)
+- [ ] **SC-005**: Renewal configured 30 days before expiry ✅ (T071A, T078)
 - [ ] **SC-006**: Prometheus metrics endpoint returns 200 ✅ (T083)
 - [ ] **SC-007**: All CRDs installed, webhook works ✅ (T027-T029)
 - [ ] **SC-008**: HTTP-01 challenge completes successfully ✅ (T043)
-- [ ] **SC-009**: Certificate logs visible ✅ (T030)
+- [ ] **SC-009**: Certificate logs visible ✅ (T030, T030A)
 - [ ] **SC-010**: Grafana dashboard displays metrics ✅ (T086, if Prometheus deployed)
+
+**Additional Validations**:
+- [ ] **FR-013**: Structured logging enabled ✅ (T021, T030A)
+- [ ] **Network-First Security**: Port 80 accessible ✅ (T006A)
 
 ---
 
@@ -392,11 +400,11 @@ Before marking feature complete, verify all success criteria from spec.md:
 ### Phase 2: 3 tasks parallel
 - T007, T008, T009 (scaffolding files)
 
-### Phase 3 (US1): 13 tasks parallel
+### Phase 3 (US1): 14 tasks parallel [UPDATED]
 - T011-T012 (Helm config sections)
 - T014-T017 (resource configs)
 - T018-T021 (health checks)
-- T026-T029 (deployment validations)
+- T026-T030A (deployment validations, including logging)
 
 ### Phase 4 (US2): 7 tasks parallel
 - T031-T034 (ClusterIssuer sections)
@@ -412,8 +420,8 @@ Before marking feature complete, verify all success criteria from spec.md:
 - T059-T061 (IngressRoute manifest)
 - T065-T067 (validations)
 
-### Phase 7 (US5): 5 tasks parallel
-- T071-T072 (renewal config)
+### Phase 7 (US5): 6 tasks parallel [UPDATED]
+- T071-T072, T071A (renewal config and validation)
 - T076-T078 (renewal validations)
 
 ### Phase 8 (US6): 4 tasks parallel
@@ -423,7 +431,7 @@ Before marking feature complete, verify all success criteria from spec.md:
 ### Phase 9: 3 tasks parallel
 - T087-T089 (documentation)
 
-**Total Parallel Opportunities**: 47 tasks can be executed in parallel (59% of total tasks)
+**Total Parallel Opportunities**: 49 tasks can be executed in parallel (51% of total 96 tasks)
 
 ---
 
@@ -431,11 +439,11 @@ Before marking feature complete, verify all success criteria from spec.md:
 
 ### MVP Delivery (Phases 1-4)
 
-**Time Estimate**: ~90 minutes
-**Tasks**: T001-T044 (46 tasks)
+**Time Estimate**: ~95 minutes
+**Tasks**: T001-T044 (48 tasks) [UPDATED: +2 validation tasks]
 **Deliverable**: cert-manager deployed with staging certificate validation
 
-**Value**: Proves certificate automation works, safe to test without production rate limits
+**Value**: Proves certificate automation works, safe to test without production rate limits, with enhanced validation
 
 ### Incremental Enhancements
 
@@ -466,15 +474,15 @@ Before marking feature complete, verify all success criteria from spec.md:
 ## Estimated Time Breakdown
 
 - Phase 1 (Setup): 4 tasks, ~5 minutes
-- Phase 2 (Foundational): 6 tasks, ~10 minutes
-- Phase 3 (US1): 20 tasks, ~35 minutes
+- Phase 2 (Foundational): 7 tasks, ~12 minutes [UPDATED: +1 firewall check]
+- Phase 3 (US1): 21 tasks, ~37 minutes [UPDATED: +1 logging validation]
 - Phase 4 (US2): 13 tasks, ~25 minutes
 - Phase 5 (US3): 13 tasks, ~20 minutes
 - Phase 6 (US4): 12 tasks, ~25 minutes
-- Phase 7 (US5): 8 tasks, ~15 minutes
+- Phase 7 (US5): 9 tasks, ~17 minutes [UPDATED: +1 renewBefore validation]
 - Phase 8 (US6): 7 tasks, ~10 minutes
 - Phase 9 (Polish): 6 tasks, ~15 minutes
 
-**Total Estimated Time**: ~150 minutes (~2.5 hours)
+**Total Estimated Time**: ~160 minutes (~2.7 hours)
 
-**MVP Time** (Phases 1-4): ~90 minutes (~1.5 hours)
+**MVP Time** (Phases 1-4): ~95 minutes (~1.6 hours)
