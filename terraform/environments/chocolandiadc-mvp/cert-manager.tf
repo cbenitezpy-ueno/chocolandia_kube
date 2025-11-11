@@ -22,6 +22,10 @@ module "cert_manager" {
   enable_metrics        = var.cert_manager_enable_metrics
   enable_servicemonitor = var.cert_manager_enable_servicemonitor
 
+  # Cloudflare DNS-01 challenge configuration
+  cloudflare_api_token = var.cloudflare_api_token
+  cloudflare_email     = var.cloudflare_email
+
   # High availability configuration (homelab: single replica)
   controller_replicas = 1
   webhook_replicas    = 1

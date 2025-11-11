@@ -155,3 +155,17 @@ variable "cainjector_memory_limit" {
   type        = string
   default     = "128Mi"
 }
+
+# Cloudflare DNS-01 challenge configuration
+variable "cloudflare_api_token" {
+  description = "Cloudflare API token for DNS-01 challenge (optional, enables DNS-01 if provided)"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "cloudflare_email" {
+  description = "Cloudflare account email (required if cloudflare_api_token is provided)"
+  type        = string
+  default     = ""
+}

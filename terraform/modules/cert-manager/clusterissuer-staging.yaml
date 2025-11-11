@@ -16,8 +16,19 @@ spec:
     privateKeySecretRef:
       name: letsencrypt-staging-account-key
 
-    # HTTP-01 challenge solver configuration
+    # Challenge solver configuration
     solvers:
+%{ if use_dns01 ~}
+      # DNS-01 challenge solver with Cloudflare (recommended for wildcard certs and when HTTP is redirected)
+      - dns01:
+          cloudflare:
+            email: ${cloudflare_email}
+            apiTokenSecretRef:
+              name: ${cloudflare_secret_name}
+              key: api-token
+%{ else ~}
+      # HTTP-01 challenge solver configuration
       - http01:
           ingress:
             class: traefik
+%{ endif ~}
