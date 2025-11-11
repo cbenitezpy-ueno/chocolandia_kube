@@ -54,6 +54,17 @@ resource "helm_release" "cert_manager" {
   ]
 }
 
+# Render ClusterIssuer manifests
+locals {
+  staging_issuer_manifest = templatefile("${path.module}/clusterissuer-staging.yaml", {
+    acme_email = var.acme_email
+  })
+
+  production_issuer_manifest = templatefile("${path.module}/clusterissuer-production.yaml", {
+    acme_email = var.acme_email
+  })
+}
+
 # Wait for cert-manager CRDs to be ready
 resource "null_resource" "wait_for_crds" {
   provisioner "local-exec" {
@@ -84,9 +95,7 @@ resource "null_resource" "letsencrypt_staging" {
   provisioner "local-exec" {
     command = <<-EOT
       cat <<'EOF' | kubectl apply -f -
-$(templatefile("${path.module}/clusterissuer-staging.yaml", {
-  acme_email = var.acme_email
-}))
+${local.staging_issuer_manifest}
 EOF
     EOT
   }
@@ -108,9 +117,7 @@ resource "null_resource" "letsencrypt_production" {
   provisioner "local-exec" {
     command = <<-EOT
       cat <<'EOF' | kubectl apply -f -
-$(templatefile("${path.module}/clusterissuer-production.yaml", {
-  acme_email = var.acme_email
-}))
+${local.production_issuer_manifest}
 EOF
     EOT
   }
