@@ -54,47 +54,22 @@ resource "helm_release" "cert_manager" {
   ]
 }
 
-# Create staging ClusterIssuer for Let's Encrypt (testing)
-resource "kubernetes_manifest" "letsencrypt_staging" {
-  count = var.enable_staging ? 1 : 0
-
-  manifest = {
-    apiVersion = "cert-manager.io/v1"
-    kind       = "ClusterIssuer"
-
-    metadata = {
-      name = "letsencrypt-staging"
-
-      labels = {
-        "app.kubernetes.io/managed-by" = "terraform"
-      }
-    }
-
-    spec = {
-      acme = {
-        # Staging ACME server (higher rate limits, fake certificates)
-        server = "https://acme-staging-v02.api.letsencrypt.org/directory"
-
-        # Email for expiry notifications
-        email = var.acme_email
-
-        # Secret to store ACME account private key
-        privateKeySecretRef = {
-          name = "letsencrypt-staging-account-key"
-        }
-
-        # HTTP-01 challenge solver configuration
-        solvers = [
-          {
-            http01 = {
-              ingress = {
-                class = "traefik"
-              }
-            }
-          }
-        ]
-      }
-    }
+# Wait for cert-manager CRDs to be ready
+resource "null_resource" "wait_for_crds" {
+  provisioner "local-exec" {
+    command = <<-EOT
+      echo "Waiting for cert-manager CRDs to be ready..."
+      for i in {1..30}; do
+        if kubectl get crd clusterissuers.cert-manager.io >/dev/null 2>&1; then
+          echo "CRDs are ready"
+          exit 0
+        fi
+        echo "Waiting for CRDs... attempt $i/30"
+        sleep 2
+      done
+      echo "Timeout waiting for CRDs"
+      exit 1
+    EOT
   }
 
   depends_on = [
@@ -102,50 +77,50 @@ resource "kubernetes_manifest" "letsencrypt_staging" {
   ]
 }
 
-# Create production ClusterIssuer for Let's Encrypt (trusted certificates)
-resource "kubernetes_manifest" "letsencrypt_production" {
-  count = var.enable_production ? 1 : 0
+# Create staging ClusterIssuer for Let's Encrypt (testing)
+resource "null_resource" "letsencrypt_staging" {
+  count = var.enable_staging ? 1 : 0
 
-  manifest = {
-    apiVersion = "cert-manager.io/v1"
-    kind       = "ClusterIssuer"
+  provisioner "local-exec" {
+    command = <<-EOT
+      cat <<'EOF' | kubectl apply -f -
+$(templatefile("${path.module}/clusterissuer-staging.yaml", {
+  acme_email = var.acme_email
+}))
+EOF
+    EOT
+  }
 
-    metadata = {
-      name = "letsencrypt-production"
-
-      labels = {
-        "app.kubernetes.io/managed-by" = "terraform"
-      }
-    }
-
-    spec = {
-      acme = {
-        # Production ACME server (rate limited, trusted certificates)
-        server = "https://acme-v02.api.letsencrypt.org/directory"
-
-        # Email for expiry notifications
-        email = var.acme_email
-
-        # Secret to store ACME account private key
-        privateKeySecretRef = {
-          name = "letsencrypt-production-account-key"
-        }
-
-        # HTTP-01 challenge solver configuration
-        solvers = [
-          {
-            http01 = {
-              ingress = {
-                class = "traefik"
-              }
-            }
-          }
-        ]
-      }
-    }
+  provisioner "local-exec" {
+    when    = destroy
+    command = "kubectl delete clusterissuer letsencrypt-staging --ignore-not-found=true"
   }
 
   depends_on = [
-    helm_release.cert_manager
+    null_resource.wait_for_crds
+  ]
+}
+
+# Create production ClusterIssuer for Let's Encrypt (trusted certificates)
+resource "null_resource" "letsencrypt_production" {
+  count = var.enable_production ? 1 : 0
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      cat <<'EOF' | kubectl apply -f -
+$(templatefile("${path.module}/clusterissuer-production.yaml", {
+  acme_email = var.acme_email
+}))
+EOF
+    EOT
+  }
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = "kubectl delete clusterissuer letsencrypt-production --ignore-not-found=true"
+  }
+
+  depends_on = [
+    null_resource.wait_for_crds
   ]
 }
