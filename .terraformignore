@@ -1,0 +1,26 @@
+# Terraform/OpenTofu state files
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Terraform/OpenTofu variable files
+*.tfvars
+*.auto.tfvars
+
+# Terraform/OpenTofu lock files
+.terraform.lock.hcl
+
+# Kubernetes secrets and certificates
+secrets/
+*.key
+*.crt
+*.pem
+
+# Kubeconfig files
+kubeconfig
+*.kubeconfig
+
+# Backup files
+*.bak
+*.backup
