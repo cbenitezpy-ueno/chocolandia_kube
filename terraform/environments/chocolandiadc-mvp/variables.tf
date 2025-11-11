@@ -125,6 +125,11 @@ variable "cloudflare_zone_id" {
   type        = string
 }
 
+variable "cloudflare_email" {
+  description = "Cloudflare account email (used for cert-manager DNS-01 challenge)"
+  type        = string
+}
+
 variable "domain_name" {
   description = "Cloudflare-managed domain name"
   type        = string

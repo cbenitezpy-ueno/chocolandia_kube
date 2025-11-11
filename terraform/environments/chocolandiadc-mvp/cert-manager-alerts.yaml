@@ -1,0 +1,130 @@
+---
+# Prometheus Alerts for cert-manager
+# Monitors certificate expiration, renewal failures, and component health
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cert-manager-alerts
+  namespace: monitoring
+  labels:
+    app: kube-prometheus-stack
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: cert-manager
+      interval: 30s
+      rules:
+        # Alert if certificate expires in less than 7 days
+        - alert: CertificateExpiringSoon
+          expr: |
+            (certmanager_certificate_expiration_timestamp_seconds - time()) / 86400 < 7
+          for: 1h
+          labels:
+            severity: warning
+            component: cert-manager
+          annotations:
+            summary: "Certificate {{ $labels.name }} expiring soon"
+            description: "Certificate {{ $labels.name }} in namespace {{ $labels.namespace }} will expire in {{ $value | humanizeDuration }}. Current expiry: {{ $value }}."
+
+        # Alert if certificate expires in less than 3 days (critical)
+        - alert: CertificateExpiringCritical
+          expr: |
+            (certmanager_certificate_expiration_timestamp_seconds - time()) / 86400 < 3
+          for: 30m
+          labels:
+            severity: critical
+            component: cert-manager
+          annotations:
+            summary: "Certificate {{ $labels.name }} expiring very soon!"
+            description: "CRITICAL: Certificate {{ $labels.name }} in namespace {{ $labels.namespace }} will expire in {{ $value | humanizeDuration }}. Immediate action required!"
+
+        # Alert if certificate is not ready
+        - alert: CertificateNotReady
+          expr: |
+            certmanager_certificate_ready_status == 0
+          for: 1h
+          labels:
+            severity: warning
+            component: cert-manager
+          annotations:
+            summary: "Certificate {{ $labels.name }} not ready"
+            description: "Certificate {{ $labels.name }} in namespace {{ $labels.namespace }} has been in not-ready state for over 1 hour. Check cert-manager logs and CertificateRequest status."
+
+        # Alert if certificate renewal is failing
+        - alert: CertificateRenewalFailed
+          expr: |
+            certmanager_certificate_ready_status == 0
+            and
+            (certmanager_certificate_expiration_timestamp_seconds - time()) / 86400 < 30
+          for: 2h
+          labels:
+            severity: critical
+            component: cert-manager
+          annotations:
+            summary: "Certificate {{ $labels.name }} renewal failing"
+            description: "Certificate {{ $labels.name }} in namespace {{ $labels.namespace }} is not ready and expires in less than 30 days. Renewal is likely failing."
+
+        # Alert on high ACME API error rate
+        - alert: ACMERequestFailureRateHigh
+          expr: |
+            sum(rate(certmanager_http_acme_client_request_count{status!~"2.."}[5m])) by (host)
+            /
+            sum(rate(certmanager_http_acme_client_request_count[5m])) by (host)
+            > 0.1
+          for: 15m
+          labels:
+            severity: warning
+            component: cert-manager
+          annotations:
+            summary: "High ACME API failure rate to {{ $labels.host }}"
+            description: "More than 10% of ACME API requests to {{ $labels.host }} are failing. Current rate: {{ $value | humanizePercentage }}."
+
+        # Alert if cert-manager pods are not running
+        - alert: CertManagerPodDown
+          expr: |
+            kube_deployment_status_replicas_available{namespace="cert-manager",deployment=~"cert-manager.*"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            component: cert-manager
+          annotations:
+            summary: "cert-manager {{ $labels.deployment }} pod is down"
+            description: "The {{ $labels.deployment }} deployment in namespace cert-manager has no available replicas. Certificate operations may be impacted."
+
+        # Alert if cert-manager pods are restarting frequently
+        - alert: CertManagerPodRestartingFrequently
+          expr: |
+            rate(kube_pod_container_status_restarts_total{namespace="cert-manager"}[15m]) > 0.05
+          for: 30m
+          labels:
+            severity: warning
+            component: cert-manager
+          annotations:
+            summary: "cert-manager pod {{ $labels.pod }} restarting frequently"
+            description: "Pod {{ $labels.pod }} in namespace cert-manager is restarting frequently ({{ $value }} restarts/min). Check pod logs for errors."
+
+        # Alert on high ACME request latency
+        - alert: ACMERequestLatencyHigh
+          expr: |
+            histogram_quantile(0.95,
+              sum(rate(certmanager_http_acme_client_request_duration_seconds_bucket[5m])) by (le, host)
+            ) > 10
+          for: 10m
+          labels:
+            severity: warning
+            component: cert-manager
+          annotations:
+            summary: "High ACME API latency to {{ $labels.host }}"
+            description: "95th percentile latency for ACME API requests to {{ $labels.host }} is {{ $value }}s. This may indicate Let's Encrypt API issues or network problems."
+
+        # Alert if no certificates exist (sanity check)
+        - alert: NoCertificatesFound
+          expr: |
+            count(certmanager_certificate_expiration_timestamp_seconds) == 0
+          for: 30m
+          labels:
+            severity: info
+            component: cert-manager
+          annotations:
+            summary: "No certificates found in cluster"
+            description: "cert-manager is running but no Certificate resources are being tracked. This may be expected if no certificates have been created yet."
