@@ -1,0 +1,130 @@
+# cert-manager Helm Chart Values
+# Official chart: https://github.com/cert-manager/cert-manager/tree/master/deploy/charts/cert-manager
+
+# Install CRDs as part of the Helm release
+installCRDs: true
+
+# Global configuration
+global:
+  # Logging configuration
+  logLevel: 2  # Info level (1=warn, 2=info, 3=debug)
+  leaderElection:
+    namespace: ${namespace}
+
+# Controller configuration
+replicaCount: ${controller_replicas}
+
+resources:
+  requests:
+    cpu: ${controller_cpu_request}
+    memory: ${controller_memory_request}
+  limits:
+    cpu: ${controller_cpu_limit}
+    memory: ${controller_memory_limit}
+
+# Liveness probe for controller
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 15
+  successThreshold: 1
+  failureThreshold: 8
+
+# Readiness probe for controller
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 15
+  successThreshold: 1
+  failureThreshold: 3
+
+# Webhook configuration
+webhook:
+  replicaCount: ${webhook_replicas}
+
+  resources:
+    requests:
+      cpu: ${webhook_cpu_request}
+      memory: ${webhook_memory_request}
+    limits:
+      cpu: ${webhook_cpu_limit}
+      memory: ${webhook_memory_limit}
+
+  # Liveness probe for webhook
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 15
+    successThreshold: 1
+    failureThreshold: 3
+
+  # Readiness probe for webhook
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 15
+    successThreshold: 1
+    failureThreshold: 3
+
+# CAInjector configuration
+cainjector:
+  enabled: true
+  replicaCount: ${cainjector_replicas}
+
+  resources:
+    requests:
+      cpu: ${cainjector_cpu_request}
+      memory: ${cainjector_memory_request}
+    limits:
+      cpu: ${cainjector_cpu_limit}
+      memory: ${cainjector_memory_limit}
+
+  # Liveness probe for cainjector
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 15
+    successThreshold: 1
+    failureThreshold: 8
+
+  # Readiness probe for cainjector
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 15
+    successThreshold: 1
+    failureThreshold: 3
+
+# Prometheus metrics configuration
+prometheus:
+  enabled: ${enable_metrics}
+  servicemonitor:
+    enabled: ${enable_servicemonitor}
+    prometheusInstance: default
+    targetPort: 9402
+    path: /metrics
+    interval: 60s
+    scrapeTimeout: 30s
+    labels:
+      release: kube-prometheus-stack
+
+# Security context
+securityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+# Container security context
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true

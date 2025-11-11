@@ -6,7 +6,7 @@ module "traefik" {
   source = "../../modules/traefik"
 
   release_name    = "traefik"
-  chart_version   = "30.0.2"  # Traefik v3.2.0
+  chart_version   = "30.0.2" # Traefik v3.2.0
   namespace       = "traefik"
   replicas        = 2
   loadbalancer_ip = "192.168.4.201"

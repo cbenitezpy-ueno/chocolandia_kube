@@ -177,3 +177,41 @@ variable "ingress_rules" {
     service  = string
   }))
 }
+
+# ============================================================================
+# cert-manager Configuration (Feature 006)
+# ============================================================================
+
+variable "cert_manager_acme_email" {
+  description = "Email address for Let's Encrypt ACME account notifications"
+  type        = string
+
+  validation {
+    condition     = can(regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", var.cert_manager_acme_email))
+    error_message = "cert_manager_acme_email must be a valid email address format"
+  }
+}
+
+variable "cert_manager_enable_staging" {
+  description = "Create staging ClusterIssuer for Let's Encrypt (recommended for testing)"
+  type        = bool
+  default     = true
+}
+
+variable "cert_manager_enable_production" {
+  description = "Create production ClusterIssuer for Let's Encrypt (trusted certificates)"
+  type        = bool
+  default     = true
+}
+
+variable "cert_manager_enable_metrics" {
+  description = "Enable Prometheus metrics endpoints for cert-manager components"
+  type        = bool
+  default     = true
+}
+
+variable "cert_manager_enable_servicemonitor" {
+  description = "Enable ServiceMonitor for Prometheus Operator (requires Prometheus Operator)"
+  type        = bool
+  default     = true
+}
