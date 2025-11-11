@@ -139,7 +139,7 @@ deployment:
 service:
   type: LoadBalancer                   # MetalLB assigns external IP
   annotations:
-    metallb.universe.tf/loadBalancerIPs: 192.168.4.240  # Static IP from MetalLB pool
+    metallb.universe.tf/loadBalancerIPs: 192.168.4.201  # Static IP from MetalLB pool
 
 # Ports configuration
 ports:
@@ -213,7 +213,7 @@ logs:
 
 **How it works**:
 - Traefik Service type=LoadBalancer triggers MetalLB IP assignment
-- MetalLB allocates IP from pool (e.g., 192.168.4.240)
+- MetalLB allocates IP from pool (e.g., 192.168.4.201)
 - MetalLB announces IP via ARP (L2 mode) to network
 - External clients send HTTP/HTTPS traffic to LoadBalancer IP
 - MetalLB forwards to Traefik pods (round-robin L4 load balancing)
@@ -223,13 +223,13 @@ logs:
 service:
   type: LoadBalancer
   annotations:
-    metallb.universe.tf/loadBalancerIPs: 192.168.4.240  # Request specific IP
+    metallb.universe.tf/loadBalancerIPs: 192.168.4.201  # Request specific IP
 ```
 
 **Validation**:
 ```bash
 kubectl get svc -n traefik traefik -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
-# Should return: 192.168.4.240
+# Should return: 192.168.4.201
 ```
 
 ### 2. IngressRoute CRD Routing
@@ -260,7 +260,7 @@ spec:
 
 **Validation**:
 ```bash
-curl -H "Host: whoami.local" http://192.168.4.240
+curl -H "Host: whoami.local" http://192.168.4.201
 # Should return: whoami service response
 ```
 
@@ -305,7 +305,7 @@ spec:
 **Deployment**:
 - Enabled via Helm values (dashboard.enabled: true)
 - Exposed via custom IngressRoute (not Helm default)
-- Accessible at http://192.168.4.240:9000/dashboard/ (internal port)
+- Accessible at http://192.168.4.201:9000/dashboard/ (internal port)
 - Future: IngressRoute with hostname (e.g., traefik.local) + basic auth
 
 **Security**:
@@ -380,7 +380,7 @@ spec:
 │ External Client │
 │ (Browser/curl)  │
 └────────┬────────┘
-         │ HTTP request to 192.168.4.240:80
+         │ HTTP request to 192.168.4.201:80
          │ Host: whoami.local
          ▼
 ┌─────────────────────────────────────┐
@@ -445,9 +445,9 @@ kubectl get pods -n traefik -l app.kubernetes.io/name=traefik
 # Check LoadBalancer service has external IP
 kubectl get svc -n traefik traefik
 
-# Expected: EXTERNAL-IP = 192.168.4.240 (from MetalLB)
+# Expected: EXTERNAL-IP = 192.168.4.201 (from MetalLB)
 # NAME      TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)
-# traefik   LoadBalancer   10.43.100.123   192.168.4.240    80:30080/TCP,443:30443/TCP
+# traefik   LoadBalancer   10.43.100.123   192.168.4.201    80:30080/TCP,443:30443/TCP
 ```
 
 ### 3. HTTP Routing Validation
@@ -459,7 +459,7 @@ kubectl apply -f terraform/manifests/traefik/whoami-test.yaml
 kubectl apply -f terraform/manifests/traefik/whoami-ingressroute.yaml
 
 # Test HTTP request
-curl -H "Host: whoami.local" http://192.168.4.240
+curl -H "Host: whoami.local" http://192.168.4.201
 
 # Expected: whoami response with hostname, IP, headers
 ```
@@ -470,7 +470,7 @@ curl -H "Host: whoami.local" http://192.168.4.240
 kubectl delete pod -n traefik -l app.kubernetes.io/name=traefik --field-selector metadata.name=traefik-5d6f8b9c4d-abc12
 
 # Test routing still works (traffic goes to replica 2)
-curl -H "Host: whoami.local" http://192.168.4.240
+curl -H "Host: whoami.local" http://192.168.4.201
 
 # Expected: No downtime, successful response
 ```

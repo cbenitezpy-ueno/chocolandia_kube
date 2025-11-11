@@ -60,14 +60,14 @@ This document contains the complete task breakdown for implementing Traefik Ingr
 
 **Goal**: Deploy highly available Traefik ingress controller with MetalLB LoadBalancer integration, 2 replicas, and proper resource limits.
 
-**Test Criteria**: Traefik pods running (2/2), LoadBalancer IP assigned (192.168.4.240), CRDs installed, HTTP/HTTPS endpoints responding with 404.
+**Test Criteria**: Traefik pods running (2/2), LoadBalancer IP assigned (192.168.4.201), CRDs installed, HTTP/HTTPS endpoints responding with 404.
 
 - [ ] T012 [P] [US1] Create /Users/cbenitez/chocolandia_kube/terraform/modules/traefik/main.tf with helm_release resource for Traefik
 - [ ] T013 [P] [US1] Create /Users/cbenitez/chocolandia_kube/terraform/modules/traefik/variables.tf (replicas, loadbalancer_ip, chart_version, namespace, resources)
 - [ ] T014 [P] [US1] Create /Users/cbenitez/chocolandia_kube/terraform/modules/traefik/outputs.tf (loadbalancer_ip, deployment_status, namespace, service_name)
 - [ ] T015 [US1] Create /Users/cbenitez/chocolandia_kube/terraform/modules/traefik/versions.tf (Helm provider ~> 2.0, Kubernetes provider ~> 2.0)
 - [ ] T016 [US1] Create /Users/cbenitez/chocolandia_kube/terraform/modules/traefik/values.yaml with Helm chart values (deployment.replicas: 2, service.type: LoadBalancer)
-- [ ] T017 [US1] Configure values.yaml: set service.spec.loadBalancerIP to 192.168.4.240 (MetalLB IP)
+- [ ] T017 [US1] Configure values.yaml: set service.spec.loadBalancerIP to 192.168.4.201 (MetalLB IP)
 - [ ] T018 [US1] Configure values.yaml: set ports.web (80), ports.websecure (443), ports.metrics (9100)
 - [ ] T019 [US1] Configure values.yaml: set resource requests/limits (memory: 128Mi/256Mi, cpu: 100m/200m)
 - [ ] T020 [US1] Configure values.yaml: set readinessProbe and livenessProbe (httpGet /ping on port 9000)
@@ -85,7 +85,7 @@ This document contains the complete task breakdown for implementing Traefik Ingr
 - [ ] T032 [US1] Verify Traefik pods running: `kubectl get pods -n traefik` (expect 2/2 Running)
 - [ ] T033 [US1] Verify 2 replicas: `kubectl get deployment traefik -n traefik` (expect READY 2/2)
 - [ ] T034 [US1] Verify LoadBalancer service created: `kubectl get svc traefik -n traefik` (expect TYPE LoadBalancer)
-- [ ] T035 [US1] Verify LoadBalancer IP assigned: check EXTERNAL-IP is 192.168.4.240 (MetalLB)
+- [ ] T035 [US1] Verify LoadBalancer IP assigned: check EXTERNAL-IP is 192.168.4.201 (MetalLB)
 - [ ] T036 [US1] Verify Traefik CRDs installed: `kubectl get crd | grep traefik` (expect IngressRoute, Middleware, TLSOption, etc.)
 - [ ] T037 [US1] Verify IngressRoute CRD exists: `kubectl get crd ingressroutes.traefik.io`
 - [ ] T038 [US1] Verify Middleware CRD exists: `kubectl get crd middlewares.traefik.io`
@@ -93,8 +93,8 @@ This document contains the complete task breakdown for implementing Traefik Ingr
 - [ ] T040 [US1] Verify PodDisruptionBudget created: `kubectl get pdb -n traefik` (expect maxUnavailable: 1)
 - [ ] T041 [US1] Verify resource limits set: `kubectl describe pod -n traefik | grep -A 5 "Limits"`
 - [ ] T042 [US1] Verify health probes configured: `kubectl describe pod -n traefik | grep -A 3 "Liveness\|Readiness"`
-- [ ] T043 [US1] Test HTTP connectivity: `curl http://192.168.4.240` (expect 404 - no routes configured yet)
-- [ ] T044 [US1] Test HTTPS connectivity: `curl https://192.168.4.240 -k` (expect 404 or TLS error)
+- [ ] T043 [US1] Test HTTP connectivity: `curl http://192.168.4.201` (expect 404 - no routes configured yet)
+- [ ] T044 [US1] Test HTTPS connectivity: `curl https://192.168.4.201 -k` (expect 404 or TLS error)
 - [ ] T045 [US1] Verify Traefik logs: `kubectl logs -n traefik -l app.kubernetes.io/name=traefik` (expect no errors)
 - [ ] T046 [US1] Create /Users/cbenitez/chocolandia_kube/docs/traefik/deployment.md documenting deployment process
 
@@ -118,13 +118,13 @@ This document contains the complete task breakdown for implementing Traefik Ingr
 - [ ] T056 [US2] Apply IngressRoute: `kubectl apply -f whoami-ingressroute.yaml`
 - [ ] T057 [US2] Verify IngressRoute created: `kubectl get ingressroute` (expect whoami-http)
 - [ ] T058 [US2] Describe IngressRoute: `kubectl describe ingressroute whoami-http` (verify routes configured)
-- [ ] T059 [US2] Add /etc/hosts entry: `echo "192.168.4.240 whoami.local" | sudo tee -a /etc/hosts`
+- [ ] T059 [US2] Add /etc/hosts entry: `echo "192.168.4.201 whoami.local" | sudo tee -a /etc/hosts`
 - [ ] T060 [US2] Test HTTP routing with hostname: `curl http://whoami.local` (expect whoami response with headers)
-- [ ] T061 [US2] Test HTTP routing with Host header: `curl -H "Host: whoami.local" http://192.168.4.240` (expect whoami response)
+- [ ] T061 [US2] Test HTTP routing with Host header: `curl -H "Host: whoami.local" http://192.168.4.201` (expect whoami response)
 - [ ] T062 [P] [US2] Create /Users/cbenitez/chocolandia_kube/terraform/manifests/traefik/echo-deployment.yaml (ealen/echo-server image)
 - [ ] T063 [P] [US2] Create /Users/cbenitez/chocolandia_kube/terraform/manifests/traefik/echo-ingressroute.yaml with Host(`echo.local`)
 - [ ] T064 [US2] Deploy echo service and IngressRoute: `kubectl apply -f echo-deployment.yaml -f echo-ingressroute.yaml`
-- [ ] T065 [US2] Add /etc/hosts entry: `echo "192.168.4.240 echo.local" | sudo tee -a /etc/hosts`
+- [ ] T065 [US2] Add /etc/hosts entry: `echo "192.168.4.201 echo.local" | sudo tee -a /etc/hosts`
 - [ ] T066 [US2] Test second service routing: `curl http://echo.local` (expect echo-server response)
 - [ ] T067 [US2] Verify both hostnames work: test whoami.local and echo.local (both should respond correctly)
 - [ ] T068 [US2] Verify Traefik logs show routing: `kubectl logs -n traefik -l app.kubernetes.io/name=traefik | grep whoami`
@@ -146,7 +146,7 @@ This document contains the complete task breakdown for implementing Traefik Ingr
 - [ ] T075 [US3] Configure dashboard IngressRoute: set services to api@internal (Traefik built-in service)
 - [ ] T076 [US3] Apply dashboard IngressRoute: `kubectl apply -f dashboard-ingressroute.yaml`
 - [ ] T077 [US3] Verify dashboard IngressRoute created: `kubectl get ingressroute dashboard`
-- [ ] T078 [US3] Add /etc/hosts entry: `echo "192.168.4.240 traefik.local" | sudo tee -a /etc/hosts`
+- [ ] T078 [US3] Add /etc/hosts entry: `echo "192.168.4.201 traefik.local" | sudo tee -a /etc/hosts`
 - [ ] T079 [US3] Test dashboard HTTP access: `curl http://traefik.local/dashboard/` (expect HTML response)
 - [ ] T080 [US3] Open browser to http://traefik.local/dashboard/ (verify dashboard loads)
 - [ ] T081 [US3] Verify dashboard shows HTTP routers section (expect whoami-http, echo-http, dashboard routers)
@@ -176,7 +176,7 @@ This document contains the complete task breakdown for implementing Traefik Ingr
 - [ ] T096 [US4] Apply HTTPS IngressRoute: `kubectl apply -f whoami-ingressroute-tls.yaml`
 - [ ] T097 [US4] Verify HTTPS IngressRoute created: `kubectl get ingressroute whoami-https`
 - [ ] T098 [US4] Test HTTPS routing: `curl https://whoami.local -k` (expect whoami response)
-- [ ] T099 [US4] Verify certificate presented: `openssl s_client -connect 192.168.4.240:443 -servername whoami.local` (expect CN=whoami.local)
+- [ ] T099 [US4] Verify certificate presented: `openssl s_client -connect 192.168.4.201:443 -servername whoami.local` (expect CN=whoami.local)
 - [ ] T100 [P] [US4] Create /Users/cbenitez/chocolandia_kube/terraform/manifests/traefik/https-redirect-middleware.yaml
 - [ ] T101 [US4] Configure Middleware: set redirectScheme.scheme to https, redirectScheme.permanent to true
 - [ ] T102 [US4] Apply Middleware: `kubectl apply -f https-redirect-middleware.yaml`

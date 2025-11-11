@@ -52,9 +52,9 @@ resource "helm_release" "traefik" {
   # Create namespace if it doesn't exist
   create_namespace = true
 
-  # Disable atomic for debugging
-  atomic = false
+  # Enable atomic to rollback on failure
+  atomic = true
 
   # Enable cleanup on failure
-  cleanup_on_fail = false
+  cleanup_on_fail = true
 }

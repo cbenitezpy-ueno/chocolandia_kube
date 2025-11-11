@@ -17,7 +17,7 @@ Traefik ingress controller's data model consists of Kubernetes native resources 
                             ▼
             ┌───────────────────────────────┐
             │   LoadBalancer IP (MetalLB)   │
-            │   192.168.4.240:80,443        │
+            │   192.168.4.201:80,443        │
             └───────────────┬───────────────┘
                             │
                             ▼
@@ -227,7 +227,7 @@ metadata:
   name: traefik
   namespace: traefik
   annotations:
-    metallb.universe.tf/loadBalancerIPs: 192.168.4.240
+    metallb.universe.tf/loadBalancerIPs: 192.168.4.201
 spec:
   type: LoadBalancer
   selector:
@@ -609,8 +609,8 @@ spec:
 
 ```
 External Client
-  → DNS resolution (whoami.local → 192.168.4.240)
-  → HTTP GET http://192.168.4.240/ with Host: whoami.local
+  → DNS resolution (whoami.local → 192.168.4.201)
+  → HTTP GET http://192.168.4.201/ with Host: whoami.local
   → Eero router (ARP, forwards to MetalLB IP)
   → MetalLB (L4 load balance to Traefik pod)
   → Traefik pod receives request

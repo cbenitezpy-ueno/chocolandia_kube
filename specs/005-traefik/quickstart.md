@@ -41,7 +41,7 @@ kubectl get pods -n metallb-system
 # Check IP pool configured
 kubectl get ipaddresspool -n metallb-system
 
-# Expected: At least one IP pool with range including 192.168.4.240
+# Expected: At least one IP pool with range including 192.168.4.201
 ```
 
 ### 3. Verify kubectl Access
@@ -98,7 +98,7 @@ service:
   enabled: true
   type: LoadBalancer                   # MetalLB assigns external IP
   annotations:
-    metallb.universe.tf/loadBalancerIPs: 192.168.4.240  # Static IP from pool
+    metallb.universe.tf/loadBalancerIPs: 192.168.4.201  # Static IP from pool
   spec:
     externalTrafficPolicy: Local       # Preserve source IP
 
@@ -246,13 +246,13 @@ variable "namespace" {
 variable "chart_version" {
   description = "Traefik Helm chart version"
   type        = string
-  default     = "30.0.0"  # Traefik v3.2.x
+  default     = "30.0.2"  # Traefik v3.2.x
 }
 
 variable "loadbalancer_ip" {
   description = "Static LoadBalancer IP from MetalLB pool"
   type        = string
-  default     = "192.168.4.240"
+  default     = "192.168.4.201"
 }
 
 variable "replicas" {
@@ -311,8 +311,8 @@ module "traefik" {
   source = "../../modules/traefik"
 
   namespace       = "traefik"
-  chart_version   = "30.0.0"
-  loadbalancer_ip = "192.168.4.240"
+  chart_version   = "30.0.2"
+  loadbalancer_ip = "192.168.4.201"
   replicas        = 2
 }
 
@@ -374,7 +374,7 @@ kubectl get svc -n traefik traefik
 
 # Expected output:
 # NAME      TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)
-# traefik   LoadBalancer   10.43.x.x       192.168.4.240    80:30080/TCP,443:30443/TCP
+# traefik   LoadBalancer   10.43.x.x       192.168.4.201    80:30080/TCP,443:30443/TCP
 
 # Check Traefik CRDs installed
 kubectl get crd | grep traefik
@@ -475,7 +475,7 @@ kubectl get ingressroute -n default
 
 ```bash
 # Test with curl (using Host header)
-curl -H "Host: whoami.local" http://192.168.4.240
+curl -H "Host: whoami.local" http://192.168.4.201
 
 # Expected output: whoami service response
 # Hostname: whoami-xxxxxxxxxx-xxxxx
@@ -492,7 +492,7 @@ curl -H "Host: whoami.local" http://192.168.4.240
 
 # Test from browser (requires /etc/hosts entry)
 # Add to /etc/hosts:
-echo "192.168.4.240 whoami.local" | sudo tee -a /etc/hosts
+echo "192.168.4.201 whoami.local" | sudo tee -a /etc/hosts
 
 # Open browser: http://whoami.local
 # Expected: whoami service response in browser
@@ -541,7 +541,7 @@ Deploy and access:
 kubectl apply -f /Users/cbenitez/chocolandia_kube/terraform/manifests/traefik/dashboard-ingressroute.yaml
 
 # Add to /etc/hosts
-echo "192.168.4.240 traefik.local" | sudo tee -a /etc/hosts
+echo "192.168.4.201 traefik.local" | sudo tee -a /etc/hosts
 
 # Open browser: http://traefik.local/dashboard/
 # Expected: Dashboard accessible via hostname
@@ -567,7 +567,7 @@ curl http://localhost:9100/metrics
 
 ```bash
 # Send continuous requests in background
-while true; do curl -s -H "Host: whoami.local" http://192.168.4.240 | grep Hostname; sleep 1; done &
+while true; do curl -s -H "Host: whoami.local" http://192.168.4.201 | grep Hostname; sleep 1; done &
 CURL_PID=$!
 
 # Delete one Traefik pod
@@ -714,7 +714,7 @@ kubectl get ipaddresspool -n metallb-system -o yaml
 
 **Solutions**:
 1. Verify MetalLB is running: `kubectl get pods -n metallb-system`
-2. Verify IP pool contains 192.168.4.240: `kubectl get ipaddresspool -n metallb-system -o yaml`
+2. Verify IP pool contains 192.168.4.201: `kubectl get ipaddresspool -n metallb-system -o yaml`
 3. Check service annotation: `kubectl get svc -n traefik traefik -o yaml | grep metallb`
 4. Delete and recreate service: `kubectl delete svc -n traefik traefik && tofu apply`
 
@@ -724,7 +724,7 @@ kubectl get ipaddresspool -n metallb-system -o yaml
 
 **Symptom**:
 ```bash
-curl -H "Host: whoami.local" http://192.168.4.240
+curl -H "Host: whoami.local" http://192.168.4.201
 # Returns: 404 page not found
 ```
 
@@ -812,7 +812,7 @@ kubectl get svc -n traefik traefik -o yaml | grep 9000
 
 **Symptom**:
 ```bash
-curl http://192.168.4.240:9100/metrics
+curl http://192.168.4.201:9100/metrics
 # Connection refused
 ```
 
@@ -886,7 +886,7 @@ tofu destroy -target=module.traefik
 
 You have successfully:
 - ✅ Deployed Traefik v3.x ingress controller via OpenTofu Helm module
-- ✅ Verified LoadBalancer IP assigned by MetalLB (192.168.4.240)
+- ✅ Verified LoadBalancer IP assigned by MetalLB (192.168.4.201)
 - ✅ Deployed test whoami service with IngressRoute
 - ✅ Validated HTTP routing works (curl + browser)
 - ✅ Accessed Traefik dashboard for operational visibility
