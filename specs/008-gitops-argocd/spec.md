@@ -148,8 +148,8 @@ Create reusable ArgoCD Application manifest template that can be easily adapted 
 - **FR-020**: System MUST create reusable Application manifest template for web projects with parameterized values
 - **FR-021**: System MUST support multiple ArgoCD Applications (one per web project) without resource conflicts
 - **FR-022**: System MUST configure health assessment for custom CRDs (Traefik IngressRoute, Certificate)
-- **FR-023**: [NEEDS CLARIFICATION: How should ArgoCD handle terraform.tfvars secrets? Use sealed-secrets, external-secrets, or commit encrypted values?]
-- **FR-024**: [NEEDS CLARIFICATION: Should ArgoCD auto-sync be initially enabled or require manual enablement after validation?]
+- **FR-023**: System MUST reference existing Kubernetes Secrets in cluster (current approach) rather than committing secrets to Git
+- **FR-024**: System MUST configure ArgoCD Application with auto-sync disabled initially, requiring manual sync for validation before enabling auto-sync
 
 ### Key Entities
 
@@ -211,14 +211,46 @@ Create reusable ArgoCD Application manifest template that can be easily adapted 
 - **Argo Rollouts**: Progressive delivery (canary, blue-green) is not required for homelab. Standard Kubernetes rolling updates are sufficient.
 - **ArgoCD Image Updater**: Automatic image tag updates in Git are not needed. Manual PR process for image updates is acceptable.
 
-## Open Questions for User
+## Design Decisions *(user clarifications)*
 
-### Clarification Needed
-1. **Secrets Management Strategy**: How should ArgoCD handle sensitive values in terraform.tfvars (Cloudflare API token, Google OAuth secrets)? Options:
-   - Commit encrypted values with SOPS/sealed-secrets
-   - Use external-secrets-operator to pull from vault
-   - Keep secrets in cluster and reference via existing Secrets (current approach)
+### Secrets Management Strategy
+**Decision**: Reference existing Kubernetes Secrets in cluster (current approach)
 
-2. **Initial Auto-Sync Setting**: Should ArgoCD auto-sync be enabled from the start, or should it start with manual sync for validation? Recommendation: Start manual, enable auto-sync after confirming first successful sync.
+**Rationale**:
+- Sensitive values (Cloudflare API token, Google OAuth secrets) already exist as Kubernetes Secrets in cluster
+- ArgoCD will reference these Secrets in manifests rather than committing secrets to Git
+- Avoids additional complexity of SOPS/sealed-secrets or external-secrets-operator for homelab
+- Aligns with current terraform.tfvars pattern where secrets are .gitignored
 
-3. **GitHub Repository Access**: Is chocolandia_kube repository public or private? If private, we need to create GitHub personal access token for ArgoCD repository access.
+**Implementation**:
+- OpenTofu modules create Secrets during initial deployment
+- ArgoCD Application manifests reference existing Secret names
+- Future enhancement: Consider sealed-secrets if sharing infrastructure code publicly
+
+### Initial Auto-Sync Setting
+**Decision**: Start with manual sync, enable auto-sync after validation
+
+**Rationale**:
+- Conservative approach for first GitOps deployment
+- Allows validation of sync process before enabling automation
+- Prevents potential issues from immediately applying every Git change
+- User can manually trigger first sync, verify success, then enable auto-sync
+
+**Implementation**:
+- ArgoCD Application created with `syncPolicy.automated: null` (manual mode)
+- After first successful manual sync, update Application to enable auto-sync
+- Document procedure for enabling auto-sync in implementation guide
+
+### GitHub Repository Access
+**Decision**: Private repository with GitHub Personal Access Token
+
+**Details**:
+- Repository: `chocolandia_kube` (private)
+- GitHub token location: `~/.env` and MCP GitHub configuration
+- ArgoCD will use token for repository authentication
+
+**Implementation**:
+- Create Kubernetes Secret with GitHub token for ArgoCD repository access
+- ArgoCD Application references private repository with credentials
+- Token scope: `repo` (full repository access)
+- Security: Token stored as Kubernetes Secret, not committed to Git

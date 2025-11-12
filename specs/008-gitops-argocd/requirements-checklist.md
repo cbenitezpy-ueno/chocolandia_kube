@@ -21,10 +21,10 @@
 - [x] US5: Prometheus Integration (P3)
 - [x] US6: Web App Template (P2) - Reusability requirement
 
-### Clarifications Identified
-- [x] FR-023: Secrets management strategy needs user decision
-- [x] FR-024: Initial auto-sync setting needs user confirmation
-- [x] Open Question: GitHub repository visibility (public/private)
+### Clarifications Resolved
+- [x] FR-023: Secrets management - Reference existing cluster Secrets (no SOPS/sealed-secrets)
+- [x] FR-024: Auto-sync disabled initially - Manual sync first, then enable automation
+- [x] GitHub repository: Private with token from ~/.env and MCP config
 
 ## Functional Requirements Coverage
 
@@ -131,7 +131,16 @@
 
 ## Next Steps
 
-1. **User Clarifications**: Present 3 open questions to user
-2. **Phase 1 - Research**: Begin implementation planning after clarifications
+1. ~~**User Clarifications**: Present 3 open questions to user~~ ✅ COMPLETE
+   - Secrets: Reference existing cluster Secrets
+   - Auto-sync: Start manual, enable after validation
+   - GitHub: Private repo with token from ~/.env
+2. **Phase 1 - Research**: Ready to begin implementation planning
 3. **Phase 2 - Design**: Create plan.md with technical approach
 4. **Phase 3 - Implementation**: Generate tasks.md from plan
+
+## Status
+
+**Specification**: ✅ Complete and validated
+**Clarifications**: ✅ All resolved
+**Ready for**: `/speckit.plan` (Phase 1 - Research & Planning)
