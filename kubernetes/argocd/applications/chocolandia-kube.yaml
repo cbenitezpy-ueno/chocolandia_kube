@@ -37,9 +37,12 @@ spec:
 
   # Sync policy configuration
   syncPolicy:
-    # Auto-sync disabled initially (manual mode for validation)
-    # Enable in Phase 5 (US3) after successful manual sync
-    automated: null
+    # Auto-sync enabled (Phase 5 - US3)
+    # ArgoCD will automatically detect and apply changes from GitHub
+    automated:
+      prune: true       # Delete resources that are no longer in Git
+      selfHeal: true    # Revert manual changes to match Git state
+      allowEmpty: false # Prevent deletion of all resources if Git is empty
 
     # Sync options
     syncOptions:
