@@ -146,14 +146,14 @@ kubectl port-forward -n argocd svc/argocd-server 8080:443
 
 #### Application Manifest Creation
 
-- [ ] T031 [US2] Create kubernetes/argocd/applications/chocolandia-kube.yaml with Application CRD metadata
-- [ ] T032 [US2] Configure Application spec.project=default in kubernetes/argocd/applications/chocolandia-kube.yaml
-- [ ] T033 [US2] Configure Application spec.source in kubernetes/argocd/applications/chocolandia-kube.yaml: repoURL, targetRevision=main, path=kubernetes/argocd/applications
-- [ ] T034 [US2] Configure Application spec.destination in kubernetes/argocd/applications/chocolandia-kube.yaml: server, namespace=argocd
-- [ ] T035 [US2] Configure Application spec.syncPolicy in kubernetes/argocd/applications/chocolandia-kube.yaml: automated=null, syncOptions=[CreateNamespace=true, PruneLast=true]
-- [ ] T036 [US2] Configure Application spec.syncPolicy.retry in kubernetes/argocd/applications/chocolandia-kube.yaml: limit=5, backoff (5s, factor=2, maxDuration=3m)
-- [ ] T037 [US2] Configure Application spec.ignoreDifferences in kubernetes/argocd/applications/chocolandia-kube.yaml: ignore /spec/replicas for Deployments
-- [ ] T038 [US2] Add finalizer resources-finalizer.argocd.argoproj.io in kubernetes/argocd/applications/chocolandia-kube.yaml
+- [X] T031 [US2] Create kubernetes/argocd/applications/chocolandia-kube.yaml with Application CRD metadata
+- [X] T032 [US2] Configure Application spec.project=default in kubernetes/argocd/applications/chocolandia-kube.yaml
+- [X] T033 [US2] Configure Application spec.source in kubernetes/argocd/applications/chocolandia-kube.yaml: repoURL, targetRevision=main, path=kubernetes/argocd/applications
+- [X] T034 [US2] Configure Application spec.destination in kubernetes/argocd/applications/chocolandia-kube.yaml: server, namespace=argocd
+- [X] T035 [US2] Configure Application spec.syncPolicy in kubernetes/argocd/applications/chocolandia-kube.yaml: automated=null, syncOptions=[CreateNamespace=true, PruneLast=true]
+- [X] T036 [US2] Configure Application spec.syncPolicy.retry in kubernetes/argocd/applications/chocolandia-kube.yaml: limit=5, backoff (5s, factor=2, maxDuration=3m)
+- [X] T037 [US2] Configure Application spec.ignoreDifferences in kubernetes/argocd/applications/chocolandia-kube.yaml: ignore /spec/replicas for Deployments
+- [X] T038 [US2] Add finalizer resources-finalizer.argocd.argoproj.io in kubernetes/argocd/applications/chocolandia-kube.yaml
 
 #### Application Deployment
 
