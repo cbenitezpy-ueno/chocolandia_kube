@@ -26,10 +26,10 @@ Tasks are organized by user story to enable independent implementation and testi
 
 ### Tasks
 
-- [ ] T001 [P] Create terraform/modules/argocd/ directory structure
-- [ ] T002 [P] Create kubernetes/argocd/ directory structure with applications/ and projects/ subdirectories
-- [ ] T003 [P] Create scripts/argocd/ directory for operational scripts
-- [ ] T004 [P] Create tests/argocd/ directory for validation scripts
+- [X] T001 [P] Create terraform/modules/argocd/ directory structure
+- [X] T002 [P] Create kubernetes/argocd/ directory structure with applications/ and projects/ subdirectories
+- [X] T003 [P] Create scripts/argocd/ directory for operational scripts
+- [X] T004 [P] Create tests/argocd/ directory for validation scripts
 
 **Parallel Opportunities**: All 4 tasks can run in parallel (different directories)
 
@@ -43,12 +43,12 @@ Tasks are organized by user story to enable independent implementation and testi
 
 ### Tasks
 
-- [ ] T005 Verify K3s cluster is running and accessible via kubectl in terraform/environments/chocolandiadc-mvp/kubeconfig
-- [ ] T006 Verify Traefik ingress controller is deployed (kubectl get pods -n traefik)
-- [ ] T007 Verify cert-manager is deployed (kubectl get pods -n cert-manager)
-- [ ] T008 Verify Cloudflare Zero Trust tunnel is configured (kubectl get pods -n cloudflare-tunnel)
-- [ ] T009 [P] Create terraform/modules/argocd/variables.tf with input variable declarations (argocd_domain, github_token, authorized_emails, etc.)
-- [ ] T010 [P] Create terraform/modules/argocd/outputs.tf with module outputs (namespace, service_name, admin_password_secret)
+- [X] T005 Verify K3s cluster is running and accessible via kubectl in terraform/environments/chocolandiadc-mvp/kubeconfig
+- [X] T006 Verify Traefik ingress controller is deployed (kubectl get pods -n traefik)
+- [X] T007 Verify cert-manager is deployed (kubectl get pods -n cert-manager)
+- [X] T008 Verify Cloudflare Zero Trust tunnel is configured (kubectl get pods -n cloudflare-tunnel)
+- [X] T009 [P] Create terraform/modules/argocd/variables.tf with input variable declarations (argocd_domain, github_token, authorized_emails, etc.)
+- [X] T010 [P] Create terraform/modules/argocd/outputs.tf with module outputs (namespace, service_name, admin_password_secret)
 
 **Parallel Opportunities**: T009 and T010 can run in parallel (different files)
 
@@ -72,38 +72,38 @@ Tasks are organized by user story to enable independent implementation and testi
 
 #### ArgoCD Module - Main Configuration
 
-- [ ] T011 [US1] Create terraform/modules/argocd/main.tf with helm_release resource for ArgoCD chart (version 5.51.0)
-- [ ] T012 [US1] Configure ArgoCD Helm values in terraform/modules/argocd/main.tf: global.domain, server replicas=1, resources limits
-- [ ] T013 [US1] Configure ArgoCD repo-server Helm values in terraform/modules/argocd/main.tf: replicas=1, resources, metrics enabled
-- [ ] T014 [US1] Configure ArgoCD application-controller Helm values in terraform/modules/argocd/main.tf: replicas=1, resources, metrics enabled
-- [ ] T015 [US1] Configure ArgoCD redis Helm values in terraform/modules/argocd/main.tf: enabled=true, resources limits
-- [ ] T016 [US1] Configure ArgoCD dex disabled in terraform/modules/argocd/main.tf: dex.enabled=false
-- [ ] T017 [US1] Configure ArgoCD timeout.reconciliation=180s in terraform/modules/argocd/main.tf configs.cm section
+- [X] T011 [US1] Create terraform/modules/argocd/main.tf with helm_release resource for ArgoCD chart (version 5.51.0)
+- [X] T012 [US1] Configure ArgoCD Helm values in terraform/modules/argocd/main.tf: global.domain, server replicas=1, resources limits
+- [X] T013 [US1] Configure ArgoCD repo-server Helm values in terraform/modules/argocd/main.tf: replicas=1, resources, metrics enabled
+- [X] T014 [US1] Configure ArgoCD application-controller Helm values in terraform/modules/argocd/main.tf: replicas=1, resources, metrics enabled
+- [X] T015 [US1] Configure ArgoCD redis Helm values in terraform/modules/argocd/main.tf: enabled=true, resources limits
+- [X] T016 [US1] Configure ArgoCD dex disabled in terraform/modules/argocd/main.tf: dex.enabled=false
+- [X] T017 [US1] Configure ArgoCD timeout.reconciliation=180s in terraform/modules/argocd/main.tf configs.cm section
 
 #### Custom Health Checks for CRDs
 
-- [ ] T018 [P] [US1] Add Traefik IngressRoute custom health check Lua script in terraform/modules/argocd/main.tf configs.cm.resource.customizations
-- [ ] T019 [P] [US1] Add cert-manager Certificate custom health check Lua script in terraform/modules/argocd/main.tf configs.cm.resource.customizations
+- [X] T018 [P] [US1] Add Traefik IngressRoute custom health check Lua script in terraform/modules/argocd/main.tf configs.cm.resource.customizations
+- [X] T019 [P] [US1] Add cert-manager Certificate custom health check Lua script in terraform/modules/argocd/main.tf configs.cm.resource.customizations
 
 #### GitHub Credentials Secret
 
-- [ ] T020 [US1] Create terraform/modules/argocd/github-credentials.tf with kubernetes_secret resource for repo authentication
-- [ ] T021 [US1] Configure GitHub Secret in terraform/modules/argocd/github-credentials.tf: type=git, url, username, password (PAT from var.github_token)
-- [ ] T022 [US1] Add argocd.argoproj.io/secret-type: repository label to Secret in terraform/modules/argocd/github-credentials.tf
+- [X] T020 [US1] Create terraform/modules/argocd/github-credentials.tf with kubernetes_secret resource for repo authentication
+- [X] T021 [US1] Configure GitHub Secret in terraform/modules/argocd/github-credentials.tf: type=git, url, username, password (PAT from var.github_token)
+- [X] T022 [US1] Add argocd.argoproj.io/secret-type: repository label to Secret in terraform/modules/argocd/github-credentials.tf
 
 #### Environment Configuration
 
-- [ ] T023 [US1] Create terraform/environments/chocolandiadc-mvp/argocd.tf with module invocation for ArgoCD
-- [ ] T024 [US1] Add ArgoCD variable declarations in terraform/environments/chocolandiadc-mvp/variables.tf (argocd_domain, github_token, etc.)
-- [ ] T025 [US1] Add ArgoCD variable values in terraform/environments/chocolandiadc-mvp/terraform.tfvars (domain, token, authorized_emails)
+- [X] T023 [US1] Create terraform/environments/chocolandiadc-mvp/argocd.tf with module invocation for ArgoCD
+- [X] T024 [US1] Add ArgoCD variable declarations in terraform/environments/chocolandiadc-mvp/variables.tf (argocd_domain, github_token, etc.)
+- [X] T025 [US1] Add ArgoCD variable values in terraform/environments/chocolandiadc-mvp/terraform.tfvars (domain, token, authorized_emails)
 
 #### Deployment and Verification
 
-- [ ] T026 [US1] Run tofu init in terraform/environments/chocolandiadc-mvp/ to initialize ArgoCD module
-- [ ] T027 [US1] Run tofu plan -target=module.argocd to preview ArgoCD deployment
-- [ ] T028 [US1] Run tofu apply -target=module.argocd to deploy ArgoCD to cluster
-- [ ] T029 [US1] Verify ArgoCD namespace created: kubectl get namespace argocd
-- [ ] T030 [US1] Verify all ArgoCD pods Running: kubectl wait --for=condition=Ready pods --all -n argocd --timeout=300s
+- [X] T026 [US1] Run tofu init in terraform/environments/chocolandiadc-mvp/ to initialize ArgoCD module
+- [X] T027 [US1] Run tofu plan -target=module.argocd to preview ArgoCD deployment
+- [X] T028 [US1] Run tofu apply -target=module.argocd to deploy ArgoCD to cluster
+- [X] T029 [US1] Verify ArgoCD namespace created: kubectl get namespace argocd
+- [X] T030 [US1] Verify all ArgoCD pods Running: kubectl wait --for=condition=Ready pods --all -n argocd --timeout=300s
 
 **Independent Test for US1**:
 ```bash

@@ -251,3 +251,47 @@ variable "google_oauth_idp_id" {
   sensitive   = true
   default     = "" # Optional until Phase 6
 }
+
+# ============================================================================
+# ArgoCD GitOps Configuration (Feature 008)
+# ============================================================================
+
+variable "argocd_domain" {
+  description = "Domain name for ArgoCD web interface (e.g., argocd.chocolandiadc.com)"
+  type        = string
+
+  validation {
+    condition     = can(regex("^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$", var.argocd_domain))
+    error_message = "argocd_domain must be a valid DNS name"
+  }
+}
+
+variable "github_token" {
+  description = "GitHub Personal Access Token for private repository authentication (repo scope)"
+  type        = string
+  sensitive   = true
+}
+
+variable "github_username" {
+  description = "GitHub username for repository access"
+  type        = string
+  default     = "cbenitez"
+}
+
+variable "cluster_issuer" {
+  description = "cert-manager ClusterIssuer name for TLS certificate issuance"
+  type        = string
+  default     = "letsencrypt-production"
+}
+
+variable "certificate_duration" {
+  description = "TLS certificate duration (90 days)"
+  type        = string
+  default     = "2160h"
+}
+
+variable "certificate_renew_before" {
+  description = "Renew certificate before expiration (30 days)"
+  type        = string
+  default     = "720h"
+}
