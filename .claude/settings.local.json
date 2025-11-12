@@ -76,7 +76,10 @@
       "Bash(gh pr merge:*)",
       "Bash(.specify/scripts/bash/create-new-feature.sh:*)",
       "WebFetch(domain:artifacthub.io)",
-      "WebFetch(domain:registry.terraform.io)"
+      "WebFetch(domain:registry.terraform.io)",
+      "SlashCommand(/speckit.implement)",
+      "Bash(kubectl top:*)",
+      "Bash(kubectl auth:*)"
     ],
     "deny": [],
     "ask": []

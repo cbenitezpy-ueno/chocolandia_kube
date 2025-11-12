@@ -63,15 +63,24 @@ output "headlamp_replicas" {
 }
 
 # ==============================================================================
+# Outputs - Phase 4 (US2) RBAC
+# ==============================================================================
+
+output "headlamp_serviceaccount_token_secret" {
+  description = "ServiceAccount token secret name for UI authentication"
+  value       = module.headlamp.serviceaccount_token_secret
+}
+
+output "headlamp_serviceaccount_name" {
+  description = "ServiceAccount name for Headlamp admin"
+  value       = module.headlamp.serviceaccount_name
+}
+
+# ==============================================================================
 # Outputs - Later Phases (Uncomment after implementation)
 # ==============================================================================
 
 # output "headlamp_url" {
 #   description = "Headlamp web UI URL"
 #   value       = module.headlamp.ingress_hostname
-# }
-
-# output "headlamp_serviceaccount_token_secret" {
-#   description = "ServiceAccount token secret name for UI authentication"
-#   value       = module.headlamp.serviceaccount_token_secret
 # }

@@ -41,23 +41,23 @@ output "chart_version" {
 # }
 
 # ==============================================================================
-# RBAC Outputs - Phase 4 (US2) - UNCOMMENT AFTER IMPLEMENTATION
+# RBAC Outputs - Phase 4 (US2)
 # ==============================================================================
 
-# output "serviceaccount_name" {
-#   description = "ServiceAccount name for Headlamp admin access"
-#   value       = kubernetes_service_account.headlamp_admin.metadata[0].name
-# }
+output "serviceaccount_name" {
+  description = "ServiceAccount name for Headlamp admin access"
+  value       = kubernetes_service_account.headlamp_admin.metadata[0].name
+}
 
-# output "serviceaccount_token_secret" {
-#   description = "ServiceAccount token secret name (for UI authentication)"
-#   value       = kubernetes_secret.headlamp_admin_token.metadata[0].name
-# }
+output "serviceaccount_token_secret" {
+  description = "ServiceAccount token secret name (for UI authentication)"
+  value       = kubernetes_secret.headlamp_admin_token.metadata[0].name
+}
 
-# output "clusterrolebinding_name" {
-#   description = "ClusterRoleBinding name for read-only access"
-#   value       = kubernetes_cluster_role_binding.headlamp_view.metadata[0].name
-# }
+output "clusterrolebinding_name" {
+  description = "ClusterRoleBinding name for read-only access"
+  value       = kubernetes_cluster_role_binding.headlamp_view.metadata[0].name
+}
 
 # ==============================================================================
 # Cloudflare Access Outputs - Phase 6 (US4) - UNCOMMENT AFTER IMPLEMENTATION
