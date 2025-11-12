@@ -170,7 +170,7 @@ resource "helm_release" "argocd" {
           # Custom health checks for CRDs
           # Format: resource.customizations as multiline YAML string
           "resource.customizations" = <<-YAML
-            traefik.containo.us/IngressRoute:
+            traefik.io/IngressRoute:
               health.lua: |
                 hs = {}
                 hs.status = "Healthy"
