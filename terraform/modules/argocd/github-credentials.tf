@@ -21,15 +21,15 @@ resource "kubernetes_secret" "github_credentials" {
     type = "git"
 
     # GitHub repository URL (must match Application spec.source.repoURL)
-    url = var.github_repo_url  # https://github.com/cbenitez/chocolandia_kube
+    url = var.github_repo_url # https://github.com/cbenitez/chocolandia_kube
 
     # GitHub username for authentication
-    username = var.github_username  # cbenitez
+    username = var.github_username # cbenitez
 
     # GitHub Personal Access Token (PAT) with 'repo' scope
     # Token retrieved from terraform.tfvars (var.github_token)
     # IMPORTANT: Never commit this token to Git
-    password = var.github_token  # Sensitive variable
+    password = var.github_token # Sensitive variable
   }
 
   # Ensure Secret is created after ArgoCD namespace exists

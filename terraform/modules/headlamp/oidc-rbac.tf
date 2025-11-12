@@ -20,12 +20,12 @@ resource "kubernetes_cluster_role_binding" "oidc_users_view" {
   role_ref {
     api_group = "rbac.authorization.k8s.io"
     kind      = "ClusterRole"
-    name      = "view"  # Built-in Kubernetes read-only role
+    name      = "view" # Built-in Kubernetes read-only role
   }
 
   subject {
     kind = "User"
-    name = each.value  # Email from OIDC token (username claim)
+    name = each.value # Email from OIDC token (username claim)
   }
 }
 

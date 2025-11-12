@@ -23,7 +23,7 @@ resource "kubernetes_manifest" "argocd_servicemonitor" {
         "app.kubernetes.io/instance"   = "argocd"
         "app.kubernetes.io/component"  = "metrics"
         "app.kubernetes.io/managed-by" = "terraform"
-        "release"                      = "kube-prometheus-stack"  # Required by Prometheus Operator
+        "release"                      = "kube-prometheus-stack" # Required by Prometheus Operator
       }
     }
 

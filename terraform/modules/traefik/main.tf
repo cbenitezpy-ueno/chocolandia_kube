@@ -47,7 +47,7 @@ resource "helm_release" "traefik" {
   # Wait for deployment to be ready
   wait          = true
   wait_for_jobs = true
-  timeout       = 300  # 5 minutes
+  timeout       = 300 # 5 minutes
 
   # Create namespace if it doesn't exist
   create_namespace = true

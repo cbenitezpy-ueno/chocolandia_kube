@@ -11,23 +11,23 @@
 resource "cloudflare_access_application" "argocd" {
   account_id = var.cloudflare_account_id
 
-  name                       = "ArgoCD (${var.argocd_domain})"
-  domain                     = var.argocd_domain  # argocd.chocolandiadc.com
-  type                       = "self_hosted"
-  session_duration           = var.access_session_duration  # 24h
-  auto_redirect_to_identity  = var.access_auto_redirect     # true (skip Cloudflare login page)
-  app_launcher_visible       = var.access_app_launcher_visible  # true (show in Cloudflare App Launcher)
+  name                      = "ArgoCD (${var.argocd_domain})"
+  domain                    = var.argocd_domain # argocd.chocolandiadc.com
+  type                      = "self_hosted"
+  session_duration          = var.access_session_duration     # 24h
+  auto_redirect_to_identity = var.access_auto_redirect        # true (skip Cloudflare login page)
+  app_launcher_visible      = var.access_app_launcher_visible # true (show in Cloudflare App Launcher)
 
   # Required when auto_redirect_to_identity is true
   # Only allow Google OAuth identity provider (if configured)
-  allowed_idps               = var.google_oauth_idp_id != "" ? [var.google_oauth_idp_id] : []
+  allowed_idps = var.google_oauth_idp_id != "" ? [var.google_oauth_idp_id] : []
 
   # CORS settings for ArgoCD API access
   cors_headers {
-    allowed_methods = ["GET", "POST", "OPTIONS"]
-    allowed_origins = ["https://${var.argocd_domain}"]
+    allowed_methods   = ["GET", "POST", "OPTIONS"]
+    allowed_origins   = ["https://${var.argocd_domain}"]
     allow_all_headers = true
-    max_age           = 86400  # 24 hours
+    max_age           = 86400 # 24 hours
   }
 
   # Logo and appearance
@@ -51,7 +51,7 @@ resource "cloudflare_access_policy" "argocd_authorized_users" {
 
   # Include: Authorized email addresses
   include {
-    email = var.authorized_emails  # List of authorized email addresses
+    email = var.authorized_emails # List of authorized email addresses
   }
 
   # Require: Google OAuth authentication
@@ -60,7 +60,7 @@ resource "cloudflare_access_policy" "argocd_authorized_users" {
     for_each = var.google_oauth_idp_id != "" ? [1] : []
 
     content {
-      login_method = [var.google_oauth_idp_id]  # Google OAuth IDP UUID
+      login_method = [var.google_oauth_idp_id] # Google OAuth IDP UUID
     }
   }
 

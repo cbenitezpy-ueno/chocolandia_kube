@@ -19,7 +19,7 @@ variable "argocd_namespace" {
 variable "argocd_chart_version" {
   description = "ArgoCD Helm chart version"
   type        = string
-  default     = "5.51.0"  # ArgoCD v2.9.x
+  default     = "5.51.0" # ArgoCD v2.9.x
 }
 
 # ==============================================================================
@@ -178,5 +178,5 @@ variable "controller_memory_limit" {
 variable "repository_polling_interval" {
   description = "Git repository polling interval (reconciliation timeout)"
   type        = string
-  default     = "180s"  # 3 minutes
+  default     = "180s" # 3 minutes
 }

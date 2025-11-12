@@ -80,16 +80,16 @@ locals {
   use_dns01 = var.cloudflare_api_token != ""
 
   staging_issuer_manifest = templatefile("${path.module}/clusterissuer-staging.yaml", {
-    acme_email            = var.acme_email
-    use_dns01             = local.use_dns01
-    cloudflare_email      = var.cloudflare_email
+    acme_email             = var.acme_email
+    use_dns01              = local.use_dns01
+    cloudflare_email       = var.cloudflare_email
     cloudflare_secret_name = local.use_dns01 ? kubernetes_secret.cloudflare_api_token[0].metadata[0].name : ""
   })
 
   production_issuer_manifest = templatefile("${path.module}/clusterissuer-production.yaml", {
-    acme_email            = var.acme_email
-    use_dns01             = local.use_dns01
-    cloudflare_email      = var.cloudflare_email
+    acme_email             = var.acme_email
+    use_dns01              = local.use_dns01
+    cloudflare_email       = var.cloudflare_email
     cloudflare_secret_name = local.use_dns01 ? kubernetes_secret.cloudflare_api_token[0].metadata[0].name : ""
   })
 }

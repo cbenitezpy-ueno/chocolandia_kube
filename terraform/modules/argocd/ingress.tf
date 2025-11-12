@@ -35,14 +35,14 @@ resource "kubernetes_manifest" "argocd_ingressroute" {
           services = [
             {
               name = "argocd-server"
-              port = 443  # ArgoCD server HTTPS port (insecure mode, TLS terminated at Traefik)
+              port = 443 # ArgoCD server HTTPS port (insecure mode, TLS terminated at Traefik)
             }
           ]
         }
       ]
 
       tls = {
-        secretName = "argocd-tls"  # TLS certificate Secret created by cert-manager
+        secretName = "argocd-tls" # TLS certificate Secret created by cert-manager
       }
     }
   }
@@ -72,22 +72,22 @@ resource "kubernetes_manifest" "argocd_certificate" {
     }
 
     spec = {
-      secretName = "argocd-tls"  # Secret name where certificate will be stored
+      secretName = "argocd-tls" # Secret name where certificate will be stored
 
       # Certificate duration and renewal (using Go duration format)
-      duration    = "2160h0m0s"  # 90 days
-      renewBefore = "720h0m0s"   # 30 days before expiration
+      duration    = "2160h0m0s" # 90 days
+      renewBefore = "720h0m0s"  # 30 days before expiration
 
       # Let's Encrypt ClusterIssuer (production or staging)
       issuerRef = {
-        name  = var.cluster_issuer  # letsencrypt-production or letsencrypt-staging
+        name  = var.cluster_issuer # letsencrypt-production or letsencrypt-staging
         kind  = "ClusterIssuer"
         group = "cert-manager.io"
       }
 
       # DNS names for certificate
       dnsNames = [
-        var.argocd_domain  # argocd.chocolandiadc.com
+        var.argocd_domain # argocd.chocolandiadc.com
       ]
 
       # Private key configuration

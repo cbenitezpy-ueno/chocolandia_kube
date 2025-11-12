@@ -10,7 +10,7 @@ variable "release_name" {
 variable "chart_version" {
   description = "Traefik Helm chart version"
   type        = string
-  default     = "30.0.2"  # Traefik v3.2.0
+  default     = "30.0.2" # Traefik v3.2.0
 }
 
 variable "namespace" {

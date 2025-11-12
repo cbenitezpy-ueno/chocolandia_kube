@@ -34,7 +34,7 @@ resource "helm_release" "argocd" {
 
   create_namespace = true
   wait             = true
-  timeout          = 600  # 10 minutes for initial deployment
+  timeout          = 600 # 10 minutes for initial deployment
 
   values = [
     yamlencode({
@@ -42,19 +42,19 @@ resource "helm_release" "argocd" {
       # Global Configuration
       # ==========================================================================
       global = {
-        domain = var.argocd_domain  # argocd.chocolandiadc.com
+        domain = var.argocd_domain # argocd.chocolandiadc.com
       }
 
       # ==========================================================================
       # ArgoCD Server (Web UI + gRPC API)
       # ==========================================================================
       server = {
-        replicas = var.server_replicas  # 1 for homelab
+        replicas = var.server_replicas # 1 for homelab
 
         resources = {
           limits = {
-            cpu    = var.server_cpu_limit       # 200m
-            memory = var.server_memory_limit    # 256Mi
+            cpu    = var.server_cpu_limit    # 200m
+            memory = var.server_memory_limit # 256Mi
           }
           requests = {
             cpu    = "100m"
@@ -77,7 +77,7 @@ resource "helm_release" "argocd" {
 
         # Insecure mode for TLS termination at Traefik
         extraArgs = [
-          "--insecure"  # Traefik handles TLS, ArgoCD serves HTTP internally
+          "--insecure" # Traefik handles TLS, ArgoCD serves HTTP internally
         ]
       }
 
@@ -85,12 +85,12 @@ resource "helm_release" "argocd" {
       # ArgoCD Repository Server (Git Operations)
       # ==========================================================================
       repoServer = {
-        replicas = var.repo_server_replicas  # 1 for homelab
+        replicas = var.repo_server_replicas # 1 for homelab
 
         resources = {
           limits = {
-            cpu    = var.repo_server_cpu_limit      # 200m
-            memory = var.repo_server_memory_limit   # 128Mi
+            cpu    = var.repo_server_cpu_limit    # 200m
+            memory = var.repo_server_memory_limit # 128Mi
           }
           requests = {
             cpu    = "100m"
@@ -111,12 +111,12 @@ resource "helm_release" "argocd" {
       # ArgoCD Application Controller (Sync Engine)
       # ==========================================================================
       controller = {
-        replicas = var.controller_replicas  # 1 for homelab
+        replicas = var.controller_replicas # 1 for homelab
 
         resources = {
           limits = {
-            cpu    = var.controller_cpu_limit       # 500m
-            memory = var.controller_memory_limit    # 512Mi
+            cpu    = var.controller_cpu_limit    # 500m
+            memory = var.controller_memory_limit # 512Mi
           }
           requests = {
             cpu    = "250m"
@@ -137,7 +137,7 @@ resource "helm_release" "argocd" {
       # Redis (Caching Layer)
       # ==========================================================================
       redis = {
-        enabled = true  # Embedded Redis (not HA for homelab)
+        enabled = true # Embedded Redis (not HA for homelab)
 
         resources = {
           limits = {
@@ -165,7 +165,7 @@ resource "helm_release" "argocd" {
       configs = {
         cm = {
           # Repository polling interval (3 minutes)
-          "timeout.reconciliation" = var.repository_polling_interval  # 180s
+          "timeout.reconciliation" = var.repository_polling_interval # 180s
 
           # Custom health checks for CRDs
           # Format: resource.customizations as multiline YAML string
