@@ -73,7 +73,16 @@
       "Bash(do)",
       "Bash(gh api:*)",
       "Bash(done)",
-      "Bash(gh pr merge:*)"
+      "Bash(gh pr merge:*)",
+      "Bash(.specify/scripts/bash/create-new-feature.sh:*)",
+      "WebFetch(domain:artifacthub.io)",
+      "WebFetch(domain:registry.terraform.io)",
+      "SlashCommand(/speckit.implement)",
+      "Bash(kubectl top:*)",
+      "Bash(kubectl auth:*)",
+      "Bash(openssl s_client:*)",
+      "Bash(openssl x509:*)",
+      "Bash(git -C /Users/cbenitez/chocolandia_kube diff terraform/environments/chocolandiadc-mvp/variables.tf)"
     ],
     "deny": [],
     "ask": []

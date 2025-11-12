@@ -220,3 +220,34 @@ variable "cert_manager_enable_servicemonitor" {
   type        = bool
   default     = true
 }
+
+# ============================================================================
+# Headlamp Web UI Configuration (Feature 007)
+# ============================================================================
+
+variable "headlamp_domain" {
+  description = "Domain name for Headlamp web interface (e.g., headlamp.chocolandiadc.com)"
+  type        = string
+
+  validation {
+    condition     = can(regex("^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$", var.headlamp_domain))
+    error_message = "headlamp_domain must be a valid DNS name"
+  }
+}
+
+variable "headlamp_authorized_emails" {
+  description = "List of authorized email addresses for Headlamp Cloudflare Access"
+  type        = list(string)
+
+  validation {
+    condition     = length(var.headlamp_authorized_emails) > 0
+    error_message = "At least one authorized email is required for Headlamp access"
+  }
+}
+
+variable "google_oauth_idp_id" {
+  description = "Google OAuth Identity Provider ID from Cloudflare Zero Trust (UUID format) - Phase 6 (US4)"
+  type        = string
+  sensitive   = true
+  default     = "" # Optional until Phase 6
+}
