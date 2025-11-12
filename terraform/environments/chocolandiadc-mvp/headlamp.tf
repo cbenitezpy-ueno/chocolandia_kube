@@ -25,7 +25,7 @@ module "headlamp" {
 
   # Cloudflare Access authentication
   cloudflare_account_id = var.cloudflare_account_id
-  google_oauth_idp_id   = var.google_oauth_idp_id
+  google_oauth_idp_id   = module.cloudflare_tunnel.access_identity_provider_id
   authorized_emails     = var.headlamp_authorized_emails
 
   # Cloudflare Access session
