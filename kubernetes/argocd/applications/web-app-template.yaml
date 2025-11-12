@@ -1,0 +1,79 @@
+# ArgoCD Application Template for Web Applications
+# Feature 008: GitOps Continuous Deployment with ArgoCD
+#
+# USAGE INSTRUCTIONS:
+# 1. Copy this template: cp web-app-template.yaml <your-app-name>.yaml
+# 2. Replace the 4 placeholders below:
+#    - APP_NAME: Your application name (e.g., "portfolio-app", "blog-app")
+#    - REPO_URL: Your GitHub repository URL (e.g., "https://github.com/username/my-app")
+#    - TARGET_PATH: Path to Kubernetes manifests in your repo (e.g., "kubernetes/", "k8s/manifests/")
+#    - NAMESPACE: Target Kubernetes namespace (e.g., "web-apps", "production")
+# 3. Apply to cluster: kubectl apply -f <your-app-name>.yaml
+# 4. Verify Application created: kubectl get application -n argocd <your-app-name>
+# 5. Manual sync (first time): argocd app sync <your-app-name>
+# 6. After validation, enable auto-sync by uncommenting the "automated:" section
+#
+# PREREQUISITES:
+# - GitHub repository with Kubernetes manifests (Deployment, Service, Ingress, etc.)
+# - GitHub repository accessible (public or private with credentials configured)
+# - Target namespace exists or CreateNamespace=true option enabled
+#
+# EXAMPLE:
+# Replace placeholders with actual values:
+#   APP_NAME → portfolio-app
+#   REPO_URL → https://github.com/cbenitez/my-portfolio
+#   TARGET_PATH → kubernetes/
+#   NAMESPACE → web-apps
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: APP_NAME  # ← REPLACE: Your application name (lowercase, no spaces)
+  namespace: argocd
+  finalizers:
+    # Cascade delete: Remove all managed resources when Application is deleted
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # ArgoCD Project for RBAC scoping (default = no restrictions)
+  project: default
+
+  # Git repository source
+  source:
+    repoURL: REPO_URL  # ← REPLACE: Your GitHub repository URL
+    targetRevision: main  # Branch to track (default: main)
+    path: TARGET_PATH  # ← REPLACE: Path to Kubernetes manifests (e.g., "kubernetes/")
+
+  # Kubernetes cluster destination
+  destination:
+    server: https://kubernetes.default.svc  # In-cluster API server
+    namespace: NAMESPACE  # ← REPLACE: Target namespace for your application
+
+  # Sync policy configuration
+  syncPolicy:
+    # Auto-sync disabled by default (manual sync for initial validation)
+    # After validating your application works correctly, uncomment the section below:
+    # automated:
+    #   prune: true       # Delete resources that are no longer in Git
+    #   selfHeal: true    # Revert manual changes to match Git state
+    #   allowEmpty: false # Prevent deletion of all resources if Git is empty
+
+    # Sync options
+    syncOptions:
+      - CreateNamespace=true  # Auto-create destination namespace if missing
+      - PruneLast=true        # Delete resources last during sync (prevents dependency issues)
+
+    # Retry policy for failed syncs
+    retry:
+      limit: 5  # Maximum retry attempts
+      backoff:
+        duration: 5s    # Initial retry delay
+        factor: 2       # Exponential backoff factor (5s, 10s, 20s, 40s, 80s)
+        maxDuration: 3m # Maximum retry delay
+
+  # Ignore differences in specific fields (prevent false drift detection)
+  # Uncomment if using Horizontal Pod Autoscaler (HPA):
+  # ignoreDifferences:
+  #   - group: apps
+  #     kind: Deployment
+  #     jsonPointers:
+  #       - /spec/replicas  # Ignore HPA-managed replica count changes
