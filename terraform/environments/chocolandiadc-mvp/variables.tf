@@ -249,5 +249,5 @@ variable "google_oauth_idp_id" {
   description = "Google OAuth Identity Provider ID from Cloudflare Zero Trust (UUID format) - Phase 6 (US4)"
   type        = string
   sensitive   = true
-  default     = ""  # Optional until Phase 6
+  default     = "" # Optional until Phase 6
 }

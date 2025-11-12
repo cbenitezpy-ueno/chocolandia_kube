@@ -77,10 +77,15 @@ output "headlamp_serviceaccount_name" {
 }
 
 # ==============================================================================
-# Outputs - Later Phases (Uncomment after implementation)
+# Outputs - Phase 5 (US3): Ingress & Certificate
 # ==============================================================================
 
-# output "headlamp_url" {
-#   description = "Headlamp web UI URL"
-#   value       = module.headlamp.ingress_hostname
-# }
+output "headlamp_url" {
+  description = "Headlamp web UI URL (HTTPS)"
+  value       = module.headlamp.ingress_hostname
+}
+
+output "headlamp_certificate_secret" {
+  description = "TLS certificate secret name"
+  value       = module.headlamp.certificate_secret
+}

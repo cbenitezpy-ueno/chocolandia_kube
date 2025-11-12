@@ -79,7 +79,10 @@
       "WebFetch(domain:registry.terraform.io)",
       "SlashCommand(/speckit.implement)",
       "Bash(kubectl top:*)",
-      "Bash(kubectl auth:*)"
+      "Bash(kubectl auth:*)",
+      "Bash(openssl s_client:*)",
+      "Bash(openssl x509:*)",
+      "Bash(git -C /Users/cbenitez/chocolandia_kube diff terraform/environments/chocolandiadc-mvp/variables.tf)"
     ],
     "deny": [],
     "ask": []

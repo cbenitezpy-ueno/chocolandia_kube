@@ -27,18 +27,18 @@ output "chart_version" {
 }
 
 # ==============================================================================
-# Ingress & Certificate Outputs - Phase 5 (US3) - UNCOMMENT AFTER IMPLEMENTATION
+# Ingress & Certificate Outputs - Phase 5 (US3)
 # ==============================================================================
 
-# output "ingress_hostname" {
-#   description = "Headlamp ingress hostname (HTTPS URL)"
-#   value       = "https://${var.domain}"
-# }
+output "ingress_hostname" {
+  description = "Headlamp ingress hostname (HTTPS URL)"
+  value       = "https://${var.domain}"
+}
 
-# output "certificate_secret" {
-#   description = "TLS certificate secret name"
-#   value       = kubernetes_manifest.certificate.manifest.spec.secretName
-# }
+output "certificate_secret" {
+  description = "TLS certificate secret name"
+  value       = kubernetes_manifest.certificate.manifest.spec.secretName
+}
 
 # ==============================================================================
 # RBAC Outputs - Phase 4 (US2)
