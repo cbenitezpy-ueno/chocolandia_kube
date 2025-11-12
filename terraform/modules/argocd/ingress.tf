@@ -74,9 +74,9 @@ resource "kubernetes_manifest" "argocd_certificate" {
     spec = {
       secretName = "argocd-tls"  # Secret name where certificate will be stored
 
-      # Certificate duration and renewal
-      duration    = var.certificate_duration        # 2160h = 90 days
-      renewBefore = var.certificate_renew_before    # 720h = 30 days before expiration
+      # Certificate duration and renewal (using Go duration format)
+      duration    = "2160h0m0s"  # 90 days
+      renewBefore = "720h0m0s"   # 30 days before expiration
 
       # Let's Encrypt ClusterIssuer (production or staging)
       issuerRef = {

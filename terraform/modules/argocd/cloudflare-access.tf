@@ -29,13 +29,8 @@ resource "cloudflare_access_application" "argocd" {
   # Logo and appearance
   logo_url = "https://raw.githubusercontent.com/argoproj/argo-cd/master/assets/logo.png"
 
-  tags = [
-    "argocd",
-    "gitops",
-    "kubernetes",
-    "infrastructure",
-    "feature-008"
-  ]
+  # Tags removed: Cloudflare requires tags to be created before assigning
+  # tags = ["argocd", "gitops", "kubernetes", "infrastructure", "feature-008"]
 }
 
 # ==============================================================================
