@@ -21,9 +21,14 @@ spec:
 
   # Git repository source
   source:
-    repoURL: https://github.com/cbenitez/chocolandia_kube
-    targetRevision: main  # Branch to sync
+    repoURL: https://github.com/cbenitezpy-ueno/chocolandia_kube
+    targetRevision: 008-gitops-argocd  # Feature branch for testing (change to main after merge)
     path: kubernetes/argocd/applications  # Path containing Kubernetes manifests
+
+    # Directory configuration (App of Apps pattern)
+    directory:
+      recurse: false  # Don't recurse into subdirectories
+      exclude: "chocolandia-kube.yaml"  # Don't manage self (prevent self-reference loop)
 
   # Kubernetes cluster destination
   destination:
