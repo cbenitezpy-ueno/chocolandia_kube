@@ -18,6 +18,10 @@ resource "cloudflare_access_application" "argocd" {
   auto_redirect_to_identity  = var.access_auto_redirect     # true (skip Cloudflare login page)
   app_launcher_visible       = var.access_app_launcher_visible  # true (show in Cloudflare App Launcher)
 
+  # Required when auto_redirect_to_identity is true
+  # Only allow Google OAuth identity provider (if configured)
+  allowed_idps               = var.google_oauth_idp_id != "" ? [var.google_oauth_idp_id] : []
+
   # CORS settings for ArgoCD API access
   cors_headers {
     allowed_methods = ["GET", "POST", "OPTIONS"]
