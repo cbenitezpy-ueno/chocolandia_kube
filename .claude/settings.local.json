@@ -73,7 +73,10 @@
       "Bash(do)",
       "Bash(gh api:*)",
       "Bash(done)",
-      "Bash(gh pr merge:*)"
+      "Bash(gh pr merge:*)",
+      "Bash(.specify/scripts/bash/create-new-feature.sh:*)",
+      "WebFetch(domain:artifacthub.io)",
+      "WebFetch(domain:registry.terraform.io)"
     ],
     "deny": [],
     "ask": []
