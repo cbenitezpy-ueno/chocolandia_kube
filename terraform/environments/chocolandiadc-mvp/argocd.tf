@@ -16,7 +16,7 @@ module "argocd" {
   # GitHub Repository Authentication
   github_token    = var.github_token
   github_username = var.github_username
-  github_repo_url = "https://github.com/cbenitez/chocolandia_kube"
+  github_repo_url = "https://github.com/cbenitezpy-ueno/chocolandia_kube"
 
   # TLS Certificate Configuration
   cluster_issuer          = var.cluster_issuer

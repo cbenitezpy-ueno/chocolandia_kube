@@ -275,7 +275,7 @@ variable "github_token" {
 variable "github_username" {
   description = "GitHub username for repository access"
   type        = string
-  default     = "cbenitez"
+  default     = "cbenitezpy-ueno"
 }
 
 variable "cluster_issuer" {
