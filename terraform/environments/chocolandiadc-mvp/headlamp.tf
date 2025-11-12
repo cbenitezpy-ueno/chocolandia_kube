@@ -19,8 +19,15 @@ module "headlamp" {
   # Prometheus integration - Phase 3 (US1)
   prometheus_url = "http://kube-prometheus-stack-prometheus.monitoring:9090"
 
+  # OIDC authentication - Phase 9 (OIDC Integration)
+  enable_oidc          = true
+  oidc_client_id       = var.google_oauth_client_id
+  oidc_client_secret   = var.google_oauth_client_secret
+  oidc_issuer_url      = "https://accounts.google.com"
+  oidc_scopes          = "email,profile,openid"
+
   # ============================================================================
-  # Phase 6 (US4): Cloudflare Access - UNCOMMENT AFTER IMPLEMENTATION
+  # Phase 6 (US4): Cloudflare Access
   # ============================================================================
 
   # Cloudflare Access authentication

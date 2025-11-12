@@ -121,7 +121,7 @@ resource "helm_release" "headlamp" {
         failureThreshold    = 3
       }
 
-      # Prometheus integration (if URL provided)
+      # Prometheus and OIDC integration
       config = merge(
         {
           baseURL          = ""
@@ -129,6 +129,14 @@ resource "helm_release" "headlamp" {
         },
         var.prometheus_url != "" ? {
           prometheusUrl = var.prometheus_url
+        } : {},
+        var.enable_oidc && var.oidc_client_id != "" ? {
+          oidc = {
+            clientID     = var.oidc_client_id
+            clientSecret = var.oidc_client_secret
+            issuerURL    = var.oidc_issuer_url
+            scopes       = var.oidc_scopes
+          }
         } : {}
       )
     })

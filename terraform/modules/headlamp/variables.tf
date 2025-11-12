@@ -167,3 +167,38 @@ variable "enable_pod_anti_affinity" {
   type        = bool
   default     = true
 }
+
+# ==============================================================================
+# Optional Variables - OIDC Authentication
+# ==============================================================================
+
+variable "enable_oidc" {
+  description = "Enable OIDC authentication for Headlamp (requires K3s API server OIDC configuration)"
+  type        = bool
+  default     = true
+}
+
+variable "oidc_client_id" {
+  description = "OIDC client ID (Google OAuth Client ID)"
+  type        = string
+  default     = ""
+}
+
+variable "oidc_client_secret" {
+  description = "OIDC client secret (Google OAuth Client Secret)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "oidc_issuer_url" {
+  description = "OIDC issuer URL (e.g., https://accounts.google.com)"
+  type        = string
+  default     = "https://accounts.google.com"
+}
+
+variable "oidc_scopes" {
+  description = "OIDC scopes to request"
+  type        = string
+  default     = "email,profile,openid"
+}
