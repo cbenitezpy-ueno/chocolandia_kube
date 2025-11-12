@@ -72,7 +72,8 @@
       "Bash(for:*)",
       "Bash(do)",
       "Bash(gh api:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(gh pr merge:*)"
     ],
     "deny": [],
     "ask": []
