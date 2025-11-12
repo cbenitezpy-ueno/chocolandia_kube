@@ -42,7 +42,7 @@ output "argocd_url" {
 
 output "cloudflare_access_application_id" {
   description = "Cloudflare Access application ID for ArgoCD (Phase 6 - US4)"
-  value       = null  # Created in Phase 6 (US4) - Traefik/HTTPS exposure
+  value       = cloudflare_access_application.argocd.id
 }
 
 # ==============================================================================
