@@ -1,0 +1,50 @@
+---
+# ArgoCD Application: Homepage Dashboard (Feature 009)
+# GitOps-managed deployment of Homepage dashboard
+# Automatically syncs changes from kubernetes/homepage/ to the cluster
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homepage
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: homepage
+    app.kubernetes.io/component: dashboard
+    app.kubernetes.io/managed-by: argocd
+  # Finalizer ensures ArgoCD cleans up resources when Application is deleted
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # Project name (default allows deployment to any namespace)
+  project: default
+
+  # Source: GitHub repository with Homepage YAML manifests
+  source:
+    repoURL: https://github.com/cbenitezpy-ueno/chocolandia_kube
+    targetRevision: main # Track main branch
+    path: kubernetes/homepage
+
+  # Destination: Homepage namespace in K3s cluster
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: homepage
+
+  # Sync Policy: Automated, self-healing, prune orphaned resources
+  syncPolicy:
+    # Automated sync when Git changes detected
+    automated:
+      prune: true # Delete resources removed from Git
+      selfHeal: true # Revert manual changes back to Git state
+
+    # Sync options
+    syncOptions:
+      - CreateNamespace=true # Create namespace if it doesn't exist
+      - PruneLast=true # Prune resources after new resources are healthy
+
+    # Retry strategy for failed syncs
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

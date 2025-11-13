@@ -1,0 +1,10 @@
+---
+# Homepage Dashboard Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: homepage
+  labels:
+    name: homepage
+    managed-by: argocd
+    app: homepage-dashboard

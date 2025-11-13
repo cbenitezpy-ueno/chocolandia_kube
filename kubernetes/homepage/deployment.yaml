@@ -1,0 +1,106 @@
+---
+# Homepage Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homepage
+  namespace: homepage
+  labels:
+    app: homepage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: homepage
+  template:
+    metadata:
+      labels:
+        app: homepage
+    spec:
+      serviceAccountName: homepage
+      containers:
+        - name: homepage
+          image: ghcr.io/gethomepage/homepage:latest
+          ports:
+            - containerPort: 3000
+              name: http
+          # Allow requests from Cloudflare domain
+          env:
+            - name: HOMEPAGE_ALLOWED_HOSTS
+              value: "homepage.chocolandiadc.com"
+          # Inject secrets as environment variables
+          envFrom:
+            - secretRef:
+                name: homepage-widgets
+          # Resource limits
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+          # Volume mounts for ConfigMaps
+          volumeMounts:
+            - name: services-config
+              mountPath: /app/config/services.yaml
+              subPath: services.yaml
+            - name: widgets-config
+              mountPath: /app/config/widgets.yaml
+              subPath: widgets.yaml
+            - name: settings-config
+              mountPath: /app/config/settings.yaml
+              subPath: settings.yaml
+            - name: kubernetes-config
+              mountPath: /app/config/kubernetes.yaml
+              subPath: kubernetes.yaml
+          # Liveness probe
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          # Readiness probe
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+      # Volumes from ConfigMaps
+      volumes:
+        - name: services-config
+          configMap:
+            name: homepage-services
+        - name: widgets-config
+          configMap:
+            name: homepage-widgets
+        - name: settings-config
+          configMap:
+            name: homepage-settings
+        - name: kubernetes-config
+          configMap:
+            name: homepage-kubernetes
+
+---
+# Homepage Service (ClusterIP)
+apiVersion: v1
+kind: Service
+metadata:
+  name: homepage
+  namespace: homepage
+  labels:
+    app: homepage
+spec:
+  selector:
+    app: homepage
+  ports:
+    - port: 3000
+      targetPort: 3000
+      name: http
+  type: ClusterIP

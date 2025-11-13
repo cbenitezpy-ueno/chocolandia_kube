@@ -67,3 +67,10 @@ output "argocd_cli_login" {
   description = "ArgoCD CLI login command"
   value       = module.argocd.cli_login_command
 }
+
+# ==============================================================================
+# ArgoCD Application: Homepage Dashboard (Feature 009)
+# ==============================================================================
+# Homepage is now managed via GitOps from kubernetes/argocd/applications/homepage.yaml
+# The ArgoCD "App of Apps" pattern automatically syncs all applications from
+# kubernetes/argocd/applications/ directory, including Homepage.

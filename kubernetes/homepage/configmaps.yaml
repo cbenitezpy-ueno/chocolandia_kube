@@ -1,0 +1,150 @@
+---
+# Homepage ConfigMaps
+# Configuration files for Homepage dashboard
+
+# Services configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homepage-services
+  namespace: homepage
+data:
+  services.yaml: |
+    ---
+    # Homepage Services Configuration
+    # This file defines service groups and their links for the Homepage dashboard
+
+    - Infrastructure:
+        - Traefik:
+            icon: traefik.svg
+            description: Reverse proxy and ingress controller
+            namespace: traefik
+            app: traefik
+            widget:
+              type: kubernetes
+              cluster: default
+              namespace: traefik
+              app: traefik
+              podSelector: app.kubernetes.io/name=traefik
+
+        - cert-manager:
+            icon: cert-manager.svg
+            description: Automatic TLS certificate management
+            namespace: cert-manager
+            app: cert-manager
+            widget:
+              type: kubernetes
+              cluster: default
+              namespace: cert-manager
+              app: cert-manager
+              podSelector: app.kubernetes.io/name=cert-manager
+
+    - Kubernetes Management:
+        - ArgoCD:
+            icon: argocd.svg
+            href: https://argocd.chocolandiadc.com
+            description: GitOps continuous delivery for Kubernetes
+            namespace: argocd
+            app: argocd-server
+            widget:
+              type: argocd
+              url: http://argocd-server.argocd.svc.cluster.local:80
+              key: {{HOMEPAGE_VAR_ARGOCD_TOKEN}}
+
+        - Headlamp:
+            icon: kubernetes-dashboard.svg
+            href: https://headlamp.chocolandiadc.com
+            description: Kubernetes web UI with OIDC authentication
+            namespace: headlamp
+            app: headlamp
+            widget:
+              type: kubernetes
+              cluster: default
+              namespace: headlamp
+              app: headlamp
+              podSelector: app.kubernetes.io/name=headlamp
+
+    - Monitoring:
+        - Grafana:
+            icon: grafana.svg
+            href: https://grafana.chocolandiadc.com
+            description: Metrics visualization and monitoring dashboards
+            namespace: monitoring
+            app: grafana
+            widget:
+              type: kubernetes
+              cluster: default
+              namespace: monitoring
+              app: grafana
+              podSelector: app.kubernetes.io/name=grafana
+
+        - Homepage Dashboard:
+            icon: homepage.svg
+            href: https://homepage.chocolandiadc.com
+            description: Centralized dashboard (this page)
+            namespace: homepage
+            app: homepage
+            widget:
+              type: kubernetes
+              cluster: default
+              namespace: homepage
+              app: homepage
+              podSelector: app=homepage
+
+---
+# Widgets configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homepage-widgets
+  namespace: homepage
+data:
+  widgets.yaml: |
+    ---
+    # Homepage Widgets Configuration
+    # Defines dashboard-level widgets (search, greeting, resources, etc.)
+
+    # No custom widgets configured - using defaults
+
+---
+# Settings configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homepage-settings
+  namespace: homepage
+data:
+  settings.yaml: |
+    ---
+    # Homepage Settings Configuration
+    # Global dashboard settings
+
+    title: ChocolandiaDC
+    headerStyle: clean
+    theme: dark
+    color: slate
+    layout:
+      Infrastructure:
+        style: row
+        columns: 2
+      Kubernetes Management:
+        style: row
+        columns: 2
+      Monitoring:
+        style: row
+        columns: 2
+
+---
+# Kubernetes integration configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homepage-kubernetes
+  namespace: homepage
+data:
+  kubernetes.yaml: |
+    ---
+    # Kubernetes Integration Configuration
+    # Enables Homepage to discover services and show real-time cluster information
+
+    mode: cluster
