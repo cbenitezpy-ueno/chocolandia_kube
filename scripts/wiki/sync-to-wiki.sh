@@ -20,12 +20,17 @@ WIKI_REPO_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}.wiki.git"
 WIKI_TEMP_DIR="/tmp/${REPO_NAME}.wiki"
 SPECS_DIR="${SPECS_DIR:-specs}"
 DRY_RUN=false
+WITH_SIDEBAR=false
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
         --dry-run)
             DRY_RUN=true
+            shift
+            ;;
+        --with-sidebar)
+            WITH_SIDEBAR=true
             shift
             ;;
         -h|--help)
@@ -35,8 +40,9 @@ Usage: $(basename "$0") [OPTIONS]
 Sync all documentation from repository to GitHub Wiki.
 
 Options:
-  --dry-run    Generate pages without pushing to Wiki (validation only)
-  -h, --help   Show this help message
+  --dry-run       Generate pages without pushing to Wiki (validation only)
+  --with-sidebar  Generate sidebar navigation (_Sidebar.md) (optional)
+  -h, --help      Show this help message
 
 Environment Variables:
   REPO_OWNER   GitHub repository owner (default: cbenitezpy-ueno)
@@ -46,6 +52,9 @@ Environment Variables:
 Examples:
   # Normal sync (push to Wiki)
   ./$(basename "$0")
+
+  # Sync with sidebar navigation
+  ./$(basename "$0") --with-sidebar
 
   # Dry run (generate without pushing)
   ./$(basename "$0") --dry-run
@@ -104,6 +113,21 @@ generate_homepage() {
         return 0
     else
         log_error "Failed to generate homepage"
+        return 1
+    fi
+}
+
+# Generate sidebar (optional)
+generate_sidebar() {
+    log_info "Generating sidebar navigation..."
+
+    local sidebar_file="${WIKI_TEMP_DIR}/_Sidebar.md"
+
+    if "${SCRIPT_DIR}/generate-sidebar.sh" "$SPECS_DIR" > "$sidebar_file"; then
+        log_success "Sidebar generated: $sidebar_file"
+        return 0
+    else
+        log_error "Failed to generate sidebar"
         return 1
     fi
 }
@@ -216,6 +240,7 @@ main() {
     log_info "Repository: ${REPO_OWNER}/${REPO_NAME}"
     log_info "Specs directory: $SPECS_DIR"
     log_info "Dry run: $DRY_RUN"
+    log_info "Sidebar: $WITH_SIDEBAR"
     log_info ""
 
     # Verify specs directory exists
@@ -229,6 +254,11 @@ main() {
 
     # Generate homepage
     generate_homepage || exit 1
+
+    # Generate sidebar (optional)
+    if [[ "$WITH_SIDEBAR" == true ]]; then
+        generate_sidebar || exit 1
+    fi
 
     # Generate feature pages
     generate_feature_pages || exit 1
