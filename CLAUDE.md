@@ -12,6 +12,7 @@ Auto-generated from all feature plans. Last updated: 2025-11-08
 - HCL (OpenTofu) 1.6+, YAML (Kubernetes manifests) + cert-manager v1.13.x (Helm chart), Let's Encrypt ACME CA, Traefik v3.1.0 (ingress controller) (006-cert-manager)
 - Kubernetes Secrets (TLS certificates and private keys), etcd (cert-manager state via CRDs) (006-cert-manager)
 - Kubernetes Secrets (ServiceAccount tokens, TLS certificates), Kubernetes etcd (state for CRDs) (007-headlamp-web-ui)
+- HCL (OpenTofu) 1.6+, YAML (Kubernetes manifests), Bash scripting (008-gitops-argocd)
 
 - HCL (OpenTofu) 1.6+, Bash scripting for validation (001-k3s-cluster-setup)
 
@@ -31,9 +32,9 @@ tests/
 HCL (Terraform) 1.6+, Bash scripting for validation: Follow standard conventions
 
 ## Recent Changes
+- 008-gitops-argocd: Added HCL (OpenTofu) 1.6+, YAML (Kubernetes manifests), Bash scripting
 - 007-headlamp-web-ui: Added HCL (OpenTofu) 1.6+, YAML (Kubernetes manifests)
 - 006-cert-manager: Added HCL (OpenTofu) 1.6+, YAML (Kubernetes manifests) + cert-manager v1.13.x (Helm chart), Let's Encrypt ACME CA, Traefik v3.1.0 (ingress controller)
-- 006-cert-manager: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 
 
 <!-- MANUAL ADDITIONS START -->

@@ -1,0 +1,65 @@
+# ArgoCD Application for chocolandia_kube Infrastructure
+# Feature 008: GitOps Continuous Deployment with ArgoCD
+#
+# This Application monitors the chocolandia_kube GitHub repository and
+# automatically synchronizes infrastructure changes to the K3s cluster.
+#
+# Initial Configuration: Manual sync (automated: null)
+# After validation: Enable auto-sync (see Phase 5 - US3)
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: chocolandia-kube
+  namespace: argocd
+  finalizers:
+    # Cascade delete: Remove all managed resources when Application is deleted
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # ArgoCD Project for RBAC scoping
+  project: default
+
+  # Git repository source
+  source:
+    repoURL: https://github.com/cbenitezpy-ueno/chocolandia_kube
+    targetRevision: 008-gitops-argocd  # Feature branch for testing (change to main after merge)
+    path: kubernetes/argocd/applications  # Path containing Kubernetes manifests
+
+    # Directory configuration (App of Apps pattern)
+    directory:
+      recurse: false  # Don't recurse into subdirectories
+      exclude: "chocolandia-kube.yaml"  # Don't manage self (prevent self-reference loop)
+
+  # Kubernetes cluster destination
+  destination:
+    server: https://kubernetes.default.svc  # In-cluster API server
+    namespace: argocd  # Default namespace (Applications can override per-resource)
+
+  # Sync policy configuration
+  syncPolicy:
+    # Auto-sync enabled (Phase 5 - US3)
+    # ArgoCD will automatically detect and apply changes from GitHub
+    automated:
+      prune: true       # Delete resources that are no longer in Git
+      selfHeal: true    # Revert manual changes to match Git state
+      allowEmpty: false # Prevent deletion of all resources if Git is empty
+
+    # Sync options
+    syncOptions:
+      - CreateNamespace=true  # Auto-create destination namespaces if missing
+      - PruneLast=true        # Delete resources last during sync (prevents dependency issues)
+
+    # Retry policy for failed syncs
+    retry:
+      limit: 5  # Maximum retry attempts
+      backoff:
+        duration: 5s    # Initial retry delay
+        factor: 2       # Exponential backoff factor (5s, 10s, 20s, 40s, 80s)
+        maxDuration: 3m # Maximum retry delay
+
+  # Ignore differences in specific fields (prevent false drift detection)
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas  # Ignore HPA-managed replica count changes

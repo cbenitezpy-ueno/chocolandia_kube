@@ -82,7 +82,10 @@
       "Bash(kubectl auth:*)",
       "Bash(openssl s_client:*)",
       "Bash(openssl x509:*)",
-      "Bash(git -C /Users/cbenitez/chocolandia_kube diff terraform/environments/chocolandiadc-mvp/variables.tf)"
+      "Bash(git -C /Users/cbenitez/chocolandia_kube diff terraform/environments/chocolandiadc-mvp/variables.tf)",
+      "Bash(git branch:*)",
+      "Bash(kubectl cluster-info:*)",
+      "Bash(tofu plan:*)"
     ],
     "deny": [],
     "ask": []

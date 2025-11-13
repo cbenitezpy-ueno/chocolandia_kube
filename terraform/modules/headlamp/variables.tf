@@ -21,20 +21,20 @@ variable "domain" {
 variable "cloudflare_account_id" {
   description = "Cloudflare account ID for Zero Trust Access configuration (Phase 6 - US4)"
   type        = string
-  default     = ""  # Optional until Phase 6
+  default     = "" # Optional until Phase 6
 }
 
 variable "google_oauth_idp_id" {
   description = "Google OAuth identity provider ID for Cloudflare Access (Phase 6 - US4)"
   type        = string
   sensitive   = true
-  default     = ""  # Optional until Phase 6
+  default     = "" # Optional until Phase 6
 }
 
 variable "authorized_emails" {
   description = "List of authorized email addresses for Cloudflare Access policy (Phase 6 - US4)"
   type        = list(string)
-  default     = []  # Optional until Phase 6
+  default     = [] # Optional until Phase 6
 }
 
 # ==============================================================================
