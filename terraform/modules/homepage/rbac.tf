@@ -86,6 +86,13 @@ resource "kubernetes_cluster_role" "homepage_cluster_viewer" {
     resources  = ["nodes", "pods"]
     verbs      = ["get", "list"]
   }
+
+  # Read access to ingresses across all namespaces
+  rule {
+    api_groups = ["networking.k8s.io"]
+    resources  = ["ingresses"]
+    verbs      = ["get", "list", "watch"]
+  }
 }
 
 # ClusterRoleBinding for cluster-wide access

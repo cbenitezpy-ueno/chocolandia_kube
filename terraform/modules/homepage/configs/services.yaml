@@ -77,4 +77,4 @@
           cluster: default
           namespace: homepage
           app: homepage
-          podSelector: app.kubernetes.io/name=homepage
+          podSelector: app=homepage
