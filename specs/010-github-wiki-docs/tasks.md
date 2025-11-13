@@ -121,12 +121,12 @@
 
 ### Implementation for User Story 3
 
-- [ ] T047 [US3] Enhance feature table in generate-homepage.sh to show quickstart availability (check if quickstart.md exists and is non-empty)
-- [ ] T048 [US3] Generate Quick Start column in homepage table with section links (e.g., "[Quick Start](Feature-003-Pihole#quick-start)" or "—" if unavailable)
-- [ ] T049 [US3] Verify quickstart detection logic works (test with features that have/don't have quickstart.md)
-- [ ] T050 [US3] Test Quick Start section links from homepage (click link, verify it jumps to #quick-start anchor on feature page)
-- [ ] T051 [US3] Ensure Quick Start section appears first in feature pages (before Specification) for easy access
-- [ ] T052 [US3] Verify quickstart content is concise and actionable (manual review of 2-3 quickstart sections)
+- [x] T047 [US3] Enhance feature table in generate-homepage.sh to show quickstart availability (check if quickstart.md exists and is non-empty)
+- [x] T048 [US3] Generate Quick Start column in homepage table with section links (e.g., "[Quick Start](Feature-003-Pihole#quick-start)" or "—" if unavailable)
+- [x] T049 [US3] Verify quickstart detection logic works (test with features that have/don't have quickstart.md)
+- [x] T050 [US3] Test Quick Start section links from homepage (click link, verify it jumps to #quick-start anchor on feature page)
+- [x] T051 [US3] Ensure Quick Start section appears first in feature pages (before Specification) for easy access
+- [x] T052 [US3] Verify quickstart content is concise and actionable (manual review of 2-3 quickstart sections)
 
 **Checkpoint**: All quickstart guides are highlighted and easily accessible from homepage
 
@@ -140,11 +140,11 @@
 
 ### Implementation for User Story 4
 
-- [ ] T053 [US4] Verify Wiki pages contain searchable keywords (check that feature names, technical terms preserved in generated pages)
-- [ ] T054 [US4] Test search functionality with 5-10 common terms (Pi-hole, Cloudflare, K3s, OpenTofu, Kubernetes, Traefik, cert-manager, ArgoCD, Grafana)
-- [ ] T055 [US4] Verify search results link to correct feature pages (click search result, confirm it goes to right page)
-- [ ] T056 [US4] Test search for terms that appear in multiple features (e.g., "OpenTofu", "K3s") and verify all relevant results shown
-- [ ] T057 [US4] Document search tips in homepage Contributing section (recommend searching for feature names, technology keywords)
+- [x] T053 [US4] Verify Wiki pages contain searchable keywords (check that feature names, technical terms preserved in generated pages)
+- [x] T054 [US4] Test search functionality with 5-10 common terms (Pi-hole, Cloudflare, K3s, OpenTofu, Kubernetes, Traefik, cert-manager, ArgoCD, Grafana)
+- [x] T055 [US4] Verify search results link to correct feature pages (click search result, confirm it goes to right page)
+- [x] T056 [US4] Test search for terms that appear in multiple features (e.g., "OpenTofu", "K3s") and verify all relevant results shown
+- [x] T057 [US4] Document search tips in homepage Contributing section (recommend searching for feature names, technology keywords)
 
 **Checkpoint**: Search functionality validated - users can find documentation efficiently
 
@@ -158,11 +158,11 @@
 
 ### Implementation for User Story 5
 
-- [ ] T058 [US5] Ensure homepage footer includes "Last updated" timestamp in ISO 8601 format (already implemented in T018, verify format)
-- [ ] T059 [US5] Ensure feature page footers include "Last Synced" timestamp (already implemented in T027, verify)
-- [ ] T060 [US5] Test timestamp accuracy (sync Wiki, check timestamp matches current time within a few seconds)
-- [ ] T061 [US5] Document how to use GitHub Wiki history feature (add note to homepage: "View page history via GitHub Wiki interface")
-- [ ] T062 [US5] Verify multiple syncs update timestamps correctly (run sync twice, verify timestamp changes)
+- [x] T058 [US5] Ensure homepage footer includes "Last updated" timestamp in ISO 8601 format (already implemented in T018, verify format)
+- [x] T059 [US5] Ensure feature page footers include "Last Synced" timestamp (already implemented in T027, verify)
+- [x] T060 [US5] Test timestamp accuracy (sync Wiki, check timestamp matches current time within a few seconds)
+- [x] T061 [US5] Document how to use GitHub Wiki history feature (add note to homepage: "View page history via GitHub Wiki interface")
+- [x] T062 [US5] Verify multiple syncs update timestamps correctly (run sync twice, verify timestamp changes)
 
 **Checkpoint**: All user stories should now be independently functional - documentation portal is complete
 
@@ -172,27 +172,27 @@
 
 **Purpose**: Improvements that affect multiple user stories, validation, documentation
 
-- [ ] T063 [P] Implement link transformation in scripts/wiki/lib/transform.sh (relative links → Wiki links: ./other.md → #section)
-- [ ] T064 [P] Implement cross-feature link transformation (../001-k3s/spec.md → [[Feature-001-K3s-Cluster-Setup#specification]])
-- [ ] T065 [P] Implement image URL transformation (./images/x.png → https://raw.githubusercontent.com/.../x.png)
-- [ ] T066 [P] Apply transformations to all feature pages during generation (call transform.sh functions in generate-feature-page.sh)
-- [ ] T067 [P] Test link transformations with features that have internal/cross-feature links
-- [ ] T068 [P] Test image transformations if any features have images
-- [ ] T069 Implement --dry-run flag support in sync-to-wiki.sh (skip git push, just generate and show what would be committed)
-- [ ] T070 Implement change detection in sync-to-wiki.sh (check if Wiki content actually changed before committing, avoid empty commits)
-- [ ] T071 Add error handling in sync-to-wiki.sh (check for missing spec.md, handle git failures gracefully)
-- [ ] T072 Add progress logging to sync-to-wiki.sh (echo "Generating Feature-001...", "Committing changes...", etc.)
-- [ ] T073 [P] Run validation script on all generated pages (invoke validate-markdown.sh on /tmp/wiki/*.md before pushing)
-- [ ] T074 [P] Create scripts/wiki/README.md with comprehensive documentation (usage, examples, troubleshooting)
-- [ ] T075 [P] Update repository root README.md to reference Wiki sync scripts (add "Documentation" section)
-- [ ] T076 Test error handling (remove spec.md from a test feature, verify sync skips it with warning)
-- [ ] T077 Test with malformed markdown (introduce syntax error, verify validation catches it)
-- [ ] T078 Run full sync validation with all 9 features (verify no errors, all pages generated)
-- [ ] T079 Verify Wiki pages render correctly (check formatting, code blocks, tables, lists)
-- [ ] T080 Create quickstart validation checklist (follow quickstart.md for this feature, verify all steps work)
-- [ ] T081 [P] Add security check to sync script (scan for credentials, API keys, internal IPs before pushing)
-- [ ] T082 Document sync workflow in quickstart.md (already exists, verify completeness)
-- [ ] T083 Add troubleshooting section to scripts/wiki/README.md (common issues, solutions)
+- [x] T063 [P] Implement link transformation in scripts/wiki/lib/transform.sh (relative links → Wiki links: ./other.md → #section)
+- [x] T064 [P] Implement cross-feature link transformation (../001-k3s/spec.md → [[Feature-001-K3s-Cluster-Setup#specification]])
+- [x] T065 [P] Implement image URL transformation (./images/x.png → https://raw.githubusercontent.com/.../x.png)
+- [x] T066 [P] Apply transformations to all feature pages during generation (call transform.sh functions in generate-feature-page.sh)
+- [x] T067 [P] Test link transformations with features that have internal/cross-feature links
+- [x] T068 [P] Test image transformations if any features have images
+- [x] T069 Implement --dry-run flag support in sync-to-wiki.sh (skip git push, just generate and show what would be committed)
+- [x] T070 Implement change detection in sync-to-wiki.sh (check if Wiki content actually changed before committing, avoid empty commits)
+- [x] T071 Add error handling in sync-to-wiki.sh (check for missing spec.md, handle git failures gracefully)
+- [x] T072 Add progress logging to sync-to-wiki.sh (echo "Generating Feature-001...", "Committing changes...", etc.)
+- [x] T073 [P] Run validation script on all generated pages (invoke validate-markdown.sh on /tmp/wiki/*.md before pushing)
+- [x] T074 [P] Create scripts/wiki/README.md with comprehensive documentation (usage, examples, troubleshooting)
+- [x] T075 [P] Update repository root README.md to reference Wiki sync scripts (add "Documentation" section)
+- [x] T076 Test error handling (remove spec.md from a test feature, verify sync skips it with warning)
+- [x] T077 Test with malformed markdown (introduce syntax error, verify validation catches it)
+- [x] T078 Run full sync validation with all 9 features (verify no errors, all pages generated)
+- [x] T079 Verify Wiki pages render correctly (check formatting, code blocks, tables, lists)
+- [x] T080 Create quickstart validation checklist (follow quickstart.md for this feature, verify all steps work)
+- [x] T081 [P] Add security check to sync script (scan for credentials, API keys, internal IPs before pushing)
+- [x] T082 Document sync workflow in quickstart.md (already exists, verify completeness)
+- [x] T083 Add troubleshooting section to scripts/wiki/README.md (common issues, solutions)
 
 ---
 
@@ -200,15 +200,15 @@
 
 **Purpose**: Sidebar navigation and GitHub Actions automation (nice-to-have features)
 
-- [ ] T084 [P] Create generate-sidebar.sh script in scripts/wiki/ for optional _Sidebar.md generation
-- [ ] T085 [P] Implement sidebar structure (group features by category: Infrastructure, Services, Documentation)
-- [ ] T086 [P] Add sidebar generation to sync-to-wiki.sh (optional flag: --with-sidebar)
-- [ ] T087 [P] Test sidebar navigation (verify all links work, sidebar appears on all pages)
-- [ ] T088 [P] Create GitHub Actions workflow file .github/workflows/wiki-sync.yml
-- [ ] T089 [P] Configure workflow to trigger on push to main branch with specs/**/*.md changes
-- [ ] T090 [P] Add GitHub token authentication for Wiki push in workflow
-- [ ] T091 [P] Test GitHub Actions workflow (push docs change, verify Wiki auto-syncs)
-- [ ] T092 [P] Add workflow badge to repository README.md
+- [x] T084 [P] Create generate-sidebar.sh script in scripts/wiki/ for optional _Sidebar.md generation
+- [x] T085 [P] Implement sidebar structure (group features by category: Infrastructure, Services, Documentation)
+- [x] T086 [P] Add sidebar generation to sync-to-wiki.sh (optional flag: --with-sidebar)
+- [x] T087 [P] Test sidebar navigation (verify all links work, sidebar appears on all pages)
+- [x] T088 [P] Create GitHub Actions workflow file .github/workflows/wiki-sync.yml
+- [x] T089 [P] Configure workflow to trigger on push to main branch with specs/**/*.md changes
+- [x] T090 [P] Add GitHub token authentication for Wiki push in workflow
+- [x] T091 [P] Test GitHub Actions workflow (push docs change, verify Wiki auto-syncs)
+- [x] T092 [P] Add workflow badge to repository README.md
 
 ---
 
