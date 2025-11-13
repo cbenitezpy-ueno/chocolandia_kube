@@ -30,35 +30,6 @@ module "homepage" {
 }
 
 # ==============================================================================
-# Cloudflare Access for Homepage
-# ==============================================================================
-
-# Cloudflare Access Application for Homepage
-resource "cloudflare_access_application" "homepage" {
-  account_id                = var.cloudflare_account_id
-  name                      = "Homepage Dashboard"
-  domain                    = "homepage.${var.domain_name}"
-  type                      = "self_hosted"
-  session_duration          = "24h"
-  auto_redirect_to_identity = true
-
-  allowed_idps = [var.google_oauth_idp_id]
-}
-
-# Access Policy - Allow specific Google accounts
-resource "cloudflare_access_policy" "homepage_google" {
-  account_id     = var.cloudflare_account_id
-  application_id = cloudflare_access_application.homepage.id
-  name           = "Allow Google OAuth Users"
-  precedence     = 1
-  decision       = "allow"
-
-  include {
-    email = var.authorized_emails
-  }
-}
-
-# ==============================================================================
 # Outputs
 # ==============================================================================
 
