@@ -13,6 +13,7 @@ data:
     ---
     # Homepage Services Configuration
     # This file defines service groups and their links for the Homepage dashboard
+    # GitOps Test: Modified to test automatic sync
 
     - Infrastructure:
         - Traefik:
