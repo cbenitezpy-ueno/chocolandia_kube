@@ -6,7 +6,7 @@
     - Traefik:
         icon: traefik.svg
         description: Reverse proxy and ingress controller (internal service)
-        ping: http://traefik.traefik.svc.cluster.local:9000/ping
+        ping: http://traefik-metrics.traefik.svc.cluster.local:9100/metrics
 
     - cert-manager:
         icon: cert-manager.svg
