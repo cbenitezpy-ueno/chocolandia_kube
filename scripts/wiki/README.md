@@ -120,6 +120,50 @@ When creating a new feature (e.g., `011-new-feature`):
 
 The new feature will automatically appear in the Wiki.
 
+### Automated Sync via GitHub Actions
+
+The repository includes a GitHub Actions workflow that automatically syncs documentation to the Wiki when changes are pushed to the `main` branch.
+
+**Workflow File**: `.github/workflows/wiki-sync.yml`
+
+**Triggers**:
+- Push to `main` branch with changes to:
+  - `specs/**/*.md` (any documentation files)
+  - `scripts/wiki/**` (sync scripts)
+  - `.github/workflows/wiki-sync.yml` (workflow file itself)
+- Manual trigger via workflow_dispatch
+
+**What it does**:
+1. Checks out the repository
+2. Configures Git with bot credentials
+3. Makes wiki sync scripts executable
+4. Runs `sync-to-wiki.sh --with-sidebar`
+5. Pushes changes to Wiki repository
+
+**View workflow runs**:
+```bash
+# Via GitHub CLI
+gh run list --workflow=wiki-sync.yml
+
+# Or visit
+https://github.com/cbenitezpy-ueno/chocolandia_kube/actions/workflows/wiki-sync.yml
+```
+
+**Manual trigger**:
+```bash
+# Trigger workflow manually via GitHub CLI
+gh workflow run wiki-sync.yml
+
+# Or use the GitHub Actions UI
+```
+
+With this automation, you only need to:
+1. Edit files in `specs/` directory
+2. Commit and push to `main` branch
+3. GitHub Actions automatically syncs to Wiki
+
+No manual sync script execution required!
+
 ## Troubleshooting
 
 ### "Permission denied" when pushing

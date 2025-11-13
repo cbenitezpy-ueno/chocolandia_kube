@@ -1,0 +1,53 @@
+name: Sync Documentation to Wiki
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'specs/**/*.md'
+      - 'scripts/wiki/**'
+      - '.github/workflows/wiki-sync.yml'
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  sync-wiki:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write  # Required for pushing to Wiki
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for proper metadata
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Verify Wiki scripts
+        run: |
+          echo "Checking Wiki sync scripts..."
+          ls -lh scripts/wiki/
+          chmod +x scripts/wiki/*.sh
+          echo "Scripts verified and made executable"
+
+      - name: Run Wiki sync
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Configure git credential helper
+          git config --global credential.helper store
+          echo "https://x-access-token:${GITHUB_TOKEN}@github.com" > ~/.git-credentials
+
+          # Run sync with sidebar
+          bash scripts/wiki/sync-to-wiki.sh --with-sidebar
+
+      - name: Sync summary
+        if: always()
+        run: |
+          echo "::notice::Wiki synchronization completed"
+          echo "View at: https://github.com/${{ github.repository }}/wiki"
