@@ -20,7 +20,7 @@ resource "kubernetes_secret" "homepage_widgets" {
   }
 
   data = {
-    ARGOCD_TOKEN = var.argocd_token
+    HOMEPAGE_VAR_ARGOCD_TOKEN = var.argocd_token
   }
 
   type = "Opaque"

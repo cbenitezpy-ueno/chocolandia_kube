@@ -5,38 +5,30 @@
 - Infrastructure:
     - Traefik:
         icon: traefik.svg
-        href: https://traefik.chocolandiadc.com
-        description: Reverse proxy and ingress controller
+        description: Reverse proxy and ingress controller (internal service)
         ping: http://traefik.traefik.svc.cluster.local:9000/ping
 
     - cert-manager:
         icon: cert-manager.svg
-        description: Automatic TLS certificate management
-        widget:
-          type: kubernetes
-          cluster:
-            show: true
-            cpu: true
-            memory: true
-          nodes:
-            show: false
+        description: Automatic TLS certificate management (internal service)
+        ping: http://cert-manager.cert-manager.svc.cluster.local:9402/metrics
 
 - Kubernetes Management:
     - ArgoCD:
         icon: argocd.svg
         href: https://argocd.chocolandiadc.com
         description: GitOps continuous delivery for Kubernetes
+        ping: http://argocd-server.argocd.svc.cluster.local:80
         widget:
           type: argocd
-          url: https://argocd.chocolandiadc.com
-          username: admin
-          password: {{HOMEPAGE_VAR_ARGOCD_TOKEN}}
+          url: http://argocd-server.argocd.svc.cluster.local:80
+          key: {{HOMEPAGE_VAR_ARGOCD_TOKEN}}
 
     - Headlamp:
         icon: kubernetes-dashboard.svg
         href: https://headlamp.chocolandiadc.com
         description: Kubernetes web UI with OIDC authentication
-        ping: http://headlamp.headlamp.svc.cluster.local
+        ping: http://headlamp.headlamp.svc.cluster.local:80
 
 - Monitoring:
     - Grafana:
