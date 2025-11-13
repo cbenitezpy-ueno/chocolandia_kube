@@ -2,14 +2,17 @@
 #
 # K3s Server (Control-Plane) Installation Script
 # Installs K3s in server mode with SQLite datastore (single-server, non-HA)
+# or joins an existing cluster as additional control plane (HA mode)
 #
-# Usage: ./install-k3s-server.sh <k3s_version> <k3s_flags> <node_ip> <tls_san>
+# Usage: ./install-k3s-server.sh <k3s_version> <k3s_flags> <node_ip> <tls_san> [server_url] [join_token]
 #
 # Arguments:
 #   $1 - K3s version (e.g., "v1.28.3+k3s1" or "latest")
 #   $2 - K3s server flags (space-separated, e.g., "--disable=traefik --write-kubeconfig-mode=644")
 #   $3 - Node IP address (e.g., "192.168.4.10")
 #   $4 - TLS SAN (comma-separated hostnames/IPs for TLS cert)
+#   $5 - (Optional) Server URL to join existing cluster (e.g., "https://192.168.4.101:6443")
+#   $6 - (Optional) Cluster join token (required if server_url is provided)
 
 set -euo pipefail
 
@@ -21,6 +24,8 @@ K3S_VERSION="${1:-v1.28.3+k3s1}"
 K3S_FLAGS="${2:-}"
 NODE_IP="${3:-}"
 TLS_SAN="${4:-}"
+SERVER_URL="${5:-}"
+JOIN_TOKEN="${6:-}"
 
 # K3s installation URL
 INSTALL_K3S_URL="https://get.k3s.io"
@@ -95,7 +100,11 @@ sysctl --system > /dev/null 2>&1
 # K3s Server Installation
 # ============================================================================
 
-log "Installing K3s server..."
+if [[ -n "$SERVER_URL" ]]; then
+    log "Installing K3s server in HA mode (joining existing cluster at $SERVER_URL)..."
+else
+    log "Installing K3s server in standalone mode..."
+fi
 
 # Build K3s installation command
 INSTALL_CMD="curl -sfL $INSTALL_K3S_URL | INSTALL_K3S_VERSION='$K3S_VERSION' sh -s - server"
@@ -105,14 +114,30 @@ if [[ -n "$K3S_FLAGS" ]]; then
     INSTALL_CMD="$INSTALL_CMD $K3S_FLAGS"
 fi
 
+# Build INSTALL_K3S_EXEC variable
+EXEC_FLAGS=""
+
 # Add node IP if provided
 if [[ -n "$NODE_IP" ]]; then
-    INSTALL_CMD="INSTALL_K3S_EXEC='--node-ip=$NODE_IP' $INSTALL_CMD"
+    EXEC_FLAGS="$EXEC_FLAGS --node-ip=$NODE_IP"
 fi
 
 # Add TLS SAN if provided
 if [[ -n "$TLS_SAN" ]]; then
-    INSTALL_CMD="INSTALL_K3S_EXEC='--tls-san=$TLS_SAN' $INSTALL_CMD"
+    EXEC_FLAGS="$EXEC_FLAGS --tls-san=$TLS_SAN"
+fi
+
+# Add server URL and token for HA mode (joining existing cluster)
+if [[ -n "$SERVER_URL" ]]; then
+    if [[ -z "$JOIN_TOKEN" ]]; then
+        error "JOIN_TOKEN is required when SERVER_URL is provided"
+    fi
+    EXEC_FLAGS="$EXEC_FLAGS --server=$SERVER_URL --token=$JOIN_TOKEN"
+fi
+
+# Add INSTALL_K3S_EXEC to command if we have flags
+if [[ -n "$EXEC_FLAGS" ]]; then
+    INSTALL_CMD="INSTALL_K3S_EXEC='$EXEC_FLAGS' $INSTALL_CMD"
 fi
 
 # Execute installation

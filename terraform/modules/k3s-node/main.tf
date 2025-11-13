@@ -76,9 +76,13 @@ resource "null_resource" "k3s_install" {
   # Execute installation script
   provisioner "remote-exec" {
     inline = var.node_role == "server" ? [
-      # Server installation
+      # Server installation (standalone or HA mode)
       "chmod +x /tmp/install-k3s.sh",
-      "sudo /tmp/install-k3s.sh '${var.k3s_version}' '${local.k3s_flags_str}' '${var.node_ip}' '${local.tls_san_str}'"
+      var.server_url != "" ?
+        # HA mode: joining existing cluster as additional control plane
+        "sudo /tmp/install-k3s.sh '${var.k3s_version}' '${local.k3s_flags_str}' '${var.node_ip}' '${local.tls_san_str}' '${var.server_url}' '${var.join_token}'" :
+        # Standalone mode: first control plane
+        "sudo /tmp/install-k3s.sh '${var.k3s_version}' '${local.k3s_flags_str}' '${var.node_ip}' '${local.tls_san_str}'"
       ] : [
       # Agent installation
       "chmod +x /tmp/install-k3s.sh",

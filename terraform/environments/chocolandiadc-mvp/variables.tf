@@ -63,6 +63,26 @@ variable "nodo1_ip" {
 }
 
 # ============================================================================
+# Additional Control Plane Node Configuration (nodo03)
+# ============================================================================
+
+variable "nodo03_hostname" {
+  description = "Hostname for the second K3s control-plane node"
+  type        = string
+  default     = "nodo03"
+}
+
+variable "nodo03_ip" {
+  description = "Static IP address of nodo03 on Eero network"
+  type        = string
+
+  validation {
+    condition     = can(regex("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$", var.nodo03_ip))
+    error_message = "Nodo03 IP must be a valid IPv4 address."
+  }
+}
+
+# ============================================================================
 # SSH Configuration
 # ============================================================================
 
