@@ -1,0 +1,254 @@
+# YAML Schema for Homepage widgets.yaml Configuration
+# This file documents the expected structure for standalone Homepage widgets
+
+# widgets.yaml defines standalone widgets that are NOT tied to specific services
+# These widgets appear in a separate section on the Homepage dashboard
+
+# Note: Service-specific widgets (Pi-hole, Traefik, ArgoCD) are configured
+# in services.yaml under the service's widget property, not here.
+
+# ==========================================
+# STANDALONE WIDGET TYPES
+# ==========================================
+
+# Standalone widgets provide global information or utilities:
+# - resources: System resource usage (CPU, memory, disk)
+# - datetime: Current date/time with custom format
+# - search: Quick search bar
+# - kubernetes: Cluster-wide K8s resources
+# - greeting: Personalized greeting message
+# - openmeteo: Weather information
+# (Full list: https://gethomepage.dev/latest/widgets/)
+
+widgets:
+  # Array of widget configurations
+  - <widget-type>:
+      # Widget-specific configuration options
+
+# ==========================================
+# COMMON WIDGET TYPES
+# ==========================================
+
+# 1. RESOURCES WIDGET
+# Displays system resource usage (CPU, memory, disk, network)
+widgets_resources:
+  - resources:
+      cpu: boolean           # Show CPU usage (default: true)
+      memory: boolean        # Show memory usage (default: true)
+      disk: string           # Disk mount point to monitor (e.g., "/", "/data")
+      label: string          # Custom label (optional)
+      expanded: boolean      # Show expanded view with details (default: false)
+      units: string          # Unit format: "bytes", "kilobytes", "megabytes", "gigabytes"
+
+# 2. DATETIME WIDGET
+# Displays current date and time with customizable format
+widgets_datetime:
+  - datetime:
+      text_size: string      # Text size: "sm", "md", "lg", "xl" (default: "xl")
+      format:
+        timeStyle: string    # Time format: "short", "medium", "long" (e.g., "3:30 PM", "3:30:00 PM")
+        dateStyle: string    # Date format: "short", "medium", "long", "full"
+        hour12: boolean      # 12-hour (true) or 24-hour (false) format
+        locale: string       # Locale for date/time (e.g., "en-US", "es-ES")
+
+# 3. SEARCH WIDGET
+# Provides quick search functionality across all services
+widgets_search:
+  - search:
+      provider: string       # Search provider: "google", "duckduckgo", "bing", "custom"
+      target: string         # "_blank" (new tab) or "_self" (same tab)
+      focus: boolean         # Auto-focus search on page load (default: false)
+
+# 4. KUBERNETES WIDGET (CLUSTER-WIDE)
+# Displays cluster-wide Kubernetes resource statistics
+widgets_kubernetes:
+  - kubernetes:
+      cluster:
+        show: boolean        # Show cluster-level info (default: true)
+        cpu: boolean         # Show total CPU usage across cluster
+        memory: boolean      # Show total memory usage across cluster
+        showLabel: boolean   # Show cluster name label (default: true)
+        label: string        # Custom cluster label (optional)
+      nodes:
+        show: boolean        # Show node information (default: true)
+        showLabel: boolean   # Show node name labels (default: true)
+
+# 5. GREETING WIDGET
+# Displays personalized greeting message
+widgets_greeting:
+  - greeting:
+      text_size: string      # Text size: "sm", "md", "lg", "xl"
+      text: string           # Custom greeting text (optional)
+                             # Default uses time-based greeting (Good morning, Good afternoon, etc.)
+
+# 6. OPENMETEO WIDGET (WEATHER)
+# Displays weather information from Open-Meteo API
+widgets_openmeteo:
+  - openmeteo:
+      label: string          # Location label (e.g., "Asunción")
+      latitude: number       # Latitude coordinate
+      longitude: number      # Longitude coordinate
+      timezone: string       # Timezone (e.g., "America/Asuncion")
+      units: string          # "metric" or "imperial" (default: "metric")
+      cache: integer         # Cache duration in seconds (default: 300)
+
+# ==========================================
+# EXAMPLE: Complete widgets.yaml
+# ==========================================
+
+# Example with common widgets for Chocolandia Kube:
+example_widgets:
+  # System resources (K3s cluster resources)
+  - resources:
+      cpu: true
+      memory: true
+      disk: /
+      label: Cluster Resources
+      expanded: true
+      units: gigabytes
+
+  # Current date and time
+  - datetime:
+      text_size: xl
+      format:
+        timeStyle: short
+        dateStyle: full
+        hour12: false  # 24-hour format
+        locale: en-US
+
+  # Quick search bar
+  - search:
+      provider: duckduckgo
+      target: _blank
+      focus: false  # Don't auto-focus (prevents accidental typing)
+
+  # Kubernetes cluster-wide stats
+  - kubernetes:
+      cluster:
+        show: true
+        cpu: true
+        memory: true
+        showLabel: true
+        label: Chocolandia K3s Cluster
+      nodes:
+        show: true
+        showLabel: true
+
+  # Greeting message
+  - greeting:
+      text_size: lg
+      text: "Welcome to Chocolandia Kube"
+
+  # Weather widget (Asunción, Paraguay)
+  - openmeteo:
+      label: Asunción
+      latitude: -25.2637
+      longitude: -57.5759
+      timezone: America/Asuncion
+      units: metric
+      cache: 600  # 10 minutes
+
+# ==========================================
+# MINIMAL EXAMPLE
+# ==========================================
+
+# Minimal widgets.yaml (just datetime and resources):
+minimal_widgets:
+  - datetime:
+      text_size: lg
+      format:
+        timeStyle: short
+        dateStyle: short
+
+  - resources:
+      cpu: true
+      memory: true
+      disk: /
+
+# ==========================================
+# EMPTY EXAMPLE (NO STANDALONE WIDGETS)
+# ==========================================
+
+# If you only want service-specific widgets (configured in services.yaml),
+# you can omit widgets.yaml entirely or provide an empty array:
+no_widgets: []
+
+# ==========================================
+# VALIDATION RULES
+# ==========================================
+
+# Resources Widget:
+# - disk must be valid mount point that exists on Homepage pod filesystem
+# - units must be one of: bytes, kilobytes, megabytes, gigabytes
+# - expanded must be boolean
+
+# DateTime Widget:
+# - text_size must be one of: sm, md, lg, xl
+# - timeStyle must be one of: short, medium, long
+# - dateStyle must be one of: short, medium, long, full
+# - hour12 must be boolean
+# - locale must be valid BCP 47 language tag
+
+# Search Widget:
+# - provider must be one of: google, duckduckgo, bing, custom
+# - target must be "_blank" or "_self"
+# - focus must be boolean
+
+# Kubernetes Widget:
+# - All show/showLabel options must be boolean
+# - Requires ServiceAccount with cluster-level RBAC permissions (for cluster-wide stats)
+
+# Greeting Widget:
+# - text_size must be one of: sm, md, lg, xl
+
+# OpenMeteo Widget:
+# - latitude must be number between -90 and 90
+# - longitude must be number between -180 and 180
+# - timezone must be valid IANA timezone (e.g., America/Asuncion)
+# - units must be "metric" or "imperial"
+# - cache must be integer (seconds)
+
+# ==========================================
+# WIDGET PLACEMENT
+# ==========================================
+
+# Standalone widgets typically appear at the top of the dashboard
+# Service-specific widgets appear within their service cards
+
+# Placement order:
+# 1. Standalone widgets (from widgets.yaml) - top of page
+# 2. Service Groups (from services.yaml) - below standalone widgets
+# 3. Within each Service Group: Service cards with their widgets
+
+# ==========================================
+# PERFORMANCE CONSIDERATIONS
+# ==========================================
+
+# - resources widget polls system stats at refresh interval (default: 30s)
+# - Kubernetes cluster widget requires RBAC permissions and polls K8s API
+# - OpenMeteo widget caches weather data (configure cache duration appropriately)
+# - Too many widgets can impact page load time (recommended: 3-5 standalone widgets max)
+
+# ==========================================
+# RBAC REQUIREMENTS
+# ==========================================
+
+# Kubernetes cluster-wide widget requires:
+# - ServiceAccount with ClusterRole permissions (not just namespace-scoped Role)
+# - Permissions needed:
+#   - nodes: get, list (for node stats)
+#   - pods: get, list (for cluster-wide pod stats)
+#   - (cluster-level, not namespace-level)
+
+# If using namespace-scoped RBAC only (as in this project), omit the
+# cluster-wide Kubernetes widget or configure it to show: false for cluster/nodes
+
+# ==========================================
+# SECURITY NOTES
+# ==========================================
+
+# - Search widget with provider "custom" requires URL template (potential XSS risk)
+# - OpenMeteo widget makes external API calls (ensure network egress allowed)
+# - Resources widget shows system information (consider if this is sensitive)
+
+# For full widgets documentation: https://gethomepage.dev/latest/widgets/

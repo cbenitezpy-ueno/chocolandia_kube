@@ -1,0 +1,172 @@
+# YAML Schema for Homepage services.yaml Configuration
+# This file documents the expected structure for Homepage service entries
+
+# services.yaml defines all applications/services displayed on the Homepage dashboard
+# Organized as an array of Service Groups, each containing Service Entries
+
+# Top-level structure: Array of Service Groups
+services:
+  # Service Group: Logical grouping of related services
+  - <Group Name>:  # e.g., "Infrastructure", "Applications", "Monitoring"
+
+      # Array of Service Entries within this group
+      - <Service Name>:  # e.g., "Pi-hole", "Traefik", "ArgoCD"
+
+          # Display properties (REQUIRED)
+          icon: string              # Icon identifier or URL (e.g., "pi-hole.png", "https://example.com/icon.png")
+          href: string              # External public URL (REQUIRED, e.g., "https://pihole.chocolandiadc.com")
+          description: string       # Brief service description (REQUIRED)
+
+          # Kubernetes service discovery (OPTIONAL, enables real-time status)
+          server: string            # Kubernetes server name (e.g., "k3s-cluster", must match docker.yaml config)
+          namespace: string         # Kubernetes namespace where service is deployed (e.g., "pihole")
+          container: string         # Specific container name within pod (optional)
+
+          # Specialized widget configuration (OPTIONAL)
+          widget:
+            type: string            # Widget type: "pihole", "traefik", "kubernetes", "argocd", etc.
+            url: string             # Internal cluster API URL (e.g., "http://pihole.pihole.svc.cluster.local")
+
+            # Widget-specific fields (vary by type)
+            key: string             # API key/token (use {{HOMEPAGE_VAR_NAME}} for secrets)
+            username: string        # API username (for widgets requiring basic auth)
+            password: string        # API password (use {{HOMEPAGE_VAR_NAME}} for secrets)
+
+            # Additional widget-specific options
+            # (See Homepage documentation for each widget type)
+
+# ==========================================
+# EXAMPLE: Complete services.yaml
+# ==========================================
+
+# Example with multiple service groups and widgets:
+services:
+  - Infrastructure:
+      - Pi-hole:
+          icon: pi-hole.png
+          href: https://pihole.chocolandiadc.com
+          description: Network-wide DNS ad blocker and DHCP server
+          server: k3s-cluster
+          namespace: pihole
+          container: pihole
+          widget:
+            type: pihole
+            url: http://pihole.pihole.svc.cluster.local
+            key: "{{HOMEPAGE_VAR_PIHOLE_API_KEY}}"  # Injected from Kubernetes Secret
+
+      - Traefik:
+          icon: traefik.png
+          href: https://traefik.chocolandiadc.com
+          description: Cloud Native Ingress Controller and Load Balancer
+          server: k3s-cluster
+          namespace: traefik
+          widget:
+            type: traefik
+            url: http://traefik.traefik.svc.cluster.local:9000  # Traefik dashboard port
+
+      - cert-manager:
+          icon: cert-manager.png
+          href: https://cert-manager.io/docs
+          description: X.509 certificate management for Kubernetes
+          server: k3s-cluster
+          namespace: cert-manager
+          widget:
+            type: kubernetes
+            cluster:
+              show: false
+              cpu: false
+              memory: false
+            nodes:
+              show: false
+            customResources:
+              - group: cert-manager.io
+                version: v1
+                kind: Certificate
+                namespace: traefik  # Namespace where certificates are issued
+
+  - GitOps & Monitoring:
+      - ArgoCD:
+          icon: argocd.png
+          href: https://argocd.chocolandiadc.com
+          description: Declarative GitOps Continuous Deployment
+          server: k3s-cluster
+          namespace: argocd
+          container: argocd-server
+          widget:
+            type: argocd
+            url: http://argocd-server.argocd.svc.cluster.local
+            username: admin
+            password: "{{HOMEPAGE_VAR_ARGOCD_TOKEN}}"  # ArgoCD API token
+
+      - Headlamp:
+          icon: headlamp.png
+          href: https://headlamp.chocolandiadc.com
+          description: Kubernetes Web UI with OIDC authentication
+          server: k3s-cluster
+          namespace: headlamp
+          # No widget (just link and status)
+
+  - Applications:
+      - Homepage:
+          icon: homepage.png
+          href: https://homepage.chocolandiadc.com
+          description: Chocolandia Kube Dashboard (this app)
+          server: k3s-cluster
+          namespace: homepage
+          # Self-monitoring (optional)
+
+# ==========================================
+# VALIDATION RULES
+# ==========================================
+
+# Service Entry Rules:
+# 1. Service Name must be unique within a Service Group
+# 2. href must be valid URL starting with http:// or https://
+# 3. If server is defined, namespace must also be defined (for service discovery)
+# 4. If widget is defined:
+#    - widget.type must be a supported type
+#    - widget.url must be internal cluster URL (http://<service>.<namespace>.svc.cluster.local)
+#    - Secret references must use {{HOMEPAGE_VAR_*}} syntax
+# 5. icon should reference valid icon file in /app/public/icons/ or be a URL
+
+# Kubernetes Service Discovery Rules:
+# - server name must match entry in docker.yaml (or omit docker.yaml and use default)
+# - namespace must exist in cluster and ServiceAccount must have RBAC permissions
+# - container name (if specified) must match actual container name in pod
+
+# Widget Security Rules:
+# - API credentials (key, password) should NEVER be hardcoded
+# - Use Kubernetes Secret environment variables: {{HOMEPAGE_VAR_SECRETNAME}}
+# - Widget URLs should use internal cluster DNS (not external URLs)
+# - ServiceAccount must have RBAC permissions for Kubernetes-based widgets
+
+# ==========================================
+# WIDGET TYPES REFERENCE
+# ==========================================
+
+# Pi-hole Widget:
+#   type: pihole
+#   url: <pi-hole internal URL>
+#   key: <API key from Settings > API in Pi-hole admin>
+
+# Traefik Widget:
+#   type: traefik
+#   url: <traefik dashboard URL with port 9000>
+#   (No authentication if dashboard is internal-only)
+
+# Kubernetes Widget (for CRDs like Certificates):
+#   type: kubernetes
+#   customResources:
+#     - group: <CRD group>
+#       version: <CRD version>
+#       kind: <CRD kind>
+#       namespace: <optional namespace filter>
+
+# ArgoCD Widget:
+#   type: argocd
+#   url: <argocd-server internal URL>
+#   username: <username or "admin">
+#   password: <API token, NOT password>
+#   (Generate token: argocd account generate-token --account <account>)
+
+# For full widget documentation: https://gethomepage.dev/latest/widgets/

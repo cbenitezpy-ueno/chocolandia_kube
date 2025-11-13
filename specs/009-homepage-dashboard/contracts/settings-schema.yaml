@@ -1,0 +1,185 @@
+# YAML Schema for Homepage settings.yaml Configuration
+# This file documents the expected structure for Homepage global settings
+
+# settings.yaml defines the overall Homepage dashboard appearance and behavior
+
+# ==========================================
+# GLOBAL SETTINGS
+# ==========================================
+
+title: string                # Dashboard title shown in browser (e.g., "Chocolandia Kube Dashboard")
+favicon: string              # URL or path to favicon (e.g., "https://chocolandiadc.com/favicon.ico")
+background: string           # Background image URL or color (optional)
+cardBlur: string             # Card background blur effect (e.g., "sm", "md", "lg", "xl")
+theme: string                # Color theme: "dark", "light", "auto" (default: "auto")
+color: string                # Accent color (e.g., "slate", "gray", "zinc", "neutral", "stone")
+headerStyle: string          # Header style: "underlined", "boxed", "clean" (default: "underlined")
+hideVersion: boolean         # Hide Homepage version number in footer (default: false)
+hideErrors: boolean          # Hide error messages in widgets (default: false)
+showStats: boolean           # Show API call statistics (default: false)
+target: string               # Link target: "_blank" (new tab), "_self" (same tab) (default: "_blank")
+quicklaunch:
+  searchDescriptions: boolean  # Include service descriptions in search (default: false)
+  hideInternetSearch: boolean  # Hide internet search option (default: false)
+  showSearchSuggestions: boolean  # Show search suggestions (default: false)
+  hideVisitURL: boolean        # Hide "Visit URL" option (default: false)
+
+# ==========================================
+# LAYOUT CONFIGURATION
+# ==========================================
+
+# Layout defines how Service Groups are displayed
+# Each group can have custom styling and column count
+
+layout:
+  <Group Name>:              # Must match Service Group names in services.yaml
+    style: string            # "row" or "column" (default: "row")
+    columns: integer         # Number of columns (1-8, default: 3)
+    icon: string             # Group icon (optional)
+    header: boolean          # Show group header (default: true)
+
+# ==========================================
+# LANGUAGE & LOCALIZATION
+# ==========================================
+
+language: string             # ISO language code (e.g., "en", "es", "fr", "de")
+                             # Supported: en, fr, de, es, pt, nl, ru, zh-CN, ja, and more
+
+# ==========================================
+# AUTHENTICATION (NOT USED WITH CLOUDFLARE)
+# ==========================================
+
+# Note: Homepage has built-in authentication, but we use Cloudflare Access instead
+# These settings should be omitted when using Cloudflare Zero Trust
+
+# providers:
+#   - oidc:
+#       issuer: <OIDC issuer URL>
+#       clientId: <client ID>
+#       clientSecret: <client secret>
+#       # (NOT USED - authentication handled by Cloudflare Access)
+
+# ==========================================
+# EXAMPLE: Complete settings.yaml
+# ==========================================
+
+# Example for Chocolandia Kube Dashboard:
+settings:
+  title: Chocolandia Kube Dashboard
+  favicon: https://chocolandiadc.com/favicon.ico
+  background: /images/background.jpg  # Optional background image
+  theme: dark
+  color: slate
+  headerStyle: boxed
+  hideVersion: false
+  target: _blank  # Open links in new tab
+  quicklaunch:
+    searchDescriptions: true
+    hideInternetSearch: true
+    hideVisitURL: false
+
+  # Layout configuration for Service Groups
+  layout:
+    Infrastructure:
+      style: row
+      columns: 3
+      icon: mdi-server-network  # Material Design Icon
+      header: true
+
+    "GitOps & Monitoring":
+      style: row
+      columns: 2
+      icon: mdi-kubernetes
+      header: true
+
+    Applications:
+      style: row
+      columns: 4
+      icon: mdi-apps
+      header: true
+
+  # Language
+  language: en  # English
+
+# ==========================================
+# MINIMAL EXAMPLE
+# ==========================================
+
+# Minimal settings.yaml (uses defaults for most options):
+minimal_settings:
+  title: My Dashboard
+  theme: dark
+  layout:
+    Services:
+      columns: 3
+
+# ==========================================
+# VALIDATION RULES
+# ==========================================
+
+# Theme Rules:
+# - theme must be one of: "dark", "light", "auto"
+# - color must be valid Tailwind color (slate, gray, zinc, neutral, stone, red, etc.)
+
+# Header Style Rules:
+# - headerStyle must be one of: "underlined", "boxed", "clean"
+
+# Layout Rules:
+# - Layout group names MUST match Service Groups defined in services.yaml
+# - columns must be integer between 1 and 8 (recommended: 2-4)
+# - style must be "row" or "column"
+
+# Target Rules:
+# - target must be "_blank" (new tab) or "_self" (same tab)
+
+# Language Rules:
+# - language must be valid ISO 639-1 code (two letters)
+# - Unsupported languages fall back to English
+
+# Quick Launch Rules:
+# - All quicklaunch options are boolean (true/false)
+
+# ==========================================
+# THEMING & CUSTOMIZATION
+# ==========================================
+
+# Available themes:
+# - dark: Dark background with light text (recommended for 24/7 displays)
+# - light: Light background with dark text
+# - auto: Matches system preference
+
+# Available colors (accent color):
+# slate, gray, zinc, neutral, stone, red, orange, amber, yellow,
+# lime, green, emerald, teal, cyan, sky, blue, indigo, violet, purple,
+# fuchsia, pink, rose
+
+# Available header styles:
+# - underlined: Service names have underline effect
+# - boxed: Service cards have box/border
+# - clean: Minimal styling, no borders
+
+# Card blur options:
+# - sm: Small blur effect
+# - md: Medium blur effect
+# - lg: Large blur effect
+# - xl: Extra large blur effect
+# - (empty): No blur
+
+# ==========================================
+# PERFORMANCE CONSIDERATIONS
+# ==========================================
+
+# - Background images should be optimized (<500KB recommended)
+# - Complex backgrounds with high blur may impact performance
+# - showStats: true adds overhead for API call tracking (use for debugging only)
+
+# ==========================================
+# SECURITY NOTES
+# ==========================================
+
+# - Authentication is handled externally by Cloudflare Access
+# - Do NOT configure Homepage's built-in auth (providers) when using Cloudflare
+# - Favicon and background URLs should use HTTPS
+# - External resources (icons, backgrounds) should be from trusted sources
+
+# For full settings documentation: https://gethomepage.dev/latest/configs/settings/

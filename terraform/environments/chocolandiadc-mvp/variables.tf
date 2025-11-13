@@ -295,3 +295,61 @@ variable "certificate_renew_before" {
   type        = string
   default     = "720h"
 }
+
+# ============================================================================
+# Homepage Dashboard Configuration (Feature 009)
+# ============================================================================
+
+variable "homepage_image" {
+  description = "Docker image for Homepage dashboard"
+  type        = string
+  default     = "ghcr.io/gethomepage/homepage:latest"
+}
+
+variable "homepage_namespace" {
+  description = "Kubernetes namespace for Homepage deployment"
+  type        = string
+  default     = "homepage"
+}
+
+variable "homepage_service_port" {
+  description = "Internal service port for Homepage"
+  type        = number
+  default     = 3000
+}
+
+variable "argocd_token" {
+  description = "ArgoCD API token for Homepage widget"
+  type        = string
+  sensitive   = true
+}
+
+variable "homepage_resource_requests_cpu" {
+  description = "CPU request for Homepage container"
+  type        = string
+  default     = "100m"
+}
+
+variable "homepage_resource_requests_memory" {
+  description = "Memory request for Homepage container"
+  type        = string
+  default     = "128Mi"
+}
+
+variable "homepage_resource_limits_cpu" {
+  description = "CPU limit for Homepage container"
+  type        = string
+  default     = "500m"
+}
+
+variable "homepage_resource_limits_memory" {
+  description = "Memory limit for Homepage container"
+  type        = string
+  default     = "512Mi"
+}
+
+variable "homepage_monitored_namespaces" {
+  description = "List of Kubernetes namespaces to monitor for service discovery"
+  type        = list(string)
+  default     = ["traefik", "cert-manager", "argocd", "headlamp", "homepage", "monitoring"]
+}

@@ -1,0 +1,29 @@
+---
+# Homepage Widgets Configuration
+# Infrastructure monitoring widgets displayed on the dashboard
+
+- resources:
+    backend: kubernetes
+    expanded: true
+    cpu: true
+    memory: true
+
+- datetime:
+    text_size: xl
+    format:
+      timeStyle: short
+      dateStyle: short
+      hourCycle: h23
+
+- kubernetes:
+    cluster:
+      show: true
+      cpu: true
+      memory: true
+      showLabel: true
+      label: "cluster"
+    nodes:
+      show: true
+      cpu: true
+      memory: true
+      showLabel: true

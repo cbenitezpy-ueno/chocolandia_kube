@@ -1,0 +1,36 @@
+---
+# Homepage Settings Configuration
+
+title: Chocolandia K3s Cluster
+favicon: https://raw.githubusercontent.com/walkxcode/dashboard-icons/main/svg/kubernetes.svg
+theme: dark
+color: slate
+
+# Layout configuration
+layout:
+  Infrastructure:
+    style: row
+    columns: 3
+  Kubernetes Management:
+    style: row
+    columns: 2
+  Monitoring:
+    style: row
+    columns: 2
+
+# Disable features not needed in this deployment
+showStats: true
+statusStyle: "dot"
+quicklaunch:
+  searchDescriptions: true
+  hideInternetSearch: true
+  hideVisitURL: true
+
+# Kubernetes integration
+providers:
+  kubernetes:
+    mode: cluster
+
+# Disable external integrations not used
+disableCollapse: false
+hideVersion: false
