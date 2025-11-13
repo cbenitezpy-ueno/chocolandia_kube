@@ -22,7 +22,7 @@ spec:
   # Git repository source
   source:
     repoURL: https://github.com/cbenitezpy-ueno/chocolandia_kube
-    targetRevision: 008-gitops-argocd  # Feature branch for testing (change to main after merge)
+    targetRevision: main  # Main branch (updated after Feature 008 merge)
     path: kubernetes/argocd/applications  # Path containing Kubernetes manifests
 
     # Directory configuration (App of Apps pattern)
