@@ -1,0 +1,84 @@
+---
+# Traefik Middleware - HTTPS Redirect
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: https-redirect
+  namespace: homepage
+  labels:
+    app.kubernetes.io/name: homepage
+    app.kubernetes.io/component: ingress
+    app.kubernetes.io/managed-by: argocd
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+
+---
+# cert-manager Certificate - Let's Encrypt TLS
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: homepage-cert
+  namespace: homepage
+  labels:
+    app.kubernetes.io/name: homepage
+    app.kubernetes.io/component: certificate
+    app.kubernetes.io/managed-by: argocd
+spec:
+  secretName: homepage-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - homepage.chocolandiadc.com
+  duration: 2160h0m0s      # 90 days
+  renewBefore: 720h0m0s    # 30 days
+
+---
+# Traefik IngressRoute - HTTP (Redirect to HTTPS)
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: homepage-http
+  namespace: homepage
+  labels:
+    app.kubernetes.io/name: homepage
+    app.kubernetes.io/component: ingress
+    app.kubernetes.io/managed-by: argocd
+spec:
+  entryPoints:
+    - web  # HTTP port 80
+  routes:
+    - match: Host(`homepage.chocolandiadc.com`)
+      kind: Rule
+      middlewares:
+        - name: https-redirect
+          namespace: homepage
+      services:
+        - name: noop@internal
+          kind: TraefikService
+
+---
+# Traefik IngressRoute - HTTPS
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: homepage-https
+  namespace: homepage
+  labels:
+    app.kubernetes.io/name: homepage
+    app.kubernetes.io/component: ingress
+    app.kubernetes.io/managed-by: argocd
+spec:
+  entryPoints:
+    - websecure  # HTTPS port 443
+  routes:
+    - match: Host(`homepage.chocolandiadc.com`)
+      kind: Rule
+      services:
+        - name: homepage
+          port: 3000
+          namespace: homepage
+  tls:
+    secretName: homepage-tls

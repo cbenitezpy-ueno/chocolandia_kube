@@ -364,7 +364,7 @@ kubernetes/homepage/
 ├── configmaps.yaml        # Four ConfigMaps (services, widgets, settings, kubernetes)
 ├── secret.yaml            # ArgoCD token (placeholder - update in cluster)
 ├── deployment.yaml        # Deployment + Service
-└── ingress.yaml           # Traefik Ingress with Cloudflare Access
+└── ingress.yaml           # Traefik IngressRoute with Let's Encrypt TLS
 ```
 
 ## External Links
