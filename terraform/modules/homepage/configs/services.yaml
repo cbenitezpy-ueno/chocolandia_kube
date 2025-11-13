@@ -5,20 +5,35 @@
 - Infrastructure:
     - Traefik:
         icon: traefik.svg
-        description: Reverse proxy and ingress controller (internal service)
-        ping: http://traefik-metrics.traefik.svc.cluster.local:9100/metrics
+        description: Reverse proxy and ingress controller
+        namespace: traefik
+        app: traefik
+        widget:
+          type: kubernetes
+          cluster: default
+          namespace: traefik
+          app: traefik
+          podSelector: app.kubernetes.io/name=traefik
 
     - cert-manager:
         icon: cert-manager.svg
-        description: Automatic TLS certificate management (internal service)
-        ping: http://cert-manager.cert-manager.svc.cluster.local:9402/metrics
+        description: Automatic TLS certificate management
+        namespace: cert-manager
+        app: cert-manager
+        widget:
+          type: kubernetes
+          cluster: default
+          namespace: cert-manager
+          app: cert-manager
+          podSelector: app.kubernetes.io/name=cert-manager
 
 - Kubernetes Management:
     - ArgoCD:
         icon: argocd.svg
         href: https://argocd.chocolandiadc.com
         description: GitOps continuous delivery for Kubernetes
-        ping: http://argocd-server.argocd.svc.cluster.local:80
+        namespace: argocd
+        app: argocd-server
         widget:
           type: argocd
           url: http://argocd-server.argocd.svc.cluster.local:80
@@ -28,17 +43,38 @@
         icon: kubernetes-dashboard.svg
         href: https://headlamp.chocolandiadc.com
         description: Kubernetes web UI with OIDC authentication
-        ping: http://headlamp.headlamp.svc.cluster.local:80
+        namespace: headlamp
+        app: headlamp
+        widget:
+          type: kubernetes
+          cluster: default
+          namespace: headlamp
+          app: headlamp
+          podSelector: app.kubernetes.io/name=headlamp
 
 - Monitoring:
     - Grafana:
         icon: grafana.svg
         href: https://grafana.chocolandiadc.com
         description: Metrics visualization and monitoring dashboards
-        ping: http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local:80
+        namespace: monitoring
+        app: grafana
+        widget:
+          type: kubernetes
+          cluster: default
+          namespace: monitoring
+          app: grafana
+          podSelector: app.kubernetes.io/name=grafana
 
     - Homepage Dashboard:
         icon: homepage.svg
         href: https://homepage.chocolandiadc.com
         description: Centralized dashboard (this page)
-        ping: http://homepage.homepage.svc.cluster.local:3000
+        namespace: homepage
+        app: homepage
+        widget:
+          type: kubernetes
+          cluster: default
+          namespace: homepage
+          app: homepage
+          podSelector: app.kubernetes.io/name=homepage

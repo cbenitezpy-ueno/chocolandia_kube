@@ -62,6 +62,18 @@ resource "kubernetes_config_map" "homepage_settings" {
   }
 }
 
+# ConfigMap for kubernetes.yaml
+resource "kubernetes_config_map" "homepage_kubernetes" {
+  metadata {
+    name      = "homepage-kubernetes"
+    namespace = kubernetes_namespace.homepage.metadata[0].name
+  }
+
+  data = {
+    "kubernetes.yaml" = file("${path.module}/configs/kubernetes.yaml")
+  }
+}
+
 # Deployment
 resource "kubernetes_deployment" "homepage" {
   metadata {
@@ -117,6 +129,12 @@ resource "kubernetes_deployment" "homepage" {
             name       = "settings-config"
             mount_path = "/app/config/settings.yaml"
             sub_path   = "settings.yaml"
+          }
+
+          volume_mount {
+            name       = "kubernetes-config"
+            mount_path = "/app/config/kubernetes.yaml"
+            sub_path   = "kubernetes.yaml"
           }
 
           # Allow requests from Cloudflare domain
@@ -188,6 +206,13 @@ resource "kubernetes_deployment" "homepage" {
           name = "settings-config"
           config_map {
             name = kubernetes_config_map.homepage_settings.metadata[0].name
+          }
+        }
+
+        volume {
+          name = "kubernetes-config"
+          config_map {
+            name = kubernetes_config_map.homepage_kubernetes.metadata[0].name
           }
         }
       }

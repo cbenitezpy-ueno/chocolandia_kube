@@ -1,0 +1,5 @@
+---
+# Kubernetes Integration Configuration
+# Enables Homepage to discover services and show real-time cluster information
+
+mode: cluster

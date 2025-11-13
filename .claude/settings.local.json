@@ -85,7 +85,18 @@
       "Bash(git -C /Users/cbenitez/chocolandia_kube diff terraform/environments/chocolandiadc-mvp/variables.tf)",
       "Bash(git branch:*)",
       "Bash(kubectl cluster-info:*)",
-      "Bash(tofu plan:*)"
+      "Bash(tofu plan:*)",
+      "Bash(git -c user.email=cbenitez@gmail.com commit -m \"fix: Correct GitHub username and update Claude settings\n\nChanges:\n1. Fixed GitHub repository URL in argocd.tf and variables.tf:\n   - Changed from ''cbenitez'' to ''cbenitezpy-ueno'' (correct GitHub username)\n   \n2. Updated .claude/settings.local.json auto-approve commands:\n   - Added: git branch:*, kubectl cluster-info:*, tofu plan:*\n   - Removed: Sensitive GitHub token export (security fix)\n\nThese fixes were made during Phase 4 when resolving repository access issues.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\")",
+      "Bash(git -c user.email=cbenitez@gmail.com commit -m \"fix: Resolve Certificate duration format and Cloudflare tags errors\n\nFixed two terraform apply errors:\n\n1. Certificate duration format (ingress.tf):\n   - Changed duration from variable \"\"2160h\"\" to hardcoded \"\"2160h0m0s\"\"\n   - Changed renewBefore from variable \"\"720h\"\" to hardcoded \"\"720h0m0s\"\"\n   - Kubernetes provider normalizes duration strings causing state inconsistency\n   - Using Go duration format resolves the issue\n\n2. Cloudflare Access tags (cloudflare-access.tf):\n   - Removed tags array from Access Application\n   - Cloudflare requires tags to be created before assigning\n   - Tags can be added manually via Cloudflare dashboard if needed\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\")",
+      "mcp__MCP_DOCKER__sequentialthinking",
+      "Bash(if [ -d \"/Users/cbenitez/chocolandia_kube/specs/009-homepage-dashboard/checklists\" ])",
+      "Bash(then find /Users/cbenitez/chocolandia_kube/specs/009-homepage-dashboard/checklists -type f -name \"*.md\" -exec sh -c 'total=$(grep -c \"\"^- \\[[ xX]\\]\"\" \"\"$1\"\" || echo 0); completed=$(grep -c \"\"^- \\[[xX]\\]\"\" \"\"$1\"\" || echo 0); incomplete=$((total - completed)); basename=$(basename \"\"$1\"\"); echo \"\"$basename|$total|$completed|$incomplete\"\"' _ {} ;)",
+      "Bash(git rev-parse:*)",
+      "Bash(TF_VAR_google_oauth_idp_id=\"c33abef6-bf5f-4609-95e8-97b12c7bda95\" TF_VAR_github_token=\"placeholder\" tofu plan:*)",
+      "Bash(tofu output:*)",
+      "Bash(kubectl exec:*)",
+      "Bash(kubectl rollout:*)",
+      "Bash(kubectl rollout status:*)"
     ],
     "deny": [],
     "ask": []
