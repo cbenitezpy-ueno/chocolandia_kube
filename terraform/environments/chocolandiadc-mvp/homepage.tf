@@ -10,6 +10,7 @@ module "homepage" {
   homepage_image = var.homepage_image
   namespace      = var.homepage_namespace
   service_port   = var.homepage_service_port
+  domain_name    = var.domain_name
 
   # Widget API credentials
   argocd_token = var.argocd_token

@@ -53,3 +53,9 @@ variable "monitored_namespaces" {
   type        = list(string)
   default     = ["pihole", "traefik", "cert-manager", "argocd", "headlamp", "homepage"]
 }
+
+variable "domain_name" {
+  description = "Domain name for Homepage external access"
+  type        = string
+  default     = "chocolandiadc.com"
+}
