@@ -28,7 +28,7 @@ metadata:
 spec:
   secretName: homepage-tls
   issuerRef:
-    name: letsencrypt-prod
+    name: letsencrypt-production
     kind: ClusterIssuer
   dnsNames:
     - homepage.chocolandiadc.com
