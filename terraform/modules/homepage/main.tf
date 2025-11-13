@@ -119,16 +119,10 @@ resource "kubernetes_deployment" "homepage" {
             sub_path   = "settings.yaml"
           }
 
-          # Base URL for Homepage
+          # Allow requests from Cloudflare domain
           env {
-            name  = "HOMEPAGE_VAR_BASE_URL"
-            value = "https://homepage.${var.domain_name}"
-          }
-
-          # Disable host validation (running behind Cloudflare Tunnel)
-          env {
-            name  = "HOSTNAME"
-            value = "0.0.0.0"
+            name  = "HOMEPAGE_ALLOWED_HOSTS"
+            value = "homepage.${var.domain_name}"
           }
 
           # Inject secrets as environment variables
