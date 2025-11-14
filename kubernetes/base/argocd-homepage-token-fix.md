@@ -56,6 +56,8 @@ The new token:
 - Has `sub: "admin:apiKey"` instead of `admin:login`
 - Is stored in secret `homepage-widgets` as `HOMEPAGE_VAR_ARGOCD_TOKEN`
 
+**IMPORTANT:** The token signature must be complete and untruncated. If you see "invalid session: signature is invalid" errors, regenerate the token using the procedure above.
+
 ## Verification
 
 Check Homepage logs for ArgoCD API errors:
