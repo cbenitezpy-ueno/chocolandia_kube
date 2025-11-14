@@ -42,3 +42,4 @@ HCL (Terraform) 1.6+, Bash scripting for validation: Follow standard conventions
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
+- todos los cambios de preferencia via terraform, sino crear documentar los mismos
