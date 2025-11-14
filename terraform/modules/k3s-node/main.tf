@@ -37,7 +37,8 @@ locals {
   k3s_flags_str = join(" ", concat(
     var.k3s_flags,
     var.node_role == "server" ? [for comp in var.disable_components : "--disable=${comp}"] : [],
-    var.node_role == "server" ? ["--write-kubeconfig-mode=644"] : []
+    var.node_role == "server" ? ["--write-kubeconfig-mode=644"] : [],
+    var.node_role == "server" && var.cluster_init ? ["--cluster-init"] : []
   ))
 
   # TLS SAN joined as comma-separated string

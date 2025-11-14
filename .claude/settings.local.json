@@ -98,7 +98,10 @@
       "Bash(kubectl rollout:*)",
       "Bash(kubectl rollout status:*)",
       "Bash(TF_VAR_google_oauth_idp_id=\"c33abef6-bf5f-4609-95e8-97b12c7bda95\" TF_VAR_github_token=\"placeholder\" tofu apply:*)",
-      "Bash(git -c user.email=cbenitez@gmail.com -C /Users/cbenitez/chocolandia_kube commit -m \"chore: Update Claude settings with additional auto-approve commands\n\nAdded auto-approve patterns for cluster operations during nodo03 setup.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\")"
+      "Bash(git -c user.email=cbenitez@gmail.com -C /Users/cbenitez/chocolandia_kube commit -m \"chore: Update Claude settings with additional auto-approve commands\n\nAdded auto-approve patterns for cluster operations during nodo03 setup.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\")",
+      "Bash(scp:*)",
+      "Bash(tofu state rm:*)",
+      "Bash({id: .id, name: .name, type: .type} ')"
     ],
     "deny": [],
     "ask": []

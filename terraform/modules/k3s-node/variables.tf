@@ -137,3 +137,9 @@ variable "tls_san" {
   type        = list(string)
   default     = []
 }
+
+variable "cluster_init" {
+  description = "Initialize HA cluster with embedded etcd (only for first server node)"
+  type        = bool
+  default     = false
+}

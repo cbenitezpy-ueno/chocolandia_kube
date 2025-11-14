@@ -26,6 +26,9 @@ module "master1" {
     var.k3s_additional_flags
   )
 
+  # Enable HA cluster with embedded etcd
+  cluster_init = true
+
   # TLS SAN for API server certificate
   tls_san = [
     var.master1_ip,
