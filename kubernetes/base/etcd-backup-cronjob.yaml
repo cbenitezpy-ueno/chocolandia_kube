@@ -1,0 +1,100 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: etcd-backup
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: etcd-backup
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: etcd-backup
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: etcd-backup
+subjects:
+  - kind: ServiceAccount
+    name: etcd-backup
+    namespace: kube-system
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: etcd-backup
+  namespace: kube-system
+spec:
+  # Run daily at 2 AM
+  schedule: "0 2 * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: etcd-backup
+        spec:
+          serviceAccountName: etcd-backup
+          restartPolicy: OnFailure
+          nodeSelector:
+            node-role.kubernetes.io/control-plane: "true"
+          tolerations:
+            - key: node-role.kubernetes.io/control-plane
+              operator: Exists
+              effect: NoSchedule
+            - key: node-role.kubernetes.io/master
+              operator: Exists
+              effect: NoSchedule
+          hostNetwork: true
+          hostPID: true
+          containers:
+            - name: etcd-backup
+              image: rancher/k3s:v1.28.3-k3s1
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  echo "Starting etcd backup..."
+
+                  # Run etcd snapshot via k3s
+                  nsenter --target 1 --mount --uts --ipc --net --pid -- \
+                    k3s etcd-snapshot save \
+                    --name etcd-backup-$(date +%Y%m%d-%H%M%S) \
+                    --snapshot-compress
+
+                  # Keep only last 7 days of backups
+                  nsenter --target 1 --mount --uts --ipc --net --pid -- \
+                    find /var/lib/rancher/k3s/server/db/snapshots/ -name 'etcd-backup-*' -mtime +7 -delete
+
+                  echo "Backup completed successfully"
+
+                  # List current backups
+                  echo "Current backups:"
+                  nsenter --target 1 --mount --uts --ipc --net --pid -- \
+                    ls -lh /var/lib/rancher/k3s/server/db/snapshots/
+              securityContext:
+                privileged: true
+              volumeMounts:
+                - name: etcd-data
+                  mountPath: /var/lib/rancher/k3s/server/db/snapshots
+                  readOnly: false
+          volumes:
+            - name: etcd-data
+              hostPath:
+                path: /var/lib/rancher/k3s/server/db/snapshots
+                type: DirectoryOrCreate
