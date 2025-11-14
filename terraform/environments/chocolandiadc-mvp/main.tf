@@ -112,6 +112,34 @@ module "nodo03" {
 }
 
 # ============================================================================
+# Additional Worker Node (nodo04)
+# ============================================================================
+
+module "nodo04" {
+  source = "../../modules/k3s-node"
+
+  # Node identity
+  hostname  = var.nodo04_hostname
+  node_ip   = var.nodo04_ip
+  node_role = "agent"
+
+  # SSH configuration
+  ssh_user             = var.ssh_user
+  ssh_private_key_path = var.ssh_private_key_path
+  ssh_port             = var.ssh_port
+
+  # K3s configuration
+  k3s_version = var.k3s_version
+
+  # Cluster join configuration (from master1)
+  server_url = module.master1.server_url
+  join_token = module.master1.cluster_token
+
+  # Ensure master1 is fully provisioned before starting nodo04
+  depends_on = [module.master1]
+}
+
+# ============================================================================
 # Kubeconfig Management
 # ============================================================================
 
@@ -134,6 +162,7 @@ resource "null_resource" "wait_for_cluster_ready" {
     module.master1,
     module.nodo1,
     module.nodo03,
+    module.nodo04,
     local_file.kubeconfig
   ]
 
@@ -144,15 +173,15 @@ resource "null_resource" "wait_for_cluster_ready" {
 
       export KUBECONFIG=${path.module}/kubeconfig
 
-      # Wait for all 3 nodes to appear
-      echo "Checking for 3 nodes..."
+      # Wait for all 4 nodes to appear
+      echo "Checking for 4 nodes..."
       for i in {1..30}; do
         NODE_COUNT=$(kubectl get nodes --no-headers 2>/dev/null | wc -l | tr -d ' ')
-        if [ "$NODE_COUNT" -eq "3" ]; then
-          echo "✓ Found 3 nodes"
+        if [ "$NODE_COUNT" -eq "4" ]; then
+          echo "✓ Found 4 nodes"
           break
         fi
-        echo "  Waiting for nodes... (found $NODE_COUNT/3, attempt $i/30)"
+        echo "  Waiting for nodes... (found $NODE_COUNT/4, attempt $i/30)"
         sleep 5
       done
 

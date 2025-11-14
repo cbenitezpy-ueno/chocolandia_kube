@@ -26,7 +26,7 @@ output "node_role" {
 
 output "cluster_token" {
   description = "K3s cluster join token for agent nodes. Only populated for server nodes."
-  value       = var.node_role == "server" ? try(data.external.cluster_token[0].result.token, "") : ""
+  value       = var.node_role == "server" ? trimspace(try(data.external.cluster_token[0].result.token, "")) : ""
   sensitive   = true
 }
 

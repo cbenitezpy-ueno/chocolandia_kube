@@ -83,6 +83,26 @@ variable "nodo03_ip" {
 }
 
 # ============================================================================
+# Additional Worker Node Configuration (nodo04)
+# ============================================================================
+
+variable "nodo04_hostname" {
+  description = "Hostname for the second K3s worker node"
+  type        = string
+  default     = "nodo04"
+}
+
+variable "nodo04_ip" {
+  description = "Static IP address of nodo04 on Eero network"
+  type        = string
+
+  validation {
+    condition     = can(regex("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$", var.nodo04_ip))
+    error_message = "Nodo04 IP must be a valid IPv4 address."
+  }
+}
+
+# ============================================================================
 # SSH Configuration
 # ============================================================================
 
