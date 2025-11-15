@@ -225,8 +225,9 @@ resource "helm_release" "postgresql" {
       # ========================================================================
       # Volume Permissions Init Container
       # ========================================================================
+      # Disabled for local-path storage which handles permissions automatically
       volumePermissions = {
-        enabled = true
+        enabled = false
       }
     })
   ]

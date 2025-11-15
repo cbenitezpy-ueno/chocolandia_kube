@@ -40,9 +40,11 @@ resource "kubernetes_secret" "postgresql_credentials" {
   data = {
     # Postgres superuser password
     postgres-password = var.create_random_passwords ? random_password.postgres_password[0].result : var.postgres_password
+    password          = var.create_random_passwords ? random_password.postgres_password[0].result : var.postgres_password  # Alias for chart compatibility
 
     # Replication user password
     replication-password = var.create_random_passwords ? random_password.replication_password[0].result : var.replication_password
+    repmgr-password      = var.create_random_passwords ? random_password.replication_password[0].result : var.replication_password  # For repmgr
   }
 
   type = "Opaque"
