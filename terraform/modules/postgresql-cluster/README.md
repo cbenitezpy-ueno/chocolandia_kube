@@ -5,7 +5,7 @@
 
 ## Overview
 
-This OpenTofu/Terraform module deploys a PostgreSQL HA cluster using the Bitnami PostgreSQL HA Helm chart. The cluster provides:
+This OpenTofu/Terraform module deploys a PostgreSQL HA cluster using the Bitnami PostgreSQL Helm chart (standard chart with replication architecture). The cluster provides:
 
 - **High Availability**: 1 primary instance + 1+ replica instances with asynchronous streaming replication
 - **Cluster Access**: ClusterIP Service for applications running in Kubernetes
@@ -181,26 +181,50 @@ kubectl get secret -n postgresql postgres-ha-postgresql-credentials \
 
 ### 3. Connect to PostgreSQL
 
-**From Kubernetes cluster:**
+**From Kubernetes cluster (read/write to primary):**
 ```bash
-kubectl exec -it -n postgresql postgres-ha-postgresql-0 -- psql -U postgres
+# Using service DNS name
+kubectl run postgresql-client --rm -i --restart='Never' --namespace postgresql \
+  --image docker.io/bitnami/postgresql:latest \
+  --env="PGPASSWORD=$(kubectl get secret --namespace postgresql postgres-ha-postgresql-credentials -o jsonpath="{.data.postgres-password}" | base64 -d)" \
+  --command -- psql --host postgres-ha-postgresql-primary -U postgres -d app_db
+
+# Or exec into primary pod directly
+kubectl exec -it -n postgresql postgres-ha-postgresql-primary-0 -- psql -U postgres -d app_db
 ```
 
-**From internal network:**
+**From Kubernetes cluster (read-only from replica):**
+```bash
+kubectl run postgresql-client --rm -i --restart='Never' --namespace postgresql \
+  --image docker.io/bitnami/postgresql:latest \
+  --env="PGPASSWORD=$(kubectl get secret --namespace postgresql postgres-ha-postgresql-credentials -o jsonpath="{.data.postgres-password}" | base64 -d)" \
+  --command -- psql --host postgres-ha-postgresql-read -U postgres -d app_db
+```
+
+**Connection strings for applications:**
+- **Primary (read/write)**: `postgres-ha-postgresql-primary.postgresql.svc.cluster.local:5432`
+- **Read replica (read-only)**: `postgres-ha-postgresql-read.postgresql.svc.cluster.local:5432`
+- **Database**: `app_db`
+- **Username**: `postgres` (superuser) or `app_user` (application user)
+
+**From internal network (when MetalLB is configured):**
 ```bash
 # Get external IP first
 POSTGRES_IP=$(kubectl get svc -n postgresql postgres-ha-postgresql-external \
   -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
 # Connect using psql
-psql -h $POSTGRES_IP -p 5432 -U postgres -d postgres
+psql -h $POSTGRES_IP -p 5432 -U postgres -d app_db
 ```
 
 ### 4. Verify Replication
 
 ```bash
-kubectl exec -n postgresql postgres-ha-postgresql-0 -- \
-  psql -U postgres -c "SELECT * FROM pg_stat_replication;"
+# Check replication status on primary
+kubectl exec -n postgresql postgres-ha-postgresql-primary-0 -- \
+  psql -U postgres -c "SELECT application_name, client_addr, state, sync_state FROM pg_stat_replication;"
+
+# Expected output: 1 row showing replica in 'streaming' state
 ```
 
 ## Monitoring
@@ -215,7 +239,7 @@ PostgreSQL metrics are exposed on port 9187 via the PostgreSQL Exporter sidecar.
 
 Access metrics:
 ```bash
-kubectl port-forward -n postgresql postgres-ha-postgresql-0 9187:9187
+kubectl port-forward -n postgresql postgres-ha-postgresql-primary-0 9187:9187
 curl http://localhost:9187/metrics
 ```
 
@@ -224,40 +248,50 @@ curl http://localhost:9187/metrics
 ### Pods not starting
 
 ```bash
-# Check pod events
-kubectl describe pod -n postgresql postgres-ha-postgresql-0
+# Check primary pod events
+kubectl describe pod -n postgresql postgres-ha-postgresql-primary-0
+
+# Check read replica pod events
+kubectl describe pod -n postgresql postgres-ha-postgresql-read-0
 
 # Check logs
-kubectl logs -n postgresql postgres-ha-postgresql-0 -c postgresql
+kubectl logs -n postgresql postgres-ha-postgresql-primary-0 -c postgresql
+kubectl logs -n postgresql postgres-ha-postgresql-read-0 -c postgresql
 ```
 
 ### Connection issues
 
 ```bash
-# Test DNS resolution (from another pod)
+# Test DNS resolution for primary (from another pod)
 kubectl run -it --rm debug --image=nicolaka/netshoot --restart=Never -- \
-  nslookup postgres-ha-postgresql.postgresql.svc.cluster.local
+  nslookup postgres-ha-postgresql-primary.postgresql.svc.cluster.local
 
-# Test TCP connectivity
+# Test DNS resolution for read replica
 kubectl run -it --rm debug --image=nicolaka/netshoot --restart=Never -- \
-  nc -zv postgres-ha-postgresql.postgresql.svc.cluster.local 5432
+  nslookup postgres-ha-postgresql-read.postgresql.svc.cluster.local
+
+# Test TCP connectivity to primary
+kubectl run -it --rm debug --image=nicolaka/netshoot --restart=Never -- \
+  nc -zv postgres-ha-postgresql-primary.postgresql.svc.cluster.local 5432
 ```
 
 ### Replication lag
 
 ```bash
-# Check replication status
-kubectl exec -n postgresql postgres-ha-postgresql-0 -- \
+# Check replication status from primary
+kubectl exec -n postgresql postgres-ha-postgresql-primary-0 -- \
   psql -U postgres -c "SELECT application_name, state, sync_state, replay_lag FROM pg_stat_replication;"
+
+# Expected: 1 row with state='streaming', sync_state='async'
 ```
 
 ## References
 
-- [Bitnami PostgreSQL HA Chart](https://github.com/bitnami/charts/tree/main/bitnami/postgresql-ha)
-- [PostgreSQL Documentation](https://www.postgresql.org/docs/16/)
-- [Feature Specification](../../../specs/011-postgresql-cluster/spec.md)
-- [Quick Start Guide](../../../specs/011-postgresql-cluster/quickstart.md)
-- [Network Configuration](../../../docs/network/metallb-ip-allocation.md)
+- [Bitnami PostgreSQL Chart](https://github.com/bitnami/charts/tree/main/bitnami/postgresql)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/18/)
+- [PostgreSQL Replication](https://www.postgresql.org/docs/18/warm-standby.html)
+- [K3s Documentation](https://docs.k3s.io/)
+- [MetalLB Documentation](https://metallb.universe.tf/)
 
 ## License
 
