@@ -72,6 +72,14 @@ resource "helm_release" "postgresql" {
 
         # Pod labels
         podLabels = local.common_labels
+
+        # Service configuration for external access
+        service = {
+          type = var.enable_external_access ? "LoadBalancer" : "ClusterIP"
+          annotations = var.enable_external_access ? {
+            "metallb.universe.tf/address-pool" = var.metallb_ip_pool
+          } : {}
+        }
       }
 
       # ========================================================================
@@ -128,17 +136,6 @@ resource "helm_release" "postgresql" {
           namespace = var.namespace
           interval  = "30s"
           labels    = local.common_labels
-        }
-      }
-
-      # ========================================================================
-      # Service Configuration
-      # ========================================================================
-      service = {
-        # ClusterIP service for cluster-internal access
-        type = "ClusterIP"
-        ports = {
-          postgresql = local.postgresql_port
         }
       }
 
