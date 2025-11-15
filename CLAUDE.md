@@ -16,6 +16,7 @@ Auto-generated from all feature plans. Last updated: 2025-11-08
 - PersistentVolume via local-path-provisioner (Homepage configuration YAML files) (009-homepage-dashboard)
 - Bash scripting / Python 3.11+ (for sync automation) + GitHub CLI (`gh`), Git, GitHub Wiki API (via gh or git) (010-github-wiki-docs)
 - GitHub Wiki git repository (separate from main repo), local specs/ directory as source (010-github-wiki-docs)
+- Kubernetes PersistentVolumes via local-path-provisioner (existing in cluster) (011-postgresql-cluster)
 
 - HCL (OpenTofu) 1.6+, Bash scripting for validation (001-k3s-cluster-setup)
 
@@ -35,11 +36,10 @@ tests/
 HCL (Terraform) 1.6+, Bash scripting for validation: Follow standard conventions
 
 ## Recent Changes
+- 011-postgresql-cluster: Added HCL (OpenTofu) 1.6+
 - 010-github-wiki-docs: Added Bash scripting / Python 3.11+ (for sync automation) + GitHub CLI (`gh`), Git, GitHub Wiki API (via gh or git)
 - 009-homepage-dashboard: Added PersistentVolume via local-path-provisioner (Homepage configuration YAML files)
-- 008-gitops-argocd: Added HCL (OpenTofu) 1.6+, YAML (Kubernetes manifests), Bash scripting
 
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
-- todos los cambios de preferencia via terraform, sino crear documentar los mismos
