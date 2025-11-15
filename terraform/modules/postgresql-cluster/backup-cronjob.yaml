@@ -1,0 +1,261 @@
+---
+# PostgreSQL Backup CronJob
+# Feature: 011-postgresql-cluster
+# Phase: 8 - Backup & Restore
+#
+# This CronJob performs automated backups of the PostgreSQL database
+# using pg_dumpall to capture all databases, roles, and permissions.
+#
+# Schedule: Daily at 2:00 AM
+# Retention: Last 7 backups
+# Storage: PersistentVolume (local-path-provisioner)
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgresql-backups
+  namespace: postgresql
+  labels:
+    app: postgresql
+    component: backup
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 20Gi
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgresql-backup-script
+  namespace: postgresql
+  labels:
+    app: postgresql
+    component: backup
+data:
+  backup.sh: |
+    #!/bin/bash
+    set -euo pipefail
+
+    # Configuration
+    BACKUP_DIR="/backups"
+    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+    BACKUP_FILE="${BACKUP_DIR}/postgresql_backup_${TIMESTAMP}.sql.gz"
+    RETENTION_DAYS=7
+
+    echo "================================================"
+    echo "PostgreSQL Backup Script"
+    echo "Started: $(date)"
+    echo "================================================"
+    echo ""
+
+    # Create backup directory if it doesn't exist
+    mkdir -p "${BACKUP_DIR}"
+
+    # Perform backup using pg_dumpall (includes all databases + roles)
+    echo "Creating backup: ${BACKUP_FILE}"
+    pg_dumpall --clean --if-exists | gzip > "${BACKUP_FILE}"
+
+    # Check if backup was created successfully
+    if [ -f "${BACKUP_FILE}" ]; then
+        BACKUP_SIZE=$(du -h "${BACKUP_FILE}" | cut -f1)
+        echo "✓ Backup created successfully"
+        echo "  File: ${BACKUP_FILE}"
+        echo "  Size: ${BACKUP_SIZE}"
+    else
+        echo "✗ Backup failed - file not created"
+        exit 1
+    fi
+
+    # Remove old backups (keep only last N days)
+    echo ""
+    echo "Cleaning up old backups (keeping last ${RETENTION_DAYS} days)..."
+    find "${BACKUP_DIR}" -name "postgresql_backup_*.sql.gz" -type f -mtime +${RETENTION_DAYS} -delete
+
+    # List current backups
+    echo ""
+    echo "Current backups:"
+    ls -lh "${BACKUP_DIR}"/postgresql_backup_*.sql.gz 2>/dev/null || echo "No backups found"
+
+    # Summary
+    TOTAL_BACKUPS=$(ls -1 "${BACKUP_DIR}"/postgresql_backup_*.sql.gz 2>/dev/null | wc -l)
+    TOTAL_SIZE=$(du -sh "${BACKUP_DIR}" 2>/dev/null | cut -f1)
+
+    echo ""
+    echo "================================================"
+    echo "Backup Summary"
+    echo "================================================"
+    echo "Total backups: ${TOTAL_BACKUPS}"
+    echo "Total size: ${TOTAL_SIZE}"
+    echo "Completed: $(date)"
+    echo "================================================"
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgresql-backup
+  namespace: postgresql
+  labels:
+    app: postgresql
+    component: backup
+spec:
+  # Run daily at 2:00 AM
+  schedule: "0 2 * * *"
+
+  # Keep last 3 successful and 1 failed job history
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+
+  # Don't allow concurrent backup jobs
+  concurrencyPolicy: Forbid
+
+  jobTemplate:
+    metadata:
+      labels:
+        app: postgresql
+        component: backup-job
+    spec:
+      # Backup should complete within 30 minutes
+      activeDeadlineSeconds: 1800
+
+      # Retry once if backup fails
+      backoffLimit: 1
+
+      template:
+        metadata:
+          labels:
+            app: postgresql
+            component: backup-pod
+        spec:
+          restartPolicy: OnFailure
+
+          # Use the same service account as PostgreSQL
+          serviceAccountName: default
+
+          containers:
+          - name: backup
+            image: registry-1.docker.io/bitnami/postgresql:latest
+            imagePullPolicy: IfNotPresent
+
+            command:
+            - /bin/bash
+            - /scripts/backup.sh
+
+            env:
+            # PostgreSQL connection settings
+            - name: PGHOST
+              value: "postgres-ha-postgresql-primary"
+            - name: PGPORT
+              value: "5432"
+            - name: PGUSER
+              value: "postgres"
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-ha-postgresql-credentials
+                  key: postgres-password
+            - name: PGDATABASE
+              value: "postgres"
+
+            volumeMounts:
+            - name: backup-storage
+              mountPath: /backups
+            - name: backup-script
+              mountPath: /scripts
+              readOnly: true
+
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 500m
+                memory: 512Mi
+
+          volumes:
+          - name: backup-storage
+            persistentVolumeClaim:
+              claimName: postgresql-backups
+          - name: backup-script
+            configMap:
+              name: postgresql-backup-script
+              defaultMode: 0755
+
+---
+# Optional: Job to test backup immediately
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: postgresql-backup-manual
+  namespace: postgresql
+  labels:
+    app: postgresql
+    component: backup
+    type: manual
+spec:
+  # Backup should complete within 30 minutes
+  activeDeadlineSeconds: 1800
+
+  # Don't retry manual backup
+  backoffLimit: 0
+
+  template:
+    metadata:
+      labels:
+        app: postgresql
+        component: backup-pod
+        type: manual
+    spec:
+      restartPolicy: Never
+
+      containers:
+      - name: backup
+        image: registry-1.docker.io/bitnami/postgresql:latest
+        imagePullPolicy: IfNotPresent
+
+        command:
+        - /bin/bash
+        - /scripts/backup.sh
+
+        env:
+        - name: PGHOST
+          value: "postgres-ha-postgresql-primary"
+        - name: PGPORT
+          value: "5432"
+        - name: PGUSER
+          value: "postgres"
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-ha-postgresql-credentials
+              key: postgres-password
+        - name: PGDATABASE
+          value: "postgres"
+
+        volumeMounts:
+        - name: backup-storage
+          mountPath: /backups
+        - name: backup-script
+          mountPath: /scripts
+          readOnly: true
+
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
+      volumes:
+      - name: backup-storage
+        persistentVolumeClaim:
+          claimName: postgresql-backups
+      - name: backup-script
+        configMap:
+          name: postgresql-backup-script
+          defaultMode: 0755
