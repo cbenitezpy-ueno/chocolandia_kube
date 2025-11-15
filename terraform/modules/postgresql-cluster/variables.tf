@@ -132,9 +132,9 @@ variable "enable_service_monitor" {
 # ==============================================================================
 
 variable "chart_version" {
-  description = "Bitnami PostgreSQL HA Helm chart version"
+  description = "Bitnami PostgreSQL Helm chart version (standard chart, not HA)"
   type        = string
-  default     = "16.3.2" # Latest chart version (PostgreSQL version controlled by postgresql_version variable)
+  default     = "18.1.9" # Latest stable chart version with working container images
 }
 
 variable "chart_repository" {

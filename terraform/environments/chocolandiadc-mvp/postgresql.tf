@@ -39,7 +39,7 @@ module "postgresql_cluster" {
   create_random_passwords = true  # Auto-generate secure passwords
 
   # Helm chart configuration
-  chart_version = "16.3.2"  # Latest Bitnami PostgreSQL HA chart version
+  chart_version = "18.1.9"  # Latest Bitnami PostgreSQL chart version (standard chart with read replicas)
   helm_timeout  = 600  # 10 minutes for initial deployment
 }
 
