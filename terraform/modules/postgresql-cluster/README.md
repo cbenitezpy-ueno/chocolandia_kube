@@ -157,18 +157,33 @@ See `outputs.tf` for complete list of outputs.
 ### 1. Verify Deployment
 
 ```bash
-# Check pods are running
+# Check pods are running (should see primary and read replica)
 kubectl get pods -n postgresql
+
+# Expected output:
+# NAME                              READY   STATUS    RESTARTS   AGE
+# postgres-ha-postgresql-primary-0  2/2     Running   0          10m
+# postgres-ha-postgresql-read-0     2/2     Running   0          10m
 
 # Check services
 kubectl get svc -n postgresql
 
-# Check PVCs
+# Expected output:
+# NAME                                TYPE           CLUSTER-IP      EXTERNAL-IP     PORT(S)
+# postgres-ha-postgresql-hl           ClusterIP      None            <none>          5432/TCP
+# postgres-ha-postgresql-metrics      ClusterIP      10.43.x.x       <none>          9187/TCP
+# postgres-ha-postgresql-primary      LoadBalancer   10.43.x.x       192.168.4.202   5432:xxxxx/TCP
+# postgres-ha-postgresql-read         ClusterIP      10.43.x.x       <none>          5432/TCP
+
+# Check PVCs (should see 2 PVCs - one for primary, one for replica)
 kubectl get pvc -n postgresql
 
 # Get external IP (if LoadBalancer enabled)
-kubectl get svc -n postgresql postgres-ha-postgresql-external \
-  -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+kubectl get svc -n postgresql postgres-ha-postgresql-primary \
+  -o jsonpath='{.status.loadBalancer.ingress[0].ip}' && echo
+
+# Verify MetalLB assigned an IP from the pool
+# Expected: 192.168.4.xxx (from eero-pool range)
 ```
 
 ### 2. Retrieve Credentials
@@ -209,13 +224,25 @@ kubectl run postgresql-client --rm -i --restart='Never' --namespace postgresql \
 
 **From internal network (when MetalLB is configured):**
 ```bash
-# Get external IP first
-POSTGRES_IP=$(kubectl get svc -n postgresql postgres-ha-postgresql-external \
+# Get external IP first (LoadBalancer service for primary)
+POSTGRES_IP=$(kubectl get svc -n postgresql postgres-ha-postgresql-primary \
   -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
-# Connect using psql
+# Example output: 192.168.4.202
+
+# Connect using psql from any machine on the internal network
 psql -h $POSTGRES_IP -p 5432 -U postgres -d app_db
+
+# Or connect directly using the assigned IP
+psql -h 192.168.4.202 -p 5432 -U postgres -d app_db
 ```
+
+**External Access Notes:**
+- LoadBalancer service is configured on the **primary** PostgreSQL instance only
+- External IP is assigned from the MetalLB pool (default: `eero-pool` / 192.168.4.200-192.168.4.210)
+- External access provides **read/write** access to the primary database
+- Read replicas remain accessible only via ClusterIP (internal cluster access)
+- For read-only queries from applications, use the internal `postgres-ha-postgresql-read` service
 
 ### 4. Verify Replication
 
@@ -283,6 +310,42 @@ kubectl exec -n postgresql postgres-ha-postgresql-primary-0 -- \
   psql -U postgres -c "SELECT application_name, state, sync_state, replay_lag FROM pg_stat_replication;"
 
 # Expected: 1 row with state='streaming', sync_state='async'
+```
+
+### External access not working
+
+```bash
+# 1. Verify LoadBalancer service exists and has external IP
+kubectl get svc -n postgresql postgres-ha-postgresql-primary
+
+# If EXTERNAL-IP shows <pending>, check MetalLB logs
+kubectl logs -n metallb-system -l app=metallb -l component=controller
+
+# 2. Verify MetalLB is running
+kubectl get pods -n metallb-system
+
+# 3. Check MetalLB IP pool configuration
+kubectl get ipaddresspool -n metallb-system
+
+# 4. Test connectivity from internal network
+# Get the external IP first
+POSTGRES_IP=$(kubectl get svc -n postgresql postgres-ha-postgresql-primary \
+  -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+
+# Test port is reachable (from another machine on the network)
+nc -zv $POSTGRES_IP 5432
+
+# Or using telnet
+telnet $POSTGRES_IP 5432
+
+# 5. Check PostgreSQL is listening on all interfaces
+kubectl exec -n postgresql postgres-ha-postgresql-primary-0 -c postgresql -- \
+  psql -U postgres -c "SHOW listen_addresses;"
+
+# Expected: listen_addresses = '*'
+
+# 6. Verify firewall rules allow traffic on port 5432
+# (depends on your network/firewall configuration)
 ```
 
 ## References
