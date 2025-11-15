@@ -27,7 +27,11 @@
       "Bash(docker search:*)",
       "Bash(helm search repo:*)",
       "Bash(helm upgrade:*)",
-      "Bash(tofu init:*)"
+      "Bash(tofu init:*)",
+      "Bash(git push:*)",
+      "mcp__MCP_DOCKER__issue_write",
+      "Bash(gh issue create:*)",
+      "Bash(./scripts/wiki/sync-to-wiki.sh:*)"
     ],
     "deny": [],
     "ask": []
