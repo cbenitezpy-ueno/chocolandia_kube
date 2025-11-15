@@ -18,7 +18,7 @@ provider "postgresql" {
   port            = var.postgres_port
   username        = var.postgres_admin_user
   password        = var.postgres_admin_password
-  sslmode         = "require"
+  sslmode         = "disable"  # PostgreSQL cluster doesn't have SSL enabled
   connect_timeout = 15
   superuser       = false
 }

@@ -13,5 +13,5 @@ db_password = "<GENERATE_STRONG_PASSWORD>"
 # Optional: Override defaults
 # db_name = "beersystem_stage"
 # db_user = "beersystem_admin"
-# postgres_host = "postgres-rw.postgres.svc.cluster.local"
+# postgres_host = "postgres-ha-postgresql-primary.postgresql.svc.cluster.local"
 # postgres_port = 5432

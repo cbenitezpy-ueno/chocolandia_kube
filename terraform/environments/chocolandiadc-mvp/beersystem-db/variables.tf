@@ -3,7 +3,7 @@
 variable "postgres_host" {
   description = "PostgreSQL cluster host (service endpoint)"
   type        = string
-  default     = "postgres-rw.postgres.svc.cluster.local"
+  default     = "postgres-ha-postgresql-primary.postgresql.svc.cluster.local"
 }
 
 variable "postgres_port" {
