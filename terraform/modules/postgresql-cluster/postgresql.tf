@@ -27,6 +27,11 @@ resource "helm_release" "postgresql" {
   values = [
     yamlencode({
       # ========================================================================
+      # Architecture - must be "replication" for read replicas
+      # ========================================================================
+      architecture = "replication"
+
+      # ========================================================================
       # Authentication Configuration
       # ========================================================================
       auth = {
