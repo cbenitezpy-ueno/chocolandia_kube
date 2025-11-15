@@ -31,7 +31,9 @@
       "Bash(git push:*)",
       "mcp__MCP_DOCKER__issue_write",
       "Bash(gh issue create:*)",
-      "Bash(./scripts/wiki/sync-to-wiki.sh:*)"
+      "Bash(./scripts/wiki/sync-to-wiki.sh:*)",
+      "Bash(git checkout:*)",
+      "Bash(git pull:*)"
     ],
     "deny": [],
     "ask": []
