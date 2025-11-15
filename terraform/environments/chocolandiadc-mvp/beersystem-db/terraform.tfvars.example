@@ -1,0 +1,17 @@
+# Example terraform.tfvars for BeerSystem database
+# Copy this file to terraform.tfvars and fill in actual values
+# DO NOT commit terraform.tfvars to Git (it contains secrets)
+
+# PostgreSQL cluster admin credentials (from feature 011)
+postgres_admin_user     = "postgres"
+postgres_admin_password = "<GET_FROM_CLUSTER_SECRET>"
+
+# BeerSystem database user password
+# Generate with: openssl rand -base64 32
+db_password = "<GENERATE_STRONG_PASSWORD>"
+
+# Optional: Override defaults
+# db_name = "beersystem_stage"
+# db_user = "beersystem_admin"
+# postgres_host = "postgres-rw.postgres.svc.cluster.local"
+# postgres_port = 5432
