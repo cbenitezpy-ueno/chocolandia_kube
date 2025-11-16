@@ -230,7 +230,7 @@ resource "kubernetes_deployment" "pihole" {
 }
 
 # ============================================================================
-# DNS Service (NodePort)
+# DNS Service (LoadBalancer)
 # ============================================================================
 
 resource "kubernetes_service" "pihole_dns" {
@@ -244,7 +244,7 @@ resource "kubernetes_service" "pihole_dns" {
   }
 
   spec {
-    type = "NodePort"
+    type = "LoadBalancer"
 
     selector = {
       app = "pihole"
@@ -254,7 +254,6 @@ resource "kubernetes_service" "pihole_dns" {
       name        = "dns-tcp"
       port        = 53
       target_port = 53
-      node_port   = 30053
       protocol    = "TCP"
     }
 
@@ -262,7 +261,6 @@ resource "kubernetes_service" "pihole_dns" {
       name        = "dns-udp"
       port        = 53
       target_port = 53
-      node_port   = 30053
       protocol    = "UDP"
     }
 
