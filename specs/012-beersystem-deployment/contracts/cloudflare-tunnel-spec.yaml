@@ -1,0 +1,128 @@
+# Cloudflare Tunnel Configuration Specification for BeerSystem
+
+# This file documents the expected Cloudflare Tunnel configuration for beer.chocolandiadc.com
+# Actual implementation will be in chocolandia_kube repo: terraform/environments/chocolandiadc-mvp/cloudflare/
+
+# NOTE: No Kubernetes Ingress or Certificate resources needed
+# Cloudflare Tunnel bypasses traditional Kubernetes ingress entirely
+
+---
+# Traffic Flow:
+#
+# Internet Client (Browser/API)
+#   ↓ HTTPS (TLS at Cloudflare Edge)
+# Cloudflare Edge Network
+#   ↓ beer.chocolandiadc.com (CNAME → tunnel)
+# Cloudflare Tunnel (Encrypted)
+#   ↓ cloudflared pod in K3s cluster
+# beersystem-service (ClusterIP)
+#   ↓ HTTP internal
+# beersystem pods (port 8000)
+
+---
+# OpenTofu Configuration (add to existing tunnel config from feature 004)
+
+# 1. Tunnel Ingress Rule
+resource "cloudflare_tunnel_config" "chocolandiadc_tunnel" {
+  account_id = var.cloudflare_account_id
+  tunnel_id  = cloudflare_tunnel.chocolandiadc.id
+
+  config {
+    # Existing rules (pihole, grafana, etc.)...
+
+    # NEW: BeerSystem route
+    ingress_rule {
+      hostname = "beer.chocolandiadc.com"
+      service  = "http://beersystem-service.beersystem.svc.cluster.local:80"
+    }
+
+    # Catch-all (must be last)
+    ingress_rule {
+      service = "http_status:404"
+    }
+  }
+}
+
+# 2. DNS CNAME Record
+resource "cloudflare_record" "beersystem" {
+  zone_id = var.cloudflare_zone_id
+  name    = "beer"
+  value   = "${cloudflare_tunnel.chocolandiadc.id}.cfargotunnel.com"
+  type    = "CNAME"
+  proxied = true  # Orange cloud - enables Cloudflare features
+}
+
+# 3. OPTIONAL: Cloudflare Access Authentication
+# Uncomment to require login before accessing beersystem
+#
+# resource "cloudflare_access_application" "beersystem" {
+#   zone_id          = var.cloudflare_zone_id
+#   name             = "BeerSystem Staging"
+#   domain           = "beer.chocolandiadc.com"
+#   session_duration = "24h"
+# }
+#
+# resource "cloudflare_access_policy" "beersystem_allow" {
+#   application_id = cloudflare_access_application.beersystem.id
+#   zone_id        = var.cloudflare_zone_id
+#   name           = "Allow authorized users"
+#   precedence     = 1
+#   decision       = "allow"
+#
+#   include {
+#     email = ["cbenitez@gmail.com"]
+#   }
+# }
+
+---
+# TLS Certificate Management:
+#
+# Cloudflare Universal SSL (automatic):
+#   - Certificate provisioned and renewed by Cloudflare
+#   - No cert-manager configuration needed
+#   - No Kubernetes Certificate resource needed
+#   - Certificate visible in Cloudflare dashboard: SSL/TLS → Edge Certificates
+#
+# Encryption Mode (Cloudflare dashboard or Terraform):
+#   - Current: Flexible (HTTPS→Cloudflare, HTTP→cluster)
+#   - Future: Full (Strict) with Cloudflare Origin CA for end-to-end encryption
+
+---
+# Security Features (via Cloudflare):
+#
+# - No public IP exposure (outbound tunnel only)
+# - DDoS protection (included with proxied DNS)
+# - WAF rules (SQL injection, XSS protection)
+# - Rate limiting (optional via Transform Rules)
+# - Bot management (optional paid feature)
+# - Access authentication (optional via Cloudflare Access)
+
+---
+# Kubernetes Service (reference - actual in beersystem repo)
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: beersystem-service
+  namespace: beersystem
+spec:
+  type: ClusterIP  # Internal only - no LoadBalancer/NodePort
+  selector:
+    app: beersystem
+    component: app
+  ports:
+    - port: 80
+      targetPort: 8000
+
+---
+# Troubleshooting:
+#
+# Cannot access beer.chocolandiadc.com:
+#   - Check DNS: nslookup beer.chocolandiadc.com
+#   - Check tunnel logs: kubectl logs -n cloudflare-tunnel -l app=cloudflared
+#   - Verify service: kubectl get svc -n beersystem beersystem-service
+#
+# 502 Bad Gateway:
+#   - Check pods: kubectl get pods -n beersystem
+#   - Check endpoints: kubectl get endpoints beersystem-service -n beersystem
+#   - Check pod logs: kubectl logs -n beersystem -l app=beersystem
