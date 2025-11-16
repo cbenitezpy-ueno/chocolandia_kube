@@ -151,3 +151,38 @@ resource "helm_release" "headlamp" {
     kubernetes_namespace.headlamp
   ]
 }
+
+# ==============================================================================
+# RBAC - ClusterRoleBinding for Cloudflare Access Users
+# ==============================================================================
+
+resource "kubernetes_manifest" "cloudflare_users_admin" {
+  manifest = {
+    apiVersion = "rbac.authorization.k8s.io/v1"
+    kind       = "ClusterRoleBinding"
+    metadata = {
+      name = "headlamp-cloudflare-users-admin"
+      labels = {
+        "app.kubernetes.io/name"       = "headlamp"
+        "app.kubernetes.io/component"  = "rbac"
+        "app.kubernetes.io/managed-by" = "terraform"
+      }
+    }
+    roleRef = {
+      apiGroup = "rbac.authorization.k8s.io"
+      kind     = "ClusterRole"
+      name     = "cluster-admin"
+    }
+    subjects = [
+      {
+        apiGroup = "rbac.authorization.k8s.io"
+        kind     = "User"
+        name     = var.cloudflare_access_email
+      }
+    ]
+  }
+
+  depends_on = [
+    helm_release.headlamp
+  ]
+}

@@ -202,3 +202,13 @@ variable "oidc_scopes" {
   type        = string
   default     = "email,profile,openid"
 }
+
+# ==============================================================================
+# Optional Variables - RBAC for Cloudflare Access Users
+# ==============================================================================
+
+variable "cloudflare_access_email" {
+  description = "Email address of the user authenticated via Cloudflare Access (for RBAC)"
+  type        = string
+  default     = "cbenitez@gmail.com"
+}

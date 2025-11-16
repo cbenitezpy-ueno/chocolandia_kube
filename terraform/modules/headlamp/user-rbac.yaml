@@ -1,0 +1,17 @@
+---
+# ClusterRoleBinding for Cloudflare Access authenticated users
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: headlamp-cloudflare-users-admin
+  labels:
+    app: headlamp
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  # Bind to specific email from Cloudflare Access
+  - kind: User
+    name: cbenitez@gmail.com
+    apiGroup: rbac.authorization.k8s.io

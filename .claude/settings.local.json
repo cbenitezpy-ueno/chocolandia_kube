@@ -61,7 +61,9 @@
       "Bash(gh secret:*)",
       "Bash(gh workflow:*)",
       "Bash(gh pr create:*)",
-      "Bash(gh pr merge:*)"
+      "Bash(gh pr merge:*)",
+      "Bash(export TF_VAR_github_token=\"dummy-token\")",
+      "Bash(tofu import:*)"
     ],
     "deny": [],
     "ask": []
