@@ -143,3 +143,51 @@ variable "cluster_init" {
   type        = bool
   default     = false
 }
+
+# ============================================================================
+# OIDC Authentication Configuration (Server nodes only)
+# ============================================================================
+
+variable "enable_oidc" {
+  description = "Enable OIDC authentication for Kubernetes API server (server nodes only)"
+  type        = bool
+  default     = false
+}
+
+variable "oidc_issuer_url" {
+  description = "OIDC issuer URL (e.g., 'https://accounts.google.com')"
+  type        = string
+  default     = "https://accounts.google.com"
+}
+
+variable "oidc_client_id" {
+  description = "OIDC client ID for Google OAuth"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "oidc_client_secret" {
+  description = "OIDC client secret for Google OAuth"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "oidc_username_claim" {
+  description = "JWT claim to use as the user name"
+  type        = string
+  default     = "email"
+}
+
+variable "oidc_groups_claim" {
+  description = "JWT claim to use as the user's group"
+  type        = string
+  default     = "groups"
+}
+
+variable "oidc_username_prefix" {
+  description = "Prefix prepended to username claims to prevent conflicts"
+  type        = string
+  default     = "-"
+}

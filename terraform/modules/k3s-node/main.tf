@@ -100,6 +100,53 @@ resource "null_resource" "k3s_install" {
 }
 
 # ============================================================================
+# OIDC Configuration (Server nodes only)
+# ============================================================================
+
+resource "null_resource" "configure_oidc" {
+  count = var.node_role == "server" && var.enable_oidc && var.oidc_client_id != "" ? 1 : 0
+
+  depends_on = [null_resource.k3s_install]
+
+  triggers = {
+    oidc_issuer_url      = var.oidc_issuer_url
+    oidc_client_id       = var.oidc_client_id
+    oidc_username_claim  = var.oidc_username_claim
+    oidc_groups_claim    = var.oidc_groups_claim
+    oidc_username_prefix = var.oidc_username_prefix
+  }
+
+  connection {
+    type        = local.ssh_connection.type
+    user        = local.ssh_connection.user
+    host        = local.ssh_connection.host
+    port        = local.ssh_connection.port
+    private_key = local.ssh_connection.private_key
+  }
+
+  # Upload OIDC configuration script
+  provisioner "file" {
+    source      = "${path.module}/scripts/configure-oidc.sh"
+    destination = "/tmp/configure-oidc.sh"
+  }
+
+  # Configure K3s with OIDC parameters
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/configure-oidc.sh",
+      "sudo /tmp/configure-oidc.sh '${var.oidc_client_id}' '${var.oidc_client_secret}' '${var.oidc_issuer_url}' '${var.oidc_username_claim}' '${var.oidc_groups_claim}' '${var.oidc_username_prefix}'"
+    ]
+  }
+
+  # Cleanup
+  provisioner "remote-exec" {
+    inline = [
+      "rm -f /tmp/configure-oidc.sh"
+    ]
+  }
+}
+
+# ============================================================================
 # Kubeconfig Retrieval (Server nodes only)
 # ============================================================================
 

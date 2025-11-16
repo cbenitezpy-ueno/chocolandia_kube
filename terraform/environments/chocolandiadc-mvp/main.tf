@@ -38,6 +38,15 @@ module "master1" {
     "kubernetes.default.svc",
     "kubernetes.default.svc.cluster.local"
   ]
+
+  # OIDC authentication configuration
+  enable_oidc          = true
+  oidc_issuer_url      = "https://accounts.google.com"
+  oidc_client_id       = var.google_oauth_client_id
+  oidc_client_secret   = var.google_oauth_client_secret
+  oidc_username_claim  = "email"
+  oidc_groups_claim    = "groups"
+  oidc_username_prefix = "-"
 }
 
 # ============================================================================
@@ -106,6 +115,15 @@ module "nodo03" {
     "kubernetes.default.svc",
     "kubernetes.default.svc.cluster.local"
   ]
+
+  # OIDC authentication configuration
+  enable_oidc          = true
+  oidc_issuer_url      = "https://accounts.google.com"
+  oidc_client_id       = var.google_oauth_client_id
+  oidc_client_secret   = var.google_oauth_client_secret
+  oidc_username_claim  = "email"
+  oidc_groups_claim    = "groups"
+  oidc_username_prefix = "-"
 
   # Ensure master1 is fully provisioned before starting nodo03
   depends_on = [module.master1]
