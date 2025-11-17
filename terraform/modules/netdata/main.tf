@@ -158,6 +158,28 @@ resource "helm_release" "netdata" {
     value = "true"
   }
 
+  # Disable Netdata Cloud integration (run in standalone mode)
+  set {
+    name  = "parent.claiming.enabled"
+    value = "false"
+  }
+
+  set {
+    name  = "child.claiming.enabled"
+    value = "false"
+  }
+
+  # Disable cloud authentication redirect
+  set {
+    name  = "parent.env.NETDATA_DISABLE_CLOUD"
+    value = "1"
+  }
+
+  set {
+    name  = "child.env.NETDATA_DISABLE_CLOUD"
+    value = "1"
+  }
+
   depends_on = [kubernetes_namespace.netdata]
 }
 
