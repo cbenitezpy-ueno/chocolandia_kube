@@ -30,6 +30,36 @@ resource "kubernetes_manifest" "netdata_certificate" {
 }
 
 # ============================================================================
+# Traefik Middleware to Block Cloud Claim API
+# ============================================================================
+
+resource "kubernetes_manifest" "netdata_block_claim_middleware" {
+  manifest = {
+    apiVersion = "traefik.io/v1alpha1"
+    kind       = "Middleware"
+    metadata = {
+      name      = "netdata-block-claim"
+      namespace = kubernetes_namespace.netdata.metadata[0].name
+      labels = {
+        "app.kubernetes.io/name"       = "netdata"
+        "app.kubernetes.io/managed-by" = "terraform"
+      }
+    }
+    spec = {
+      replacePath = {
+        path = "/api/v1/info"
+      }
+      replacePathRegex = {
+        regex       = "^/api/v3/claim.*"
+        replacement = "/api/v1/info"
+      }
+    }
+  }
+
+  depends_on = [kubernetes_namespace.netdata]
+}
+
+# ============================================================================
 # Traefik IngressRoute (HTTPS)
 # ============================================================================
 
@@ -49,6 +79,22 @@ resource "kubernetes_manifest" "netdata_ingressroute" {
       entryPoints = ["websecure"]
       routes = [
         {
+          match = "Host(`${var.domain}`) && PathPrefix(`/api/v3/claim`)"
+          kind  = "Rule"
+          middlewares = [
+            {
+              name = kubernetes_manifest.netdata_block_claim_middleware.manifest.metadata.name
+            }
+          ]
+          services = [
+            {
+              name = data.kubernetes_service.netdata_parent.metadata[0].name
+              port = 19999
+            }
+          ]
+          priority = 100
+        },
+        {
           match = "Host(`${var.domain}`)"
           kind  = "Rule"
           services = [
@@ -67,7 +113,8 @@ resource "kubernetes_manifest" "netdata_ingressroute" {
 
   depends_on = [
     helm_release.netdata,
-    kubernetes_manifest.netdata_certificate
+    kubernetes_manifest.netdata_certificate,
+    kubernetes_manifest.netdata_block_claim_middleware
   ]
 }
 
