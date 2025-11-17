@@ -180,6 +180,17 @@ resource "helm_release" "netdata" {
     value = "1"
   }
 
+  # Disable claiming API endpoint completely
+  set {
+    name  = "parent.env.DISABLE_CLOUD"
+    value = "1"
+  }
+
+  set {
+    name  = "child.env.DISABLE_CLOUD"
+    value = "1"
+  }
+
   depends_on = [kubernetes_namespace.netdata]
 }
 
