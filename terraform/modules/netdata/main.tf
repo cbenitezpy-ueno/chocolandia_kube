@@ -191,6 +191,17 @@ resource "helm_release" "netdata" {
     value = "1"
   }
 
+  # Disable authentication completely (allow anonymous access)
+  set {
+    name  = "parent.env.NETDATA_REGISTRY_ENABLED"
+    value = "no"
+  }
+
+  set {
+    name  = "parent.env.NETDATA_WEB_ALLOW_CONNECTIONS_FROM"
+    value = "*"
+  }
+
   depends_on = [kubernetes_namespace.netdata]
 }
 
