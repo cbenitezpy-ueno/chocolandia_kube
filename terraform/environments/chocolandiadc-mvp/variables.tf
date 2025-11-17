@@ -393,3 +393,37 @@ variable "homepage_monitored_namespaces" {
   type        = list(string)
   default     = ["traefik", "cert-manager", "argocd", "headlamp", "homepage", "monitoring"]
 }
+
+# ============================================================================
+# Feature 001: Longhorn and MinIO Storage Infrastructure
+# ============================================================================
+
+variable "longhorn_domain" {
+  description = "Domain for Longhorn web UI"
+  type        = string
+  default     = "longhorn.chocolandiadc.com"
+}
+
+variable "minio_console_domain" {
+  description = "Domain for MinIO web console"
+  type        = string
+  default     = "minio.chocolandiadc.com"
+}
+
+variable "minio_s3_domain" {
+  description = "Domain for MinIO S3 API endpoint"
+  type        = string
+  default     = "s3.chocolandiadc.com"
+}
+
+variable "longhorn_replica_count" {
+  description = "Number of replicas for Longhorn volumes"
+  type        = number
+  default     = 2
+}
+
+variable "minio_storage_size" {
+  description = "Storage size for MinIO PersistentVolume"
+  type        = string
+  default     = "100Gi"
+}
