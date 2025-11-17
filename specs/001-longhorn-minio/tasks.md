@@ -93,23 +93,23 @@
 
 ### Implementation for User Story 2
 
-- [ ] T030 [P] [US2] Create Cloudflare DNS A record for longhorn.chocolandiadc.com pointing to Traefik LoadBalancer IP in terraform/modules/longhorn/cloudflare.tf
-- [ ] T031 [P] [US2] Create Cloudflare Access application for longhorn.chocolandiadc.com with email-based policy in terraform/modules/longhorn/cloudflare.tf
-- [ ] T032 [P] [US2] Create Traefik IngressRoute for Longhorn UI with TLS via cert-manager in terraform/modules/longhorn/ingress.tf
-- [ ] T033 [US2] Configure cert-manager Certificate resource for longhorn.chocolandiadc.com using letsencrypt-production ClusterIssuer in terraform/modules/longhorn/ingress.tf
-- [ ] T034 [US2] Update Longhorn module to include ingress and Cloudflare resources in terraform/modules/longhorn/main.tf
-- [ ] T035 [US2] Run `tofu plan` and verify Ingress and Cloudflare resources to be created
-- [ ] T036 [US2] Apply Longhorn UI ingress with `tofu apply -target=module.longhorn`
-- [ ] T037 [US2] Wait for TLS certificate to be issued (kubectl wait for Certificate ready)
+- [X] T030 [P] [US2] Create Cloudflare DNS A record for longhorn.chocolandiadc.com pointing to Traefik LoadBalancer IP in terraform/modules/longhorn/cloudflare.tf
+- [X] T031 [P] [US2] Create Cloudflare Access application for longhorn.chocolandiadc.com with email-based policy in terraform/modules/longhorn/cloudflare.tf
+- [X] T032 [P] [US2] Create Traefik IngressRoute for Longhorn UI with TLS via cert-manager in terraform/modules/longhorn/ingress.tf
+- [X] T033 [US2] Configure cert-manager Certificate resource for longhorn.chocolandiadc.com using letsencrypt-production ClusterIssuer in terraform/modules/longhorn/ingress.tf
+- [X] T034 [US2] Update Longhorn module to include ingress and Cloudflare resources in terraform/modules/longhorn/main.tf
+- [X] T035 [US2] Run `tofu plan` and verify Ingress and Cloudflare resources to be created
+- [X] T036 [US2] Apply Longhorn UI ingress with `tofu apply -target=module.longhorn`
+- [X] T037 [US2] Wait for TLS certificate to be issued (kubectl wait for Certificate ready)
 
 ### Validation for User Story 2
 
-- [ ] T038 [US2] Verify DNS resolution for longhorn.chocolandiadc.com resolves to Traefik IP
-- [ ] T039 [US2] Access https://longhorn.chocolandiadc.com and verify redirect to Cloudflare Access login
-- [ ] T040 [US2] Authenticate with authorized Google account via Cloudflare Access
-- [ ] T041 [US2] Verify Longhorn UI dashboard loads showing volumes, nodes, and disk usage
-- [ ] T042 [US2] Create manual snapshot of test volume via Longhorn UI, verify snapshot appears in list
-- [ ] T043 [US2] Verify TLS certificate is valid (issued by Let's Encrypt)
+- [X] T038 [US2] Verify DNS resolution for longhorn.chocolandiadc.com resolves to Traefik IP
+- [X] T039 [US2] Access https://longhorn.chocolandiadc.com and verify redirect to Cloudflare Access login
+- [X] T040 [US2] Authenticate with authorized Google account via Cloudflare Access
+- [X] T041 [US2] Verify Longhorn UI dashboard loads showing volumes, nodes, and disk usage
+- [X] T042 [US2] Create manual snapshot of test volume via Longhorn UI, verify snapshot appears in list
+- [X] T043 [US2] Verify TLS certificate is valid (issued by Let's Encrypt)
 
 **Checkpoint**: At this point, Longhorn UI should be accessible via HTTPS with Cloudflare Access authentication, independently testable via browser access
 

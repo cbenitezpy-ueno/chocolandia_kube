@@ -425,5 +425,5 @@ variable "longhorn_replica_count" {
 variable "minio_storage_size" {
   description = "Storage size for MinIO PersistentVolume"
   type        = string
-  default     = "100Gi"
+  default     = "50Gi"
 }
