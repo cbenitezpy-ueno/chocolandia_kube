@@ -86,26 +86,28 @@ resource "helm_release" "longhorn" {
 }
 
 # StorageClass for Longhorn (explicit definition for clarity)
-resource "kubernetes_storage_class_v1" "longhorn" {
-  metadata {
-    name = var.storage_class_name
-    annotations = {
-      "storageclass.kubernetes.io/is-default-class" = "true"
-    }
-  }
-
-  storage_provisioner    = "driver.longhorn.io"
-  allow_volume_expansion = true
-  reclaim_policy         = "Delete"
-  volume_binding_mode    = "Immediate"
-
-  parameters = {
-    numberOfReplicas    = tostring(var.replica_count)
-    staleReplicaTimeout = "30"
-    fromBackup          = ""
-    fsType              = "ext4"
-    dataLocality        = "disabled"
-  }
-
-  depends_on = [helm_release.longhorn]
-}
+# TEMPORARILY COMMENTED OUT: Storageclass already exists in cluster, managed by Longhorn Helm chart
+# TODO: Re-enable after resolving state drift issues
+# resource "kubernetes_storage_class_v1" "longhorn" {
+#   metadata {
+#     name = var.storage_class_name
+#     annotations = {
+#       "storageclass.kubernetes.io/is-default-class" = "true"
+#     }
+#   }
+#
+#   storage_provisioner    = "driver.longhorn.io"
+#   allow_volume_expansion = true
+#   reclaim_policy         = "Delete"
+#   volume_binding_mode    = "Immediate"
+#
+#   parameters = {
+#     numberOfReplicas    = tostring(var.replica_count)
+#     staleReplicaTimeout = "30"
+#     fromBackup          = ""
+#     fsType              = "ext4"
+#     dataLocality        = "disabled"
+#   }
+#
+#   depends_on = [helm_release.longhorn]
+# }

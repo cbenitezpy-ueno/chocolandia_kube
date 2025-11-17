@@ -4,7 +4,8 @@
 
 output "storageclass_name" {
   description = "Name of the Longhorn StorageClass for PVC provisioning"
-  value       = kubernetes_storage_class_v1.longhorn.metadata[0].name
+  value       = "longhorn" # Hardcoded while storageclass resource is commented out
+  # value       = kubernetes_storage_class_v1.longhorn.metadata[0].name
 }
 
 output "namespace" {

@@ -427,3 +427,19 @@ variable "minio_storage_size" {
   type        = string
   default     = "50Gi"
 }
+
+# ============================================================================
+# Netdata Hardware Monitoring Configuration
+# ============================================================================
+
+variable "netdata_domain" {
+  description = "Domain for Netdata hardware monitoring dashboard"
+  type        = string
+  default     = "netdata.chocolandiadc.com"
+}
+
+variable "netdata_storage_size" {
+  description = "Storage size for Netdata historical metrics database"
+  type        = string
+  default     = "10Gi"
+}
