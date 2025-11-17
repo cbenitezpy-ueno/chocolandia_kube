@@ -41,3 +41,50 @@ variable "enable_metrics" {
   type        = bool
   default     = true
 }
+
+# ============================================================================
+# Cloudflare and Ingress Variables (User Story 2)
+# ============================================================================
+
+variable "longhorn_domain" {
+  description = "Domain name for Longhorn web UI (e.g., longhorn.chocolandiadc.com)"
+  type        = string
+}
+
+variable "cloudflare_zone_id" {
+  description = "Cloudflare Zone ID for DNS record creation"
+  type        = string
+}
+
+variable "cloudflare_account_id" {
+  description = "Cloudflare Account ID for Zero Trust Access configuration"
+  type        = string
+}
+
+variable "traefik_loadbalancer_ip" {
+  description = "Traefik LoadBalancer IP address for DNS A record"
+  type        = string
+}
+
+variable "authorized_emails" {
+  description = "List of email addresses authorized to access Longhorn UI via Cloudflare Access"
+  type        = list(string)
+}
+
+variable "cluster_issuer" {
+  description = "cert-manager ClusterIssuer name for TLS certificate issuance"
+  type        = string
+  default     = "letsencrypt-production"
+}
+
+variable "certificate_duration" {
+  description = "TLS certificate duration"
+  type        = string
+  default     = "2160h" # 90 days
+}
+
+variable "certificate_renew_before" {
+  description = "Renew certificate before expiration"
+  type        = string
+  default     = "720h" # 30 days
+}

@@ -23,6 +23,16 @@ module "longhorn" {
 
   # Enable Prometheus metrics for monitoring
   enable_metrics = true
+
+  # Cloudflare and Ingress configuration (User Story 2)
+  longhorn_domain          = var.longhorn_domain
+  cloudflare_zone_id       = var.cloudflare_zone_id
+  cloudflare_account_id    = var.cloudflare_account_id
+  traefik_loadbalancer_ip  = "192.168.4.201" # MetalLB assigned IP
+  authorized_emails        = var.authorized_emails
+  cluster_issuer           = var.cluster_issuer
+  certificate_duration     = var.certificate_duration
+  certificate_renew_before = var.certificate_renew_before
 }
 
 # ============================================================================
