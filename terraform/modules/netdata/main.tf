@@ -202,6 +202,28 @@ resource "helm_release" "netdata" {
     value = "*"
   }
 
+  # Disable all authentication and sign-in features
+  set {
+    name  = "parent.env.NETDATA_AUTH_ENABLED"
+    value = "no"
+  }
+
+  set {
+    name  = "child.env.NETDATA_AUTH_ENABLED"
+    value = "no"
+  }
+
+  # Allow anonymous access to API
+  set {
+    name  = "parent.env.NETDATA_WEB_ALLOW_BADGES_FROM"
+    value = "*"
+  }
+
+  set {
+    name  = "parent.env.NETDATA_WEB_ALLOW_STREAMING_FROM"
+    value = "*"
+  }
+
   depends_on = [kubernetes_namespace.netdata]
 }
 
