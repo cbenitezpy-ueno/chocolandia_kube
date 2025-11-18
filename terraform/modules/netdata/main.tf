@@ -113,15 +113,20 @@ resource "helm_release" "netdata" {
     value = "true"
   }
 
-  # Service configuration
+  # Service configuration - NodePort for private network access
   set {
     name  = "service.type"
-    value = "ClusterIP"
+    value = "NodePort"
   }
 
   set {
     name  = "service.port"
     value = "19999"
+  }
+
+  set {
+    name  = "service.nodePort"
+    value = "32303"
   }
 
   # Disable built-in ingress (we'll use Traefik IngressRoute)
