@@ -51,7 +51,7 @@ variable "resource_limits_memory" {
 variable "monitored_namespaces" {
   description = "List of Kubernetes namespaces to monitor for service discovery"
   type        = list(string)
-  default     = ["pihole", "traefik", "cert-manager", "argocd", "headlamp", "homepage"]
+  default     = ["default", "pihole", "traefik", "cert-manager", "argocd", "headlamp", "homepage", "monitoring", "beersystem", "minio", "postgresql", "longhorn-system"]
 }
 
 variable "domain_name" {

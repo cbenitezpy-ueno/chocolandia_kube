@@ -106,12 +106,6 @@
           app: homepage
           podSelector: app=homepage
 
-    - Netdata:
-        icon: si-netdata
-        description: "🏠 Private: Real-time performance monitoring | Access via http://192.168.4.101:19999 (NodePort)"
-        namespace: netdata
-        app: netdata
-
     - Prometheus:
         icon: si-prometheus
         description: "🏠 Private: Metrics collection and alerting | Port-forward: kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090:9090"
@@ -125,6 +119,12 @@
         description: "🌐 Public: Distributed block storage for Kubernetes"
         namespace: longhorn-system
         app: longhorn-ui
+        widget:
+          type: kubernetes
+          cluster: default
+          namespace: longhorn-system
+          app: longhorn-ui
+          podSelector: app=longhorn-ui
 
     - MinIO Console:
         icon: si-minio
@@ -132,6 +132,12 @@
         description: "🌐 Public: MinIO web console | 🏠 Private: http://192.168.4.101:9001"
         namespace: minio
         app: minio
+        widget:
+          type: kubernetes
+          cluster: default
+          namespace: minio
+          app: minio
+          podSelector: app=minio
 
     - MinIO S3 API:
         icon: si-minio
@@ -139,9 +145,21 @@
         description: "🌐 Public: S3-compatible object storage API | 🏠 Private: http://192.168.4.101:9000"
         namespace: minio
         app: minio
+        widget:
+          type: kubernetes
+          cluster: default
+          namespace: minio
+          app: minio
+          podSelector: app=minio
 
     - PostgreSQL HA:
         icon: si-postgresql
-        description: "🏠 Private: High-availability PostgreSQL cluster | LoadBalancer: 192.168.4.200:5432"
+        description: "🏠 Private: High-availability PostgreSQL cluster | jdbc:postgresql://192.168.4.200:5432/postgres"
         namespace: postgresql
         app: postgres-ha-postgresql
+        widget:
+          type: kubernetes
+          cluster: default
+          namespace: postgresql
+          app: postgres-ha-postgresql
+          podSelector: app.kubernetes.io/name=postgresql
