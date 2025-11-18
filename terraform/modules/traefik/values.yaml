@@ -34,7 +34,7 @@ ports:
   metrics:
     port: 9100
     expose:
-      default: false  # Internal only, not exposed via LoadBalancer
+      default: true  # Expose for Prometheus scraping
 
 # Prometheus metrics
 metrics:
