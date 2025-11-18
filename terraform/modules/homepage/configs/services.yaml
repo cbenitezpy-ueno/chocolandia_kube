@@ -23,10 +23,6 @@
         description: "🌐 Public: GitOps continuous delivery for Kubernetes"
         namespace: argocd
         app: argocd-server
-        widget:
-          type: argocd
-          url: http://argocd-server.argocd.svc.cluster.local:80
-          key: {{HOMEPAGE_VAR_ARGOCD_TOKEN}}
 
 - Infrastructure:
     - cert-manager:
