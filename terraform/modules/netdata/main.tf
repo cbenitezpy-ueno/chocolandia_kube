@@ -224,6 +224,17 @@ resource "helm_release" "netdata" {
     value = "*"
   }
 
+  # Disable functions that require authentication
+  set {
+    name  = "parent.env.NETDATA_FUNCTIONS_ENABLED"
+    value = "no"
+  }
+
+  set {
+    name  = "child.env.NETDATA_FUNCTIONS_ENABLED"
+    value = "no"
+  }
+
   depends_on = [kubernetes_namespace.netdata]
 }
 
