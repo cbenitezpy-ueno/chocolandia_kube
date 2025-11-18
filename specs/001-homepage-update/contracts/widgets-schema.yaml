@@ -1,0 +1,418 @@
+# Homepage Widgets Configuration Schema
+# Feature: 001-homepage-update
+# Purpose: Define the structure for widgets.yaml (global dashboard widgets)
+
+$schema: "http://json-schema.org/draft-07/schema#"
+title: "Homepage Widgets Configuration"
+description: "Schema for defining global dashboard widgets (Kubernetes cluster, resources, datetime)"
+type: array
+
+items:
+  type: object
+  description: "Widget configuration block"
+
+  # Each widget is a single-key object where the key is the widget type
+  properties:
+    kubernetes:
+      $ref: "#/definitions/kubernetesClusterWidget"
+
+    resources:
+      $ref: "#/definitions/resourcesWidget"
+
+    datetime:
+      $ref: "#/definitions/datetimeWidget"
+
+    search:
+      $ref: "#/definitions/searchWidget"
+
+  minProperties: 1
+  maxProperties: 1
+  additionalProperties: false
+
+# Widget type definitions
+definitions:
+  kubernetesClusterWidget:
+    type: object
+    description: "Kubernetes cluster-level metrics widget"
+    properties:
+      cluster:
+        type: object
+        description: "Cluster-wide resource metrics"
+        properties:
+          show:
+            type: boolean
+            description: "Show cluster metrics"
+            default: true
+
+          cpu:
+            type: boolean
+            description: "Show cluster CPU usage"
+            default: true
+
+          memory:
+            type: boolean
+            description: "Show cluster memory usage"
+            default: true
+
+          showLabel:
+            type: boolean
+            description: "Show 'cluster' label"
+            default: true
+
+          label:
+            type: string
+            description: "Custom label for cluster section"
+            default: "cluster"
+            examples:
+              - "cluster"
+              - "Chocolandia Cluster"
+              - "K3s Cluster"
+
+        additionalProperties: false
+
+      nodes:
+        type: object
+        description: "Per-node resource metrics"
+        properties:
+          show:
+            type: boolean
+            description: "Show individual node metrics"
+            default: true
+
+          cpu:
+            type: boolean
+            description: "Show per-node CPU usage"
+            default: true
+
+          memory:
+            type: boolean
+            description: "Show per-node memory usage"
+            default: true
+
+          showLabel:
+            type: boolean
+            description: "Show node names as labels"
+            default: true
+
+          showHostname:
+            type: boolean
+            description: "Show node hostnames"
+            default: false
+
+        additionalProperties: false
+
+    additionalProperties: false
+
+  resourcesWidget:
+    type: object
+    description: "System resource monitoring widget"
+    properties:
+      backend:
+        type: string
+        description: "Data source backend"
+        enum:
+          - "kubernetes"
+          - "docker"
+          - "glances"
+        default: "kubernetes"
+
+      expanded:
+        type: boolean
+        description: "Show expanded view by default"
+        default: true
+
+      cpu:
+        type: boolean
+        description: "Show CPU metrics"
+        default: true
+
+      memory:
+        type: boolean
+        description: "Show memory metrics"
+        default: true
+
+      disk:
+        type:
+          oneOf:
+            - type: boolean
+            - type: string
+        description: "Show disk metrics (true/false or path like '/')"
+        default: false
+        examples:
+          - true
+          - false
+          - "/"
+          - "/data"
+
+      label:
+        type: string
+        description: "Custom label for resource widget"
+        examples:
+          - "System Resources"
+          - "Cluster Resources"
+
+      uptime:
+        type: boolean
+        description: "Show system uptime"
+        default: false
+
+    required:
+      - backend
+
+    additionalProperties: false
+
+  datetimeWidget:
+    type: object
+    description: "Date and time display widget"
+    properties:
+      text_size:
+        type: string
+        description: "Text size for date/time display"
+        enum:
+          - "xs"
+          - "sm"
+          - "md"
+          - "lg"
+          - "xl"
+          - "2xl"
+          - "3xl"
+          - "4xl"
+        default: "xl"
+
+      format:
+        type: object
+        description: "Date/time format configuration"
+        properties:
+          timeStyle:
+            type: string
+            description: "Time format style"
+            enum:
+              - "short"
+              - "medium"
+              - "long"
+              - "full"
+            default: "short"
+            examples:
+              - "short"    # 3:30 PM
+              - "medium"   # 3:30:00 PM
+              - "long"     # 3:30:00 PM GMT-5
+              - "full"     # 3:30:00 PM Eastern Standard Time
+
+          dateStyle:
+            type: string
+            description: "Date format style"
+            enum:
+              - "short"
+              - "medium"
+              - "long"
+              - "full"
+            default: "short"
+            examples:
+              - "short"    # 1/1/25
+              - "medium"   # Jan 1, 2025
+              - "long"     # January 1, 2025
+              - "full"     # Monday, January 1, 2025
+
+          hourCycle:
+            type: string
+            description: "Hour cycle format"
+            enum:
+              - "h11"  # 0-11
+              - "h12"  # 1-12 (AM/PM)
+              - "h23"  # 0-23
+              - "h24"  # 1-24
+            default: "h23"
+
+        additionalProperties: false
+
+      locale:
+        type: string
+        description: "Locale for date/time formatting (BCP 47 language tag)"
+        default: "en"
+        pattern: "^[a-z]{2}(-[A-Z]{2})?$"
+        examples:
+          - "en"
+          - "en-US"
+          - "es-ES"
+          - "fr-FR"
+
+    additionalProperties: false
+
+  searchWidget:
+    type: object
+    description: "Homepage search widget configuration"
+    properties:
+      provider:
+        type: string
+        description: "Search provider"
+        enum:
+          - "google"
+          - "duckduckgo"
+          - "bing"
+          - "brave"
+          - "custom"
+        default: "google"
+
+      focus:
+        type: boolean
+        description: "Auto-focus search box on page load"
+        default: true
+
+      target:
+        type: string
+        description: "Target for search results"
+        enum:
+          - "_blank"    # New tab
+          - "_self"     # Same tab
+        default: "_blank"
+
+      showSearchSuggestions:
+        type: boolean
+        description: "Show search suggestions while typing"
+        default: false
+
+    additionalProperties: false
+
+# Example valid configurations
+examples:
+  - # Kubernetes cluster widget with node details
+    - kubernetes:
+        cluster:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+          label: "cluster"
+        nodes:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+
+  - # Resources widget using Kubernetes backend
+    - resources:
+        backend: kubernetes
+        expanded: true
+        cpu: true
+        memory: true
+
+  - # DateTime widget with custom format
+    - datetime:
+        text_size: xl
+        format:
+          timeStyle: short
+          dateStyle: short
+          hourCycle: h23
+        locale: en
+
+  - # Complete widgets.yaml example
+    - kubernetes:
+        cluster:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+          label: "cluster"
+        nodes:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+
+    - resources:
+        backend: kubernetes
+        expanded: true
+        cpu: true
+        memory: true
+
+    - datetime:
+        text_size: xl
+        format:
+          timeStyle: short
+          dateStyle: short
+          hourCycle: h23
+
+# Metrics displayed by Kubernetes widget
+metrics:
+  cluster:
+    - name: "Total CPU"
+      description: "Aggregate CPU allocation/usage across all nodes"
+      unit: "cores"
+
+    - name: "Total Memory"
+      description: "Aggregate memory allocation/usage across all nodes"
+      unit: "bytes"
+
+    - name: "Node Count"
+      description: "Number of ready nodes / total nodes"
+      format: "ready/total"
+
+  nodes:
+    - name: "Node Name"
+      description: "Kubernetes node hostname (e.g., eero-1, eero-2)"
+
+    - name: "Private IP"
+      description: "Node private IP address (192.168.4.x)"
+
+    - name: "Role"
+      description: "Node role labels (control-plane, etcd, master, worker)"
+
+    - name: "Status"
+      description: "Node readiness status"
+      values:
+        - "Ready"
+        - "NotReady"
+        - "Unknown"
+
+    - name: "CPU Usage"
+      description: "Current CPU usage percentage"
+      unit: "percentage"
+
+    - name: "Memory Usage"
+      description: "Current memory usage percentage"
+      unit: "percentage"
+
+# Requirements and dependencies
+requirements:
+  kubernetes:
+    - "Kubernetes metrics-server must be deployed in the cluster"
+    - "ServiceAccount must have ClusterRole with permissions to read nodes and metrics"
+    - "Homepage must be deployed within the cluster (in-cluster mode)"
+
+  resources:
+    - "When backend=kubernetes, requires metrics-server"
+    - "When backend=docker, requires Docker socket mount"
+    - "When backend=glances, requires Glances API endpoint"
+
+# Refresh behavior
+refreshIntervals:
+  kubernetes: "30 seconds (global setting in settings.yaml)"
+  resources: "30 seconds (global setting in settings.yaml)"
+  datetime: "1 second (real-time)"
+
+# Error handling
+errorHandling:
+  kubernetes:
+    - scenario: "Metrics-server unavailable"
+      behavior: "Display error message, retry after 10 seconds once"
+
+    - scenario: "Insufficient RBAC permissions"
+      behavior: "Display permission denied error"
+
+    - scenario: "No nodes found"
+      behavior: "Display 'No nodes available' message"
+
+  resources:
+    - scenario: "Backend unavailable"
+      behavior: "Display connection error"
+
+    - scenario: "Metrics not available"
+      behavior: "Show 'N/A' for unavailable metrics"
+
+# Validation notes
+validationRules:
+  - "Kubernetes widget requires metrics-server deployed in cluster"
+  - "Resources widget backend must match deployment environment (use 'kubernetes' for K3s)"
+  - "DateTime locale must be a valid BCP 47 language tag"
+  - "All boolean flags default to true unless explicitly set to false"
+  - "Refresh intervals are controlled globally via settings.yaml, not per-widget"

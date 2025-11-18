@@ -9,10 +9,10 @@ module "minio" {
   source = "../../modules/minio"
 
   # Storage configuration (using Longhorn)
-  storage_size        = var.minio_storage_size
-  storage_class_name  = "longhorn"
-  namespace           = "minio"
-  replicas            = 1 # Single-server mode
+  storage_size       = var.minio_storage_size
+  storage_class_name = "longhorn"
+  namespace          = "minio"
+  replicas           = 1 # Single-server mode
 
   # Domain configuration
   s3_domain      = var.minio_s3_domain

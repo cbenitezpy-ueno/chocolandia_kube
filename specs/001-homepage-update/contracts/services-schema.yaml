@@ -1,0 +1,337 @@
+# Homepage Services Configuration Schema
+# Feature: 001-homepage-update
+# Purpose: Define the structure and validation rules for services.yaml
+
+$schema: "http://json-schema.org/draft-07/schema#"
+title: "Homepage Services Configuration"
+description: "Schema for defining service links and categories in Homepage dashboard"
+type: array
+
+items:
+  type: object
+  description: "Service category grouping related services"
+  minItems: 1
+
+  # Each category is a single-key object where the key is the category name
+  patternProperties:
+    "^[A-Za-z0-9 ]+$":
+      type: array
+      description: "List of services within this category"
+      minItems: 1
+
+      items:
+        type: object
+        description: "Individual service entry"
+
+        # Each service is a single-key object where the key is the service name
+        patternProperties:
+          "^[A-Za-z0-9 -]+$":
+            type: object
+            description: "Service configuration"
+
+            properties:
+              icon:
+                type: string
+                description: "Icon identifier (e.g., 'grafana.svg', 'minio.png')"
+                pattern: "^[a-z0-9-]+\\.(svg|png|jpg|jpeg)$"
+                examples:
+                  - "grafana.svg"
+                  - "argocd.svg"
+                  - "postgresql.svg"
+
+              href:
+                type: string
+                description: "Primary access URL (prefer public HTTPS URL)"
+                format: uri
+                examples:
+                  - "https://grafana.chocolandiadc.com"
+                  - "http://192.168.4.200:5432"
+
+              description:
+                type: string
+                description: |
+                  Human-readable service description. Include access methods:
+                  - Public URLs: Indicate with '🌐 Public' or 'Public:'
+                  - Private URLs: Indicate with '🏠 Private' or 'Private:' or 'Also:'
+                  - Both: 'Public: <url> | Private: <url>'
+                minLength: 10
+                maxLength: 200
+                examples:
+                  - "Metrics visualization and monitoring dashboards"
+                  - "🌐 Public: Metrics dashboard | 🏠 Private: http://192.168.4.101:30000"
+                  - "PostgreSQL high-availability cluster - Private: 192.168.4.200:5432"
+
+              namespace:
+                type: string
+                description: "Kubernetes namespace (required if widget is configured)"
+                pattern: "^[a-z0-9-]+$"
+                examples:
+                  - "monitoring"
+                  - "argocd"
+                  - "postgresql"
+
+              app:
+                type: string
+                description: "Kubernetes app label value (required if widget is configured)"
+                pattern: "^[a-z0-9-]+$"
+                examples:
+                  - "grafana"
+                  - "argocd-server"
+                  - "homepage"
+
+              widget:
+                type: object
+                description: "Widget configuration for real-time metrics"
+                oneOf:
+                  - $ref: "#/definitions/argoCdWidget"
+                  - $ref: "#/definitions/kubernetesWidget"
+                  - $ref: "#/definitions/grafanaWidget"
+                  - $ref: "#/definitions/piholeWidget"
+                  - $ref: "#/definitions/prometheusWidget"
+
+            required:
+              - description
+
+            # Must have either href or widget
+            anyOf:
+              - required: ["href"]
+              - required: ["widget"]
+
+            # If widget is present, namespace is required
+            if:
+              required: ["widget"]
+            then:
+              required: ["namespace"]
+
+            additionalProperties: false
+
+        minProperties: 1
+        maxProperties: 1
+        additionalProperties: false
+
+  minProperties: 1
+  maxProperties: 1
+  additionalProperties: false
+
+# Widget type definitions
+definitions:
+  argoCdWidget:
+    type: object
+    description: "ArgoCD GitOps deployment status widget"
+    properties:
+      type:
+        type: string
+        const: "argocd"
+
+      url:
+        type: string
+        description: "ArgoCD server URL (use in-cluster service URL)"
+        format: uri
+        pattern: "^https?://"
+        examples:
+          - "http://argocd-server.argocd.svc.cluster.local:80"
+          - "https://argocd.chocolandiadc.com"
+
+      key:
+        type: string
+        description: "ArgoCD API token (use {{HOMEPAGE_VAR_ARGOCD_TOKEN}} for secret injection)"
+        minLength: 10
+        examples:
+          - "{{HOMEPAGE_VAR_ARGOCD_TOKEN}}"
+
+    required:
+      - type
+      - url
+      - key
+
+    additionalProperties: false
+
+  kubernetesWidget:
+    type: object
+    description: "Kubernetes pod-level metrics widget"
+    properties:
+      type:
+        type: string
+        const: "kubernetes"
+
+      cluster:
+        type: string
+        description: "Cluster name (use 'default' for in-cluster deployment)"
+        default: "default"
+        examples:
+          - "default"
+
+      namespace:
+        type: string
+        description: "Kubernetes namespace containing the pods"
+        pattern: "^[a-z0-9-]+$"
+
+      app:
+        type: string
+        description: "App label value for pod selection"
+        pattern: "^[a-z0-9-]+$"
+
+      podSelector:
+        type: string
+        description: "Label selector for pods (e.g., 'app.kubernetes.io/name=grafana')"
+        pattern: "^[a-z0-9./_-]+=.+$"
+        examples:
+          - "app.kubernetes.io/name=grafana"
+          - "app=argocd-server"
+          - "app.kubernetes.io/component=controller"
+
+    required:
+      - type
+      - namespace
+
+    additionalProperties: false
+
+  grafanaWidget:
+    type: object
+    description: "Grafana dashboard widget"
+    properties:
+      type:
+        type: string
+        const: "grafana"
+
+      url:
+        type: string
+        description: "Grafana server URL (use in-cluster service URL)"
+        format: uri
+        pattern: "^https?://"
+        examples:
+          - "http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local:80"
+
+      username:
+        type: string
+        description: "Grafana username (use {{HOMEPAGE_VAR_GRAFANA_USER}} for secret injection)"
+        examples:
+          - "{{HOMEPAGE_VAR_GRAFANA_USER}}"
+
+      password:
+        type: string
+        description: "Grafana password (use {{HOMEPAGE_VAR_GRAFANA_PASSWORD}} for secret injection)"
+        examples:
+          - "{{HOMEPAGE_VAR_GRAFANA_PASSWORD}}"
+
+    required:
+      - type
+      - url
+      - username
+      - password
+
+    additionalProperties: false
+
+  piholeWidget:
+    type: object
+    description: "Pi-hole DNS statistics widget"
+    properties:
+      type:
+        type: string
+        const: "pihole"
+
+      url:
+        type: string
+        description: "Pi-hole admin interface URL"
+        format: uri
+        pattern: "^https?://"
+        examples:
+          - "http://pihole-web.default.svc.cluster.local:80"
+          - "https://pihole.chocolandiadc.com"
+
+      key:
+        type: string
+        description: "Pi-hole API token (use {{HOMEPAGE_VAR_PIHOLE_TOKEN}} for secret injection)"
+        examples:
+          - "{{HOMEPAGE_VAR_PIHOLE_TOKEN}}"
+
+    required:
+      - type
+      - url
+      - key
+
+    additionalProperties: false
+
+  prometheusWidget:
+    type: object
+    description: "Prometheus metrics widget"
+    properties:
+      type:
+        type: string
+        const: "prometheus"
+
+      url:
+        type: string
+        description: "Prometheus server URL (use in-cluster service URL)"
+        format: uri
+        pattern: "^https?://"
+        examples:
+          - "http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090"
+
+    required:
+      - type
+      - url
+
+    additionalProperties: false
+
+# Example valid configuration
+examples:
+  - - Applications:
+        - Beersystem:
+            icon: beer.svg
+            href: https://beer.chocolandiadc.com
+            description: "🌐 Public: Beer inventory management system | 🏠 Private: http://192.168.4.101:3001"
+            namespace: beersystem
+            app: beersystem-frontend
+            widget:
+              type: kubernetes
+              cluster: default
+              namespace: beersystem
+              app: beersystem-frontend
+
+  - - GitOps:
+        - ArgoCD:
+            icon: argocd.svg
+            href: https://argocd.chocolandiadc.com
+            description: "GitOps continuous deployment platform"
+            namespace: argocd
+            app: argocd-server
+            widget:
+              type: argocd
+              url: http://argocd-server.argocd.svc.cluster.local:80
+              key: "{{HOMEPAGE_VAR_ARGOCD_TOKEN}}"
+
+  - - Monitoring:
+        - Grafana:
+            icon: grafana.svg
+            href: https://grafana.chocolandiadc.com
+            description: "🌐 Public: Metrics visualization | 🏠 Private: http://192.168.4.101:30000"
+            namespace: monitoring
+            app: grafana
+            widget:
+              type: kubernetes
+              cluster: default
+              namespace: monitoring
+              podSelector: "app.kubernetes.io/name=grafana"
+
+  - - Storage:
+        - PostgreSQL HA:
+            icon: postgresql.svg
+            href: http://192.168.4.200:5432
+            description: "🏠 Private: PostgreSQL high-availability cluster (LoadBalancer IP)"
+
+  - - Infrastructure:
+        - Pi-hole:
+            icon: pihole.svg
+            href: https://pihole.chocolandiadc.com
+            description: "🌐 Public: Network-wide ad blocking and DNS | 🏠 Private: http://192.168.4.201:80"
+
+# Validation notes
+validationRules:
+  - "Services within each category must be alphabetically sorted by service name"
+  - "Category names must be one of: Applications, GitOps, Infrastructure, Monitoring, Storage"
+  - "Public URLs must use HTTPS and chocolandiadc.com domain"
+  - "Private URLs may use HTTP with IP addresses (192.168.4.x range)"
+  - "Widget configurations require corresponding Kubernetes namespace and app labels"
+  - "ArgoCD tokens must be injected via environment variables, not hardcoded"
+  - "In-cluster service URLs should use format: http://<service>.<namespace>.svc.cluster.local:<port>"
