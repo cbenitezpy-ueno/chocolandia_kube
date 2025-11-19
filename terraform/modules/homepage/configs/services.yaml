@@ -65,7 +65,7 @@
 
     - Traefik:
         icon: traefik.svg
-        description: "Reverse proxy and ingress controller | 🏠 Private: LoadBalancer 192.168.4.201"
+        description: "Reverse proxy and ingress controller | 🏠 Private: LoadBalancer 192.168.4.202"
         namespace: traefik
         app: traefik
         widget:
