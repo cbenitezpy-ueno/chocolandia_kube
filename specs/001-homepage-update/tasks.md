@@ -125,14 +125,14 @@
 
 **Purpose**: Final validation, documentation, and deployment
 
-- [ ] T042 [P] Run full OpenTofu validation: tofu validate && tofu fmt -check in terraform/environments/chocolandiadc-mvp/
-- [ ] T043 [P] Verify all ConfigMaps applied correctly with kubectl get configmaps -n homepage
-- [ ] T044 [P] Check Homepage pod logs for any errors with kubectl logs -n homepage -l app=homepage --tail=50
+- [x] T042 [P] Run full OpenTofu validation: tofu validate && tofu fmt -check in terraform/environments/chocolandiadc-mvp/
+- [x] T043 [P] Verify all ConfigMaps applied correctly with kubectl get configmaps -n homepage
+- [x] T044 [P] Check Homepage pod logs for any errors with kubectl logs -n homepage -l app=homepage --tail=50
 - [ ] T045 Test dashboard load time (should be <3 seconds on local network) per SC-005
 - [ ] T046 Verify success criteria SC-001 through SC-007 using quickstart.md validation steps
-- [ ] T047 [P] Update CLAUDE.md with any new learnings or configuration patterns discovered
+- [x] T047 [P] Update CLAUDE.md with any new learnings or configuration patterns discovered
 - [ ] T048 [P] Document ArgoCD token rotation procedure in quickstart.md or separate runbook
-- [ ] T049 Commit all changes with descriptive message following Git conventions from CLAUDE.md
+- [x] T049 Commit all changes with descriptive message following Git conventions from CLAUDE.md
 - [ ] T050 Create pull request for review before merging to main branch
 
 ---
