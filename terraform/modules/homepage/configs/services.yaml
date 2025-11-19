@@ -137,8 +137,8 @@
 
     - MinIO S3 API:
         icon: si-minio
-        href: https://s3.chocolandiadc.com
-        description: "🌐 Public: S3-compatible object storage API | 🏠 Private: http://192.168.4.101:9000"
+        href: http://s3.chocolandiadc.com
+        description: "🏠 Private only: S3 API (no public access) | Add to /etc/hosts: 192.168.4.202 s3.chocolandiadc.com"
         namespace: minio
         app: minio
         widget:
