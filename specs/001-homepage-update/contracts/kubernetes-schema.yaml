@@ -1,0 +1,454 @@
+# Homepage Kubernetes Integration Schema
+# Feature: 001-homepage-update
+# Purpose: Define the structure for kubernetes.yaml (cluster integration settings)
+
+$schema: "http://json-schema.org/draft-07/schema#"
+title: "Homepage Kubernetes Integration Configuration"
+description: "Schema for kubernetes.yaml - defines how Homepage integrates with Kubernetes cluster"
+type: object
+
+properties:
+  mode:
+    type: string
+    description: |
+      Authentication mode for Kubernetes API access:
+      - cluster: Use in-cluster ServiceAccount (recommended for pod deployment)
+      - default: Use default kubeconfig from ~/.kube/config
+      - disabled: Disable Kubernetes integration
+    enum:
+      - "cluster"
+      - "default"
+      - "disabled"
+    default: "cluster"
+    examples:
+      - "cluster"
+
+  showAnnotations:
+    type: boolean
+    description: |
+      Enable automatic service discovery via IngressRoute/Ingress annotations.
+      When enabled, services with gethomepage.dev/* annotations are auto-discovered.
+    default: false
+
+  namespaces:
+    type: array
+    description: |
+      List of namespaces to scan for services (when showAnnotations=true).
+      Empty array means scan all namespaces.
+    items:
+      type: string
+      pattern: "^[a-z0-9-]+$"
+    examples:
+      - []
+      - ["default", "monitoring", "argocd"]
+      - ["kube-system", "homepage"]
+
+  annotations:
+    type: object
+    description: "Custom annotation prefix for service discovery"
+    properties:
+      prefix:
+        type: string
+        description: "Annotation prefix (default: gethomepage.dev)"
+        default: "gethomepage.dev"
+        pattern: "^[a-z0-9.-]+$"
+    additionalProperties: false
+
+required:
+  - mode
+
+additionalProperties: false
+
+# Examples
+examples:
+  - # Minimal in-cluster configuration (recommended)
+    mode: cluster
+
+  - # Full configuration with service discovery
+    mode: cluster
+    showAnnotations: true
+    namespaces: []
+
+  - # Configuration with specific namespace scanning
+    mode: cluster
+    showAnnotations: true
+    namespaces:
+      - default
+      - monitoring
+      - argocd
+      - homepage
+      - beersystem
+
+  - # Disabled Kubernetes integration
+    mode: disabled
+
+# ServiceAccount RBAC requirements
+rbacRequirements:
+  clusterRole:
+    apiGroups:
+      - ""
+      - "apps"
+      - "batch"
+      - "networking.k8s.io"
+      - "traefik.containo.us"
+      - "metrics.k8s.io"
+
+    resources:
+      - nodes
+      - nodes/stats
+      - pods
+      - services
+      - ingresses
+      - ingressroutes
+      - deployments
+      - statefulsets
+      - daemonsets
+      - cronjobs
+      - jobs
+
+    verbs:
+      - get
+      - list
+      - watch
+
+  metricsAccess:
+    description: "Access to metrics.k8s.io API for pod/node resource usage"
+    apiGroups:
+      - "metrics.k8s.io"
+    resources:
+      - nodes
+      - pods
+    verbs:
+      - get
+      - list
+
+  exampleClusterRole: |
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: homepage
+    rules:
+      - apiGroups:
+          - ""
+        resources:
+          - nodes
+          - nodes/stats
+          - pods
+          - services
+          - namespaces
+        verbs:
+          - get
+          - list
+
+      - apiGroups:
+          - apps
+        resources:
+          - deployments
+          - statefulsets
+          - daemonsets
+        verbs:
+          - get
+          - list
+
+      - apiGroups:
+          - batch
+        resources:
+          - cronjobs
+          - jobs
+        verbs:
+          - get
+          - list
+
+      - apiGroups:
+          - networking.k8s.io
+        resources:
+          - ingresses
+        verbs:
+          - get
+          - list
+
+      - apiGroups:
+          - traefik.containo.us
+        resources:
+          - ingressroutes
+        verbs:
+          - get
+          - list
+
+      - apiGroups:
+          - metrics.k8s.io
+        resources:
+          - nodes
+          - pods
+        verbs:
+          - get
+          - list
+
+# Annotation-based service discovery
+serviceDiscovery:
+  description: |
+    When showAnnotations=true, Homepage scans IngressRoute/Ingress resources
+    for annotations and automatically adds services to the dashboard.
+
+  supportedAnnotations:
+    - name: "gethomepage.dev/enabled"
+      type: "string"
+      required: true
+      description: "Enable service discovery for this resource"
+      values: ["true", "false"]
+      example: "true"
+
+    - name: "gethomepage.dev/name"
+      type: "string"
+      required: true
+      description: "Service display name"
+      example: "Grafana"
+
+    - name: "gethomepage.dev/description"
+      type: "string"
+      required: true
+      description: "Service description"
+      example: "Metrics visualization and monitoring"
+
+    - name: "gethomepage.dev/group"
+      type: "string"
+      required: true
+      description: "Service category/group"
+      example: "Monitoring"
+
+    - name: "gethomepage.dev/icon"
+      type: "string"
+      required: false
+      description: "Icon name (without extension)"
+      example: "grafana.svg"
+
+    - name: "gethomepage.dev/href"
+      type: "string"
+      required: false
+      description: "Override URL (defaults to IngressRoute host)"
+      example: "https://grafana.chocolandiadc.com"
+
+    - name: "gethomepage.dev/widget.type"
+      type: "string"
+      required: false
+      description: "Widget type (argocd, kubernetes, grafana, etc.)"
+      example: "kubernetes"
+
+    - name: "gethomepage.dev/widget.url"
+      type: "string"
+      required: false
+      description: "Widget API endpoint (use in-cluster service URL)"
+      example: "http://grafana.monitoring.svc.cluster.local:80"
+
+    - name: "gethomepage.dev/pod-selector"
+      type: "string"
+      required: false
+      description: "Label selector for Kubernetes widget pod metrics"
+      example: "app.kubernetes.io/name=grafana"
+
+    - name: "gethomepage.dev/namespace"
+      type: "string"
+      required: false
+      description: "Override namespace (defaults to IngressRoute namespace)"
+      example: "monitoring"
+
+  exampleIngressRoute: |
+    apiVersion: traefik.containo.us/v1alpha1
+    kind: IngressRoute
+    metadata:
+      name: grafana
+      namespace: monitoring
+      annotations:
+        gethomepage.dev/enabled: "true"
+        gethomepage.dev/name: "Grafana"
+        gethomepage.dev/description: "Metrics visualization and monitoring dashboards"
+        gethomepage.dev/group: "Monitoring"
+        gethomepage.dev/icon: "grafana.svg"
+        gethomepage.dev/widget.type: "kubernetes"
+        gethomepage.dev/widget.url: "http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local:80"
+        gethomepage.dev/pod-selector: "app.kubernetes.io/name=grafana"
+    spec:
+      entryPoints:
+        - websecure
+      routes:
+        - match: Host(`grafana.chocolandiadc.com`)
+          kind: Rule
+          services:
+            - name: kube-prometheus-stack-grafana
+              port: 80
+
+# Mode-specific behavior
+modes:
+  cluster:
+    description: "In-cluster mode using ServiceAccount credentials"
+    requirements:
+      - "Homepage pod must be deployed in the cluster"
+      - "ServiceAccount must exist with appropriate ClusterRole/ClusterRoleBinding"
+      - "ServiceAccount token automatically mounted at /var/run/secrets/kubernetes.io/serviceaccount/token"
+
+    advantages:
+      - "No kubeconfig management required"
+      - "Automatic credential rotation via ServiceAccount tokens"
+      - "Follows Kubernetes RBAC best practices"
+      - "More secure than exposing kubeconfig"
+
+    limitations:
+      - "Only works when Homepage is deployed as a pod"
+      - "Cannot connect to external clusters"
+
+    configuration: |
+      # kubernetes.yaml
+      mode: cluster
+
+  default:
+    description: "Use default kubeconfig from ~/.kube/config"
+    requirements:
+      - "Valid kubeconfig file must exist"
+      - "Homepage must have filesystem access to kubeconfig"
+      - "Kubeconfig must have valid cluster credentials"
+
+    advantages:
+      - "Can connect to multiple clusters"
+      - "Useful for development/testing outside cluster"
+
+    limitations:
+      - "Requires kubeconfig management"
+      - "Static credentials (no automatic rotation)"
+      - "Security risk if kubeconfig is exposed"
+
+    configuration: |
+      # kubernetes.yaml
+      mode: default
+
+      # Requires kubeconfig at ~/.kube/config
+      # Or set KUBECONFIG environment variable
+
+  disabled:
+    description: "Disable Kubernetes integration completely"
+    useCases:
+      - "Homepage deployed outside Kubernetes"
+      - "Manual service configuration only"
+      - "No cluster metrics needed"
+
+    configuration: |
+      # kubernetes.yaml
+      mode: disabled
+
+# Metrics API requirements
+metricsRequirements:
+  metricsServer:
+    description: "Required for displaying pod/node resource usage"
+    deployment: |
+      # Check if metrics-server is deployed
+      kubectl get deployment metrics-server -n kube-system
+
+      # Install if not present (K3s usually includes it)
+      kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+    verification: |
+      # Verify metrics are available
+      kubectl top nodes
+      kubectl top pods -A
+
+  expectedMetrics:
+    nodes:
+      - "CPU usage (millicores)"
+      - "Memory usage (bytes)"
+      - "CPU percentage"
+      - "Memory percentage"
+
+    pods:
+      - "CPU usage per pod (millicores)"
+      - "Memory usage per pod (bytes)"
+      - "Container count"
+      - "Restart count"
+
+# Security considerations
+security:
+  rbacPrinciples:
+    - "Grant minimum required permissions (read-only)"
+    - "No write/update/delete verbs needed"
+    - "No secret access required (except mounted ServiceAccount token)"
+    - "Limit namespace access via RoleBinding if needed"
+
+  serviceAccountSetup:
+    description: "Create dedicated ServiceAccount for Homepage"
+    manifest: |
+      ---
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: homepage
+        namespace: homepage
+
+      ---
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: homepage
+      rules:
+        - apiGroups: ["", "apps", "batch", "networking.k8s.io", "traefik.containo.us"]
+          resources: ["nodes", "pods", "services", "deployments", "ingresses", "ingressroutes"]
+          verbs: ["get", "list"]
+        - apiGroups: ["metrics.k8s.io"]
+          resources: ["nodes", "pods"]
+          verbs: ["get", "list"]
+
+      ---
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: homepage
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: homepage
+      subjects:
+        - kind: ServiceAccount
+          name: homepage
+          namespace: homepage
+
+  tokenRotation:
+    description: "ServiceAccount tokens are automatically rotated by Kubernetes"
+    tokenLifetime: "Configurable via TokenRequest API (default: 1 hour with auto-renewal)"
+    bestPractice: "Use projected ServiceAccount tokens for automatic rotation"
+
+# Troubleshooting
+troubleshooting:
+  - issue: "Kubernetes widget shows 'Permission denied'"
+    cause: "Insufficient RBAC permissions on ServiceAccount"
+    solution: |
+      1. Verify ClusterRole has necessary permissions
+      2. Check ClusterRoleBinding references correct ServiceAccount
+      3. Verify ServiceAccount exists: kubectl get sa homepage -n homepage
+      4. Check pod logs: kubectl logs -n homepage deployment/homepage
+
+  - issue: "Node/pod metrics not displayed"
+    cause: "metrics-server not deployed or not accessible"
+    solution: |
+      1. Check metrics-server: kubectl get deployment metrics-server -n kube-system
+      2. Verify metrics API: kubectl top nodes
+      3. Check ServiceAccount has metrics.k8s.io permissions
+
+  - issue: "Services not auto-discovered"
+    cause: "showAnnotations=false or missing annotations"
+    solution: |
+      1. Set showAnnotations: true in kubernetes.yaml
+      2. Verify IngressRoute has gethomepage.dev/enabled: "true"
+      3. Check namespace is included in namespaces list (or use [])
+      4. Restart Homepage pod: kubectl rollout restart deployment/homepage -n homepage
+
+  - issue: "Cannot connect to Kubernetes API"
+    cause: "Invalid mode or missing credentials"
+    solution: |
+      1. Verify mode is set to "cluster" for in-cluster deployment
+      2. Check ServiceAccount is mounted: kubectl describe pod <homepage-pod> -n homepage
+      3. Verify API server is accessible: kubectl cluster-info
+
+# Validation rules
+validationRules:
+  - "mode must be one of: cluster, default, disabled"
+  - "For in-cluster deployment (pod), always use mode: cluster"
+  - "namespaces array must contain valid namespace names (lowercase alphanumeric + hyphens)"
+  - "When showAnnotations=true, ensure RBAC permits reading IngressRoutes/Ingresses"
+  - "Custom annotation prefix must be lowercase with dots allowed"

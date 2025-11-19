@@ -33,16 +33,16 @@ module "netdata" {
   cluster_issuer = var.cluster_issuer
 
   # Cloudflare
-  cloudflare_zone_id        = var.cloudflare_zone_id
-  cloudflare_account_id     = var.cloudflare_account_id
-  traefik_loadbalancer_ip   = module.traefik.loadbalancer_ip
-  authorized_emails         = var.authorized_emails
-  google_oauth_idp_id       = var.google_oauth_idp_id
+  cloudflare_zone_id      = var.cloudflare_zone_id
+  cloudflare_account_id   = var.cloudflare_account_id
+  traefik_loadbalancer_ip = module.traefik.loadbalancer_ip
+  authorized_emails       = var.authorized_emails
+  google_oauth_idp_id     = var.google_oauth_idp_id
 
   depends_on = [
-    module.longhorn,      # Storage backend required
-    module.traefik,       # Ingress controller required
-    module.cert_manager   # TLS certificates required
+    module.longhorn,    # Storage backend required
+    module.traefik,     # Ingress controller required
+    module.cert_manager # TLS certificates required
   ]
 }
 

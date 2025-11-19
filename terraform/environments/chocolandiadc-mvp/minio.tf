@@ -9,10 +9,10 @@ module "minio" {
   source = "../../modules/minio"
 
   # Storage configuration (using Longhorn)
-  storage_size        = var.minio_storage_size
-  storage_class_name  = "longhorn"
-  namespace           = "minio"
-  replicas            = 1 # Single-server mode
+  storage_size       = var.minio_storage_size
+  storage_class_name = "longhorn"
+  namespace          = "minio"
+  replicas           = 1 # Single-server mode
 
   # Domain configuration
   s3_domain      = var.minio_s3_domain
@@ -33,6 +33,10 @@ module "minio" {
   traefik_loadbalancer_ip = "192.168.4.201" # MetalLB assigned IP
   authorized_emails       = var.authorized_emails
   cluster_issuer          = var.cluster_issuer
+
+  # Cloudflare Access Authentication
+  google_oauth_idp_id  = module.cloudflare_tunnel.access_identity_provider_id
+  access_auto_redirect = true
 }
 
 # ============================================================================

@@ -9,38 +9,38 @@ module "postgresql_cluster" {
   source = "../../modules/postgresql-cluster"
 
   # Basic configuration
-  namespace        = "postgresql"
-  release_name     = "postgres-ha"
+  namespace          = "postgresql"
+  release_name       = "postgres-ha"
   postgresql_version = "16"
 
   # High availability configuration
-  replica_count    = 2  # 1 primary + 1 replica
+  replica_count    = 2 # 1 primary + 1 replica
   replication_mode = "async"
 
   # Storage configuration
   storage_size  = "50Gi"
-  storage_class = "local-path"  # K3s local-path-provisioner
+  storage_class = "local-path" # K3s local-path-provisioner
 
   # Resource limits (per pod)
-  resources_limits_cpu    = "2"
-  resources_limits_memory = "4Gi"
-  resources_requests_cpu  = "500m"
+  resources_limits_cpu      = "2"
+  resources_limits_memory   = "4Gi"
+  resources_requests_cpu    = "500m"
   resources_requests_memory = "1Gi"
 
   # Network configuration
   enable_external_access = true
-  metallb_ip_pool       = "eero-pool"
+  metallb_ip_pool        = "eero-pool"
 
   # Monitoring configuration
   enable_metrics         = true
   enable_service_monitor = true
 
   # Security configuration
-  create_random_passwords = true  # Auto-generate secure passwords
+  create_random_passwords = true # Auto-generate secure passwords
 
   # Helm chart configuration
-  chart_version = "18.1.9"  # Latest Bitnami PostgreSQL chart version (standard chart with read replicas)
-  helm_timeout  = 600  # 10 minutes for initial deployment
+  chart_version = "18.1.9" # Latest Bitnami PostgreSQL chart version (standard chart with read replicas)
+  helm_timeout  = 600      # 10 minutes for initial deployment
 }
 
 # ==============================================================================

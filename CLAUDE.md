@@ -20,6 +20,8 @@ Auto-generated from all feature plans. Last updated: 2025-11-08
 - Containerized application (existing Dockerfile), Kubernetes manifests (YAML), OpenTofu 1.6+ for database provisioning (012-beersystem-deployment)
 - PostgreSQL database "beersystem_stage" with persistent storage via local-path-provisioner (012-beersystem-deployment)
 - PostgreSQL database "beersystem_stage" with persistent storage via CloudNativePG PersistentVolumes (012-beersystem-deployment)
+- YAML (Homepage configuration), HCL (OpenTofu/Terraform 1.6+) + Homepage Docker image (ghcr.io/gethomepage/homepage), Kubernetes 1.28 (K3s), Helm, OpenTofu 1.6+ (001-homepage-update)
+- Kubernetes ConfigMaps for configuration persistence (services.yaml, widgets.yaml, settings.yaml, kubernetes.yaml) (001-homepage-update)
 
 - HCL (OpenTofu) 1.6+, Bash scripting for validation (001-k3s-cluster-setup)
 
@@ -39,9 +41,9 @@ tests/
 HCL (Terraform) 1.6+, Bash scripting for validation: Follow standard conventions
 
 ## Recent Changes
+- 001-homepage-update: Added YAML (Homepage configuration), HCL (OpenTofu/Terraform 1.6+) + Homepage Docker image (ghcr.io/gethomepage/homepage), Kubernetes 1.28 (K3s), Helm, OpenTofu 1.6+
 - 012-beersystem-deployment: Added Containerized application (existing Dockerfile), Kubernetes manifests (YAML), OpenTofu 1.6+ for database provisioning
 - 012-beersystem-deployment: Added Containerized application (existing Dockerfile), Kubernetes manifests (YAML), OpenTofu 1.6+ for database provisioning
-- 011-postgresql-cluster: Added HCL (OpenTofu) 1.6+
 
 
 <!-- MANUAL ADDITIONS START -->
@@ -60,9 +62,9 @@ MetalLB Pool Configuration:
 
 | Service | Namespace | External IP | Ports | Description |
 |---------|-----------|-------------|-------|-------------|
-| traefik | traefik | 192.168.4.201 | 80/TCP, 443/TCP | Traefik Ingress Controller - Entry point for all HTTPS traffic |
-| postgres-ha-postgresql-primary | postgresql | 192.168.4.202 | 5432/TCP | PostgreSQL HA Primary - Main database endpoint |
-| pihole-dns | default | 192.168.4.200 | 53/TCP, 53/UDP | Pi-hole DNS - Network-wide ad blocking and DNS |
+| postgres-ha-postgresql-primary | postgresql | 192.168.4.200 | 5432/TCP | PostgreSQL HA Primary - Main database endpoint |
+| pihole-dns | default | 192.168.4.201 | 53/TCP, 53/UDP | Pi-hole DNS - Network-wide ad blocking and DNS |
+| traefik | traefik | 192.168.4.202 | 80/TCP, 443/TCP, 9100/TCP | Traefik Ingress Controller - Entry point for all HTTPS traffic + Prometheus metrics |
 
 ### Available IPs
 - 192.168.4.203 - 192.168.4.210 (8 IPs available)
@@ -70,9 +72,10 @@ MetalLB Pool Configuration:
 ### Important Notes
 1. **Always use LoadBalancer type** for services that need to be accessible on standard ports (53, 80, 443, 5432, etc.)
 2. **NodePort is only for internal/non-standard port access** (e.g., web admin interfaces on high ports)
-3. When applying Terraform, verify that LoadBalancer services maintain their type
-4. MetalLB creates `svclb-*` pods on each node to distribute traffic
-5. Services are accessible on:
+3. **K3s ServiceLB (Klipper) must be disabled** for services managed by MetalLB using the annotation: `svccontroller.k3s.cattle.io/enablelb: "false"`
+4. When applying Terraform, verify that LoadBalancer services maintain their type and annotations
+5. MetalLB creates the LoadBalancer externally (not via svclb-* pods like K3s ServiceLB)
+6. Services are accessible on:
    - The assigned LoadBalancer IP (e.g., 192.168.4.200)
    - All node IPs (192.168.4.101, 192.168.4.102, etc.) on the service port
 

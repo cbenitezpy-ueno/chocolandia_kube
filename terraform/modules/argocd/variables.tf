@@ -180,3 +180,19 @@ variable "repository_polling_interval" {
   type        = string
   default     = "180s" # 3 minutes
 }
+
+# ==============================================================================
+# Network Access Configuration
+# ==============================================================================
+
+variable "enable_nodeport" {
+  description = "Enable NodePort access for ArgoCD CLI from private network"
+  type        = bool
+  default     = true
+}
+
+variable "nodeport_http" {
+  description = "NodePort for HTTP access (CLI and Web UI) on private network"
+  type        = number
+  default     = 30080
+}

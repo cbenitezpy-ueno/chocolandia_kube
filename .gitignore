@@ -49,3 +49,4 @@ Thumbs.db
 *.secret.yaml
 secrets/
 **/k8s/secret.yaml
+.backups/

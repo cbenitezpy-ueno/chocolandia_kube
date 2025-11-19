@@ -15,7 +15,8 @@ podDisruptionBudget:
 service:
   type: LoadBalancer  # MetalLB assigns external IP
   annotations:
-    metallb.universe.tf/loadBalancerIPs: "192.168.4.201"  # Static IP from MetalLB pool
+    metallb.universe.tf/loadBalancerIPs: "192.168.4.202"  # Static IP from MetalLB pool (changed from .201 to avoid conflict with Pi-hole)
+    svccontroller.k3s.cattle.io/enablelb: "false"  # Disable K3s ServiceLB to avoid conflict with MetalLB
   externalTrafficPolicy: Local  # Preserve source IP
 
 # Ports configuration
@@ -34,7 +35,7 @@ ports:
   metrics:
     port: 9100
     expose:
-      default: false  # Internal only, not exposed via LoadBalancer
+      default: true  # Expose for Prometheus scraping
 
 # Prometheus metrics
 metrics:

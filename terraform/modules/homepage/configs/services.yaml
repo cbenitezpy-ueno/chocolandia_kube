@@ -2,22 +2,32 @@
 # Homepage Services Configuration
 # This file defines service groups and their links for the Homepage dashboard
 
-- Infrastructure:
-    - Traefik:
-        icon: traefik.svg
-        description: Reverse proxy and ingress controller
-        namespace: traefik
-        app: traefik
+- Applications:
+    - Beersystem:
+        icon: si-beer
+        href: https://beer.chocolandiadc.com
+        description: "🌐 Public: Beer inventory system | 🏠 Private: http://192.168.4.101:3001"
+        namespace: beersystem
+        app: beersystem-backend
         widget:
           type: kubernetes
           cluster: default
-          namespace: traefik
-          app: traefik
-          podSelector: app.kubernetes.io/name=traefik
+          namespace: beersystem
+          app: beersystem-backend
+          podSelector: app=beersystem-backend
 
+- GitOps:
+    - ArgoCD:
+        icon: argocd.svg
+        href: https://argocd.chocolandiadc.com
+        description: "🌐 Public: GitOps continuous delivery for Kubernetes | 🏠 Private: http://192.168.4.101:30080"
+        namespace: argocd
+        app: argocd-server
+
+- Infrastructure:
     - cert-manager:
         icon: cert-manager.svg
-        description: Automatic TLS certificate management
+        description: "Automatic TLS certificate management"
         namespace: cert-manager
         app: cert-manager
         widget:
@@ -27,22 +37,10 @@
           app: cert-manager
           podSelector: app.kubernetes.io/name=cert-manager
 
-- Kubernetes Management:
-    - ArgoCD:
-        icon: argocd.svg
-        href: https://argocd.chocolandiadc.com
-        description: GitOps continuous delivery for Kubernetes
-        namespace: argocd
-        app: argocd-server
-        widget:
-          type: argocd
-          url: http://argocd-server.argocd.svc.cluster.local:80
-          key: {{HOMEPAGE_VAR_ARGOCD_TOKEN}}
-
     - Headlamp:
         icon: kubernetes-dashboard.svg
         href: https://headlamp.chocolandiadc.com
-        description: Kubernetes web UI with OIDC authentication
+        description: "🌐 Public: Kubernetes web UI with OIDC authentication"
         namespace: headlamp
         app: headlamp
         widget:
@@ -52,11 +50,36 @@
           app: headlamp
           podSelector: app.kubernetes.io/name=headlamp
 
+    - Pi-hole:
+        icon: si-pihole
+        href: https://pihole.chocolandiadc.com
+        description: "🌐 Public: Network-wide ad blocking | 🏠 Private: http://192.168.4.201:80 (LoadBalancer) or NodePort 30001"
+        namespace: default
+        app: pihole
+        widget:
+          type: kubernetes
+          cluster: default
+          namespace: default
+          app: pihole
+          podSelector: app=pihole
+
+    - Traefik:
+        icon: traefik.svg
+        description: "Reverse proxy and ingress controller | 🏠 Private: LoadBalancer 192.168.4.202"
+        namespace: traefik
+        app: traefik
+        widget:
+          type: kubernetes
+          cluster: default
+          namespace: traefik
+          app: traefik
+          podSelector: app.kubernetes.io/name=traefik
+
 - Monitoring:
     - Grafana:
         icon: grafana.svg
         href: https://grafana.chocolandiadc.com
-        description: Metrics visualization and monitoring dashboards
+        description: "🌐 Public: Metrics visualization and dashboards | 🏠 Private: http://192.168.4.101:30000 (NodePort)"
         namespace: monitoring
         app: grafana
         widget:
@@ -69,7 +92,7 @@
     - Homepage Dashboard:
         icon: homepage.svg
         href: https://homepage.chocolandiadc.com
-        description: Centralized dashboard (this page)
+        description: "🌐 Public: Centralized dashboard (this page)"
         namespace: homepage
         app: homepage
         widget:
@@ -78,3 +101,61 @@
           namespace: homepage
           app: homepage
           podSelector: app=homepage
+
+    - Prometheus:
+        icon: si-prometheus
+        description: "🏠 Private: Metrics collection and alerting | Port-forward: kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090:9090"
+        namespace: monitoring
+        app: prometheus
+
+- Storage:
+    - Longhorn:
+        icon: si-cncf
+        href: https://longhorn.chocolandiadc.com
+        description: "🌐 Public: Distributed block storage for Kubernetes"
+        namespace: longhorn-system
+        app: longhorn-ui
+        widget:
+          type: kubernetes
+          cluster: default
+          namespace: longhorn-system
+          app: longhorn-ui
+          podSelector: app=longhorn-ui
+
+    - MinIO Console:
+        icon: si-minio
+        href: https://minio.chocolandiadc.com
+        description: "🌐 Public: MinIO web console | 🏠 Private: http://192.168.4.101:9001"
+        namespace: minio
+        app: minio
+        widget:
+          type: kubernetes
+          cluster: default
+          namespace: minio
+          app: minio
+          podSelector: app=minio
+
+    - MinIO S3 API:
+        icon: si-minio
+        href: http://s3.chocolandiadc.com
+        description: "🏠 Private only: S3 API (auto-resolved by Pi-hole DNS) | http://s3.chocolandiadc.com"
+        namespace: minio
+        app: minio
+        widget:
+          type: kubernetes
+          cluster: default
+          namespace: minio
+          app: minio
+          podSelector: app=minio
+
+    - PostgreSQL HA:
+        icon: si-postgresql
+        description: "🏠 Private: High-availability PostgreSQL cluster | jdbc:postgresql://192.168.4.200:5432/postgres"
+        namespace: postgresql
+        app: postgres-ha-postgresql
+        widget:
+          type: kubernetes
+          cluster: default
+          namespace: postgresql
+          app: postgres-ha-postgresql
+          podSelector: app.kubernetes.io/name=postgresql

@@ -3,3 +3,6 @@
 # Enables Homepage to discover services and show real-time cluster information
 
 mode: cluster
+
+# Show detailed node information with resource metrics
+showNode: true

@@ -62,6 +62,12 @@ resource "helm_release" "argocd" {
           }
         }
 
+        # Service configuration for private network access
+        service = {
+          type = var.enable_nodeport ? "NodePort" : "ClusterIP"
+          nodePortHttp = var.enable_nodeport ? var.nodeport_http : null
+        }
+
         # Prometheus metrics exposure
         metrics = {
           enabled = true

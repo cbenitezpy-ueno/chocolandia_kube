@@ -9,7 +9,7 @@ module "traefik" {
   chart_version   = "30.0.2" # Traefik v3.2.0
   namespace       = "traefik"
   replicas        = 2
-  loadbalancer_ip = "192.168.4.201"
+  loadbalancer_ip = "192.168.4.202"  # Changed from .201 to avoid conflict with Pi-hole
 
   resources_requests_cpu    = "100m"
   resources_requests_memory = "128Mi"

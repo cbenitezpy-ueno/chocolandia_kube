@@ -120,9 +120,9 @@ accidental exposure or misconfigurations.
 
 The K3s cluster MUST be configured for high availability across dedicated hardware.
 
-- **Cluster topology**: 3 control-plane nodes (Lenovo mini computers) + 1 worker node (HP ProDesk)
-  - Topology chosen to maximize etcd quorum (3 nodes) and learning value with available hardware
-- **Etcd**: K3s embedded etcd MUST run in HA mode (minimum 3 replicas for quorum on Lenovo nodes)
+- **Cluster topology**: 2 control-plane nodes (master1, nodo03) + 2 worker nodes (nodo1, nodo04)
+  - Topology chosen for HA control-plane with etcd quorum (2 nodes) and distributed workload capacity
+- **Etcd**: K3s embedded etcd MUST run in HA mode (2 replicas on control-plane nodes)
 - **Load balancing**: Control-plane API endpoints MUST be load-balanced (via K3s built-in LB or
   FortiGate virtual IP)
 - **Node failure tolerance**: Cluster MUST survive single node failure without service interruption
@@ -132,8 +132,9 @@ The K3s cluster MUST be configured for high availability across dedicated hardwa
   (Longhorn, NFS on Raspberry Pi, or local-path with awareness of single-point-of-failure)
 
 **Rationale**: HA configuration teaches production-grade cluster design, failure handling, and
-distributed system concepts. Physical hardware diversity (Lenovo + HP ProDesk) teaches heterogeneous
-cluster management. It ensures the learning environment remains operational during experimentation.
+distributed system concepts. 2-node control-plane provides basic HA (survives single control-plane
+failure) while 4-node cluster allows distributed workload placement. It ensures the learning
+environment remains operational during experimentation.
 
 ### VII. Test-Driven Learning (NON-NEGOTIABLE)
 
@@ -223,8 +224,8 @@ prevents connectivity issues during cluster bootstrap and teaches proper layered
 ## Project Context
 
 **Hardware**:
-- 3x Lenovo mini computers (control-plane nodes: master1, master2, master3)
-- 1x HP ProDesk mini computer (worker node: nodo1)
+- 2x Lenovo mini computers (control-plane nodes: master1, nodo03)
+- 2x worker nodes (nodo1, nodo04)
 - 1x FortiGate 100D (edge firewall/router)
 - 1x Raspberry Pi (auxiliary services node)
 

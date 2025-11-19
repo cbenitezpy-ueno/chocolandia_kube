@@ -105,3 +105,15 @@ variable "cluster_issuer" {
   type        = string
   default     = "letsencrypt-production"
 }
+
+variable "google_oauth_idp_id" {
+  description = "Google OAuth Identity Provider ID from Cloudflare Zero Trust (UUID)"
+  type        = string
+  default     = ""
+}
+
+variable "access_auto_redirect" {
+  description = "Automatically redirect to Google OAuth identity provider (skip Cloudflare login page)"
+  type        = bool
+  default     = true
+}

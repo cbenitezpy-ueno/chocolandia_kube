@@ -1,6 +1,9 @@
 ---
 # Homepage Widgets Configuration
 # Infrastructure monitoring widgets displayed on the dashboard
+#
+# Note: Widget refresh intervals are handled by Homepage internally (~30 seconds default)
+# Error handling: Homepage retries failed API calls automatically with exponential backoff
 
 - resources:
     backend: kubernetes
