@@ -13,6 +13,31 @@ terraform {
 }
 
 # ============================================================================
+# ConfigMap for Custom DNS Records
+# ============================================================================
+
+resource "kubernetes_config_map" "pihole_custom_dns" {
+  metadata {
+    name      = "pihole-custom-dns"
+    namespace = var.namespace
+
+    labels = {
+      app = "pihole"
+    }
+  }
+
+  data = {
+    "02-custom.conf" = <<-EOT
+      # Custom DNS records for local services
+      # Format: address=/domain/ip
+
+      # MinIO S3 API - accessible via Traefik on private network
+      address=/s3.chocolandiadc.com/192.168.4.202
+    EOT
+  }
+}
+
+# ============================================================================
 # Kubernetes Secret for Admin Password
 # ============================================================================
 
@@ -159,6 +184,12 @@ resource "kubernetes_deployment" "pihole" {
             mount_path = "/etc/pihole"
           }
 
+          volume_mount {
+            name       = "custom-dns"
+            mount_path = "/etc/dnsmasq.d/02-custom.conf"
+            sub_path   = "02-custom.conf"
+          }
+
           # Security Context
           security_context {
             capabilities {
@@ -211,6 +242,13 @@ resource "kubernetes_deployment" "pihole" {
           }
         }
 
+        volume {
+          name = "custom-dns"
+          config_map {
+            name = kubernetes_config_map.pihole_custom_dns.metadata[0].name
+          }
+        }
+
         # DNS Configuration (prevents DNS loop)
         dns_config {
           nameservers = ["8.8.8.8", "1.1.1.1"]
@@ -222,10 +260,11 @@ resource "kubernetes_deployment" "pihole" {
   # Wait for deployment to be ready
   wait_for_rollout = true
 
-  # Ensure PVC and Secret exist first
+  # Ensure PVC, Secret and ConfigMap exist first
   depends_on = [
     kubernetes_persistent_volume_claim.pihole_config,
-    kubernetes_secret.pihole_admin_password
+    kubernetes_secret.pihole_admin_password,
+    kubernetes_config_map.pihole_custom_dns
   ]
 }
 
