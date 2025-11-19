@@ -33,6 +33,10 @@ module "longhorn" {
   cluster_issuer           = var.cluster_issuer
   certificate_duration     = var.certificate_duration
   certificate_renew_before = var.certificate_renew_before
+
+  # Cloudflare Access Authentication
+  google_oauth_idp_id  = module.cloudflare_tunnel.access_identity_provider_id
+  access_auto_redirect = true
 }
 
 # ============================================================================

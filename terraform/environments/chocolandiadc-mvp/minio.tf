@@ -33,6 +33,10 @@ module "minio" {
   traefik_loadbalancer_ip = "192.168.4.201" # MetalLB assigned IP
   authorized_emails       = var.authorized_emails
   cluster_issuer          = var.cluster_issuer
+
+  # Cloudflare Access Authentication
+  google_oauth_idp_id  = module.cloudflare_tunnel.access_identity_provider_id
+  access_auto_redirect = true
 }
 
 # ============================================================================

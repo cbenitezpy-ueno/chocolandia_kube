@@ -36,7 +36,12 @@ resource "cloudflare_access_application" "minio_console" {
   domain     = var.console_domain
   type       = "self_hosted"
 
-  session_duration = "24h"
+  session_duration          = "24h"
+  auto_redirect_to_identity = var.access_auto_redirect # true (skip Cloudflare login page)
+
+  # Required when auto_redirect_to_identity is true
+  # Only allow Google OAuth identity provider (if configured)
+  allowed_idps = var.google_oauth_idp_id != "" ? [var.google_oauth_idp_id] : []
 
   # Logo and appearance
   logo_url = "https://raw.githubusercontent.com/minio/minio/master/.github/logo.svg"
