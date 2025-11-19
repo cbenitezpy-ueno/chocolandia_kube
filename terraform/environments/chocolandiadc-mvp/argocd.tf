@@ -68,6 +68,21 @@ output "argocd_cli_login" {
   value       = module.argocd.cli_login_command
 }
 
+output "argocd_cli_login_private" {
+  description = "ArgoCD CLI login command for private network"
+  value       = module.argocd.cli_login_command_private
+}
+
+output "argocd_nodeport" {
+  description = "ArgoCD NodePort for private network access"
+  value       = module.argocd.nodeport_http
+}
+
+output "argocd_private_urls" {
+  description = "ArgoCD URLs on private network"
+  value       = module.argocd.private_network_urls
+}
+
 # ==============================================================================
 # ArgoCD Application: Homepage Dashboard (Feature 009)
 # ==============================================================================

@@ -20,7 +20,7 @@
     - ArgoCD:
         icon: argocd.svg
         href: https://argocd.chocolandiadc.com
-        description: "🌐 Public: GitOps continuous delivery for Kubernetes"
+        description: "🌐 Public: GitOps continuous delivery for Kubernetes | 🏠 Private: http://192.168.4.101:30080"
         namespace: argocd
         app: argocd-server
 

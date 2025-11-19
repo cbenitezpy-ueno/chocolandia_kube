@@ -108,3 +108,33 @@ output "port_forward_command" {
   value       = "kubectl port-forward -n ${var.argocd_namespace} svc/argocd-server 8080:443"
   sensitive   = false
 }
+
+# ==============================================================================
+# Private Network Access (NodePort)
+# ==============================================================================
+
+output "nodeport_enabled" {
+  description = "Whether NodePort access is enabled"
+  value       = var.enable_nodeport
+}
+
+output "nodeport_http" {
+  description = "NodePort for HTTP access on private network"
+  value       = var.enable_nodeport ? var.nodeport_http : null
+}
+
+output "private_network_urls" {
+  description = "ArgoCD access URLs on private network (192.168.4.x)"
+  value = var.enable_nodeport ? [
+    "http://192.168.4.101:${var.nodeport_http}",
+    "http://192.168.4.102:${var.nodeport_http}",
+    "http://192.168.4.103:${var.nodeport_http}",
+    "http://192.168.4.104:${var.nodeport_http}",
+  ] : []
+}
+
+output "cli_login_command_private" {
+  description = "ArgoCD CLI login command for private network access"
+  value       = var.enable_nodeport ? "argocd login 192.168.4.101:${var.nodeport_http} --insecure" : null
+  sensitive   = false
+}
