@@ -42,3 +42,22 @@ variable "default_topic" {
   type        = string
   default     = "homelab-alerts"
 }
+
+variable "enable_auth" {
+  description = "Enable authentication for Ntfy"
+  type        = bool
+  default     = true
+}
+
+variable "auth_default_access" {
+  description = "Default access for unauthenticated users (deny-all, read-only, write-only, read-write)"
+  type        = string
+  default     = "read-only"
+}
+
+variable "admin_password" {
+  description = "Admin user password (will be hashed)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}

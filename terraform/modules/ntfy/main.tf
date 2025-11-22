@@ -63,9 +63,18 @@ resource "kubernetes_config_map" "ntfy_config" {
       # Enable web UI
       enable-web: true
 
+      # Authentication
+      auth-file: "/var/cache/ntfy/user.db"
+      auth-default-access: "${var.auth_default_access}"
+
       # Logging
       log-level: "info"
       log-format: "json"
+
+      # Rate limiting (prevent abuse)
+      visitor-subscription-limit: 30
+      visitor-request-limit-burst: 60
+      visitor-request-limit-replenish: "5s"
     EOT
   }
 }
