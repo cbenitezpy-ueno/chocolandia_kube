@@ -22,6 +22,8 @@ Auto-generated from all feature plans. Last updated: 2025-11-08
 - PostgreSQL database "beersystem_stage" with persistent storage via CloudNativePG PersistentVolumes (012-beersystem-deployment)
 - YAML (Homepage configuration), HCL (OpenTofu/Terraform 1.6+) + Homepage Docker image (ghcr.io/gethomepage/homepage), Kubernetes 1.28 (K3s), Helm, OpenTofu 1.6+ (001-homepage-update)
 - Kubernetes ConfigMaps for configuration persistence (services.yaml, widgets.yaml, settings.yaml, kubernetes.yaml) (001-homepage-update)
+- N/A (infrastructure deployment) + Redis 7.x (Docker image), Helm chart (bitnami/redis or equivalent), MetalLB LoadBalancer, Prometheus Redis Exporter (013-redis-deployment)
+- N/A (infrastructure deployment) + Redis 7.x (Bitnami Helm chart), MetalLB LoadBalancer, Prometheus Redis Exporter (013-redis-deployment)
 
 - HCL (OpenTofu) 1.6+, Bash scripting for validation (001-k3s-cluster-setup)
 
@@ -41,9 +43,9 @@ tests/
 HCL (Terraform) 1.6+, Bash scripting for validation: Follow standard conventions
 
 ## Recent Changes
+- 013-redis-deployment: Added N/A (infrastructure deployment) + Redis 7.x (Bitnami Helm chart), MetalLB LoadBalancer, Prometheus Redis Exporter
+- 013-redis-deployment: Added N/A (infrastructure deployment) + Redis 7.x (Docker image), Helm chart (bitnami/redis or equivalent), MetalLB LoadBalancer, Prometheus Redis Exporter
 - 001-homepage-update: Added YAML (Homepage configuration), HCL (OpenTofu/Terraform 1.6+) + Homepage Docker image (ghcr.io/gethomepage/homepage), Kubernetes 1.28 (K3s), Helm, OpenTofu 1.6+
-- 012-beersystem-deployment: Added Containerized application (existing Dockerfile), Kubernetes manifests (YAML), OpenTofu 1.6+ for database provisioning
-- 012-beersystem-deployment: Added Containerized application (existing Dockerfile), Kubernetes manifests (YAML), OpenTofu 1.6+ for database provisioning
 
 
 <!-- MANUAL ADDITIONS START -->
@@ -65,9 +67,10 @@ MetalLB Pool Configuration:
 | postgres-ha-postgresql-primary | postgresql | 192.168.4.200 | 5432/TCP | PostgreSQL HA Primary - Main database endpoint |
 | pihole-dns | default | 192.168.4.201 | 53/TCP, 53/UDP | Pi-hole DNS - Network-wide ad blocking and DNS |
 | traefik | traefik | 192.168.4.202 | 80/TCP, 443/TCP, 9100/TCP | Traefik Ingress Controller - Entry point for all HTTPS traffic + Prometheus metrics |
+| redis-shared-external | redis | 192.168.4.203 | 6379/TCP | Redis Shared - Cluster-wide caching service (primary + replica) |
 
 ### Available IPs
-- 192.168.4.203 - 192.168.4.210 (8 IPs available)
+- 192.168.4.204 - 192.168.4.210 (7 IPs available)
 
 ### Important Notes
 1. **Always use LoadBalancer type** for services that need to be accessible on standard ports (53, 80, 443, 5432, etc.)

@@ -95,7 +95,8 @@
       "Bash(SESSION_TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhcmdvY2QiLCJzdWIiOiJhZG1pbjpsb2dpbiIsImV4cCI6MTc2MzU5NDY2MiwibmJmIjoxNzYzNTA4MjYyLCJpYXQiOjE3NjM1MDgyNjIsImp0aSI6IjI3NDkyMzYxLTIzNTQtNDAwOS04MzNjLWEyYmNhYmJlYTQ0YiJ9.pupvuvM9UQ3qSn-el4HFRatHGhpm1QbpEubS_BxWjj4\")",
       "Bash(tofu output:*)",
       "Bash(tofu state show:*)",
-      "Bash(.gitignore)"
+      "Bash(.gitignore)",
+      "Bash(.specify/scripts/bash/update-agent-context.sh:*)"
     ],
     "deny": [],
     "ask": []
