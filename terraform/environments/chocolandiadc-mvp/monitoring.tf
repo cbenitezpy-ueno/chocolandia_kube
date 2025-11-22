@@ -273,6 +273,7 @@ resource "helm_release" "kube_prometheus_stack" {
         # Pre-configured dashboards
         dashboards = {
           default = {
+            # Cluster Overview
             "k3s-cluster-overview" = {
               gnetId     = 15282 # K3s cluster monitoring dashboard
               revision   = 1
@@ -285,6 +286,37 @@ resource "helm_release" "kube_prometheus_stack" {
             }
             "kubernetes-cluster-monitoring" = {
               gnetId     = 7249 # Kubernetes Cluster Monitoring
+              revision   = 1
+              datasource = "Prometheus"
+            }
+            # Application Dashboards (Golden Signals)
+            "traefik" = {
+              gnetId     = 17346 # Traefik Official Standalone Dashboard
+              revision   = 9
+              datasource = "Prometheus"
+            }
+            "redis" = {
+              gnetId     = 763 # Redis Dashboard
+              revision   = 6
+              datasource = "Prometheus"
+            }
+            "postgresql" = {
+              gnetId     = 9628 # PostgreSQL Database
+              revision   = 7
+              datasource = "Prometheus"
+            }
+            "longhorn" = {
+              gnetId     = 16888 # Longhorn Dashboard
+              revision   = 9
+              datasource = "Prometheus"
+            }
+            "coredns" = {
+              gnetId     = 15038 # CoreDNS
+              revision   = 3
+              datasource = "Prometheus"
+            }
+            "kubernetes-pods" = {
+              gnetId     = 6417 # Kubernetes Pods
               revision   = 1
               datasource = "Prometheus"
             }
