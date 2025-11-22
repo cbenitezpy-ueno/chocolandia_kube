@@ -1,0 +1,207 @@
+# Ntfy API Contract
+# Defines the API endpoints and payloads for Ntfy notifications
+# Feature: 014-monitoring-alerts
+
+openapi: 3.0.3
+info:
+  title: Ntfy Notification API
+  description: |
+    API contract for sending notifications to Ntfy server.
+    Alertmanager will POST to these endpoints via webhook receiver.
+  version: 1.0.0
+
+servers:
+  - url: http://ntfy.ntfy.svc.cluster.local
+    description: Internal K8s service
+  - url: https://ntfy.chocolandia.com
+    description: External via Cloudflare (for subscriptions)
+
+paths:
+  /{topic}:
+    post:
+      summary: Publish notification to topic
+      description: Send a notification message to all subscribers of the topic
+      parameters:
+        - name: topic
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[a-zA-Z0-9_-]+$'
+            example: homelab-alerts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Notification'
+            examples:
+              critical_alert:
+                summary: Critical node down alert
+                value:
+                  topic: homelab-alerts
+                  title: "[FIRING] NodeDown"
+                  message: |
+                    🚨 Node master1 is down
+
+                    Node master1:9100 has been unreachable for more than 1 minute.
+
+                    Severity: critical
+                    Started: 2025-11-22 15:30:00
+                  priority: 5
+                  tags:
+                    - rotating_light
+                    - warning
+                  click: https://grafana.chocolandia.com/d/nodes
+
+              resolved_alert:
+                summary: Resolved alert notification
+                value:
+                  topic: homelab-alerts
+                  title: "[RESOLVED] NodeDown"
+                  message: |
+                    ✅ RESOLVED: Node master1 is back online
+
+                    Alert resolved at 2025-11-22 15:35:00
+                  priority: 2
+                  tags:
+                    - white_check_mark
+                  click: https://grafana.chocolandia.com/d/nodes
+      responses:
+        '200':
+          description: Notification sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: Unique message ID
+                  time:
+                    type: integer
+                    description: Unix timestamp
+                  event:
+                    type: string
+                    enum: [message]
+                  topic:
+                    type: string
+        '400':
+          description: Invalid request (bad topic, invalid JSON)
+        '429':
+          description: Rate limited
+        '500':
+          description: Server error
+
+    get:
+      summary: Subscribe to topic (SSE/WebSocket)
+      description: |
+        Open a long-lived connection to receive notifications.
+        Used by mobile apps and web clients.
+      parameters:
+        - name: topic
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: since
+          in: query
+          schema:
+            type: string
+            description: Fetch messages since time (all, 1h, 1d, etc.)
+      responses:
+        '200':
+          description: SSE stream of notifications
+
+components:
+  schemas:
+    Notification:
+      type: object
+      required:
+        - topic
+        - message
+      properties:
+        topic:
+          type: string
+          description: Target topic name
+          example: homelab-alerts
+        title:
+          type: string
+          description: Notification title
+          maxLength: 256
+          example: "[FIRING] NodeDown"
+        message:
+          type: string
+          description: Notification body
+          maxLength: 4096
+        priority:
+          type: integer
+          description: |
+            Priority level:
+            - 1: min (no sound, no vibration)
+            - 2: low (no sound)
+            - 3: default
+            - 4: high
+            - 5: urgent (persistent notification)
+          minimum: 1
+          maximum: 5
+          default: 3
+        tags:
+          type: array
+          description: Tags/emojis for categorization
+          items:
+            type: string
+          example:
+            - warning
+            - rotating_light
+        click:
+          type: string
+          format: uri
+          description: URL to open when notification clicked
+          example: https://grafana.chocolandia.com
+        attach:
+          type: string
+          format: uri
+          description: URL of attachment (image, file)
+        filename:
+          type: string
+          description: Attachment filename
+        delay:
+          type: string
+          description: Delay before sending (e.g., "30m", "1h")
+        email:
+          type: string
+          format: email
+          description: Email to send notification to
+
+# Alertmanager -> Ntfy Payload Mapping
+#
+# Alertmanager sends JSON like:
+# {
+#   "status": "firing",
+#   "alerts": [
+#     {
+#       "status": "firing",
+#       "labels": { "alertname": "NodeDown", "severity": "critical", ... },
+#       "annotations": { "summary": "...", "description": "..." },
+#       "startsAt": "2025-01-01T00:00:00Z",
+#       "generatorURL": "http://prometheus:9090/..."
+#     }
+#   ],
+#   "groupLabels": { ... },
+#   "commonLabels": { ... },
+#   "commonAnnotations": { ... }
+# }
+#
+# Ntfy expects:
+# {
+#   "topic": "homelab-alerts",
+#   "title": "[FIRING] NodeDown",
+#   "message": "Node master1 is down...",
+#   "priority": 5,
+#   "tags": ["warning"]
+# }
+#
+# Note: Alertmanager webhook sends raw payload. We need alertmanager-ntfy-bridge
+# or use Alertmanager templates to format the message properly.
+# Alternative: Use ntfy's native Alertmanager webhook format support.

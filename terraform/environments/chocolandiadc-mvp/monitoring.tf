@@ -186,6 +186,69 @@ resource "helm_release" "kube_prometheus_stack" {
         }
       }
 
+      # Alertmanager configuration for Ntfy notifications
+      alertmanager = {
+        alertmanagerSpec = {
+          alertmanagerConfigMatcherStrategy = {
+            type = "None"
+          }
+        }
+        config = {
+          global = {
+            resolve_timeout = "5m"
+          }
+          route = {
+            receiver        = "ntfy-homelab"
+            group_by        = ["alertname", "namespace", "severity"]
+            group_wait      = "30s"
+            group_interval  = "5m"
+            repeat_interval = "4h"
+            routes = [
+              {
+                receiver        = "ntfy-critical"
+                matchers        = ["severity=critical"]
+                repeat_interval = "1h"
+                continue        = false
+              },
+              {
+                receiver = "null"
+                matchers = ["alertname=Watchdog"]
+              }
+            ]
+          }
+          receivers = [
+            {
+              name = "null"
+            },
+            {
+              name = "ntfy-homelab"
+              webhook_configs = [
+                {
+                  url           = "http://ntfy.ntfy.svc.cluster.local/homelab-alerts"
+                  send_resolved = true
+                }
+              ]
+            },
+            {
+              name = "ntfy-critical"
+              webhook_configs = [
+                {
+                  url           = "http://ntfy.ntfy.svc.cluster.local/homelab-alerts"
+                  send_resolved = true
+                }
+              ]
+            }
+          ]
+          inhibit_rules = [
+            {
+              source_matchers = ["severity=critical"]
+              target_matchers = ["severity=warning"]
+              equal           = ["alertname", "namespace"]
+            }
+          ]
+        }
+      }
+
       # Grafana dashboards configuration
       grafana = {
         dashboardProviders = {

@@ -24,6 +24,8 @@ Auto-generated from all feature plans. Last updated: 2025-11-08
 - Kubernetes ConfigMaps for configuration persistence (services.yaml, widgets.yaml, settings.yaml, kubernetes.yaml) (001-homepage-update)
 - N/A (infrastructure deployment) + Redis 7.x (Docker image), Helm chart (bitnami/redis or equivalent), MetalLB LoadBalancer, Prometheus Redis Exporter (013-redis-deployment)
 - N/A (infrastructure deployment) + Redis 7.x (Bitnami Helm chart), MetalLB LoadBalancer, Prometheus Redis Exporter (013-redis-deployment)
+- HCL (OpenTofu 1.6+), YAML (Kubernetes manifests), Bash (scripts de validación) + Prometheus (kube-prometheus-stack Helm chart), Grafana, Alertmanager, Ntfy (014-monitoring-alerts)
+- Kubernetes PersistentVolumes via local-path-provisioner (métricas 7-14 días retención) (014-monitoring-alerts)
 
 - HCL (OpenTofu) 1.6+, Bash scripting for validation (001-k3s-cluster-setup)
 
@@ -43,9 +45,9 @@ tests/
 HCL (Terraform) 1.6+, Bash scripting for validation: Follow standard conventions
 
 ## Recent Changes
+- 014-monitoring-alerts: Added HCL (OpenTofu 1.6+), YAML (Kubernetes manifests), Bash (scripts de validación) + Prometheus (kube-prometheus-stack Helm chart), Grafana, Alertmanager, Ntfy
 - 013-redis-deployment: Added N/A (infrastructure deployment) + Redis 7.x (Bitnami Helm chart), MetalLB LoadBalancer, Prometheus Redis Exporter
 - 013-redis-deployment: Added N/A (infrastructure deployment) + Redis 7.x (Docker image), Helm chart (bitnami/redis or equivalent), MetalLB LoadBalancer, Prometheus Redis Exporter
-- 001-homepage-update: Added YAML (Homepage configuration), HCL (OpenTofu/Terraform 1.6+) + Homepage Docker image (ghcr.io/gethomepage/homepage), Kubernetes 1.28 (K3s), Helm, OpenTofu 1.6+
 
 
 <!-- MANUAL ADDITIONS START -->
@@ -88,3 +90,4 @@ MetalLB Pool Configuration:
 - Traefik service: Managed by Helm chart (already configured as LoadBalancer)
 
 <!-- MANUAL ADDITIONS END -->
+- ~/.ssh/id_ed25519_k3s  es el key para entrar a los nodos

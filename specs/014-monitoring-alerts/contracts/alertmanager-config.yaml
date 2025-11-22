@@ -1,0 +1,158 @@
+# Alertmanager Configuration Contract
+# Defines routing and receivers for alert notifications
+# Feature: 014-monitoring-alerts
+
+# This configuration will be applied via Helm values or Secret
+# Target: alertmanager-config Secret in monitoring namespace
+
+global:
+  resolve_timeout: 5m
+
+# Inhibition rules to prevent notification spam
+inhibit_rules:
+  # If NodeDown fires, suppress NodeHighCPU/Memory for same node
+  - source_matchers:
+      - alertname = "NodeDown"
+    target_matchers:
+      - alertname =~ "NodeHigh.*"
+    equal: ['instance']
+
+  # If critical fires, suppress warning for same alert
+  - source_matchers:
+      - severity = "critical"
+    target_matchers:
+      - severity = "warning"
+    equal: ['alertname', 'namespace', 'pod']
+
+# Route tree for alert delivery
+route:
+  # Default receiver
+  receiver: 'ntfy-default'
+
+  # How long to wait before sending initial notification
+  group_wait: 30s
+
+  # How long to wait before sending notifications for new alerts in same group
+  group_interval: 5m
+
+  # How long to wait before re-sending a notification
+  repeat_interval: 4h
+
+  # Group alerts by these labels
+  group_by: ['alertname', 'namespace', 'severity']
+
+  # Child routes for specific handling
+  routes:
+    # Critical alerts - immediate delivery, shorter repeat
+    - matchers:
+        - severity = "critical"
+      receiver: 'ntfy-critical'
+      group_wait: 10s
+      group_interval: 1m
+      repeat_interval: 1h
+      continue: false
+
+    # Warning alerts - standard delivery
+    - matchers:
+        - severity = "warning"
+      receiver: 'ntfy-warning'
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 4h
+      continue: false
+
+    # Info alerts - low priority, longer intervals
+    - matchers:
+        - severity = "info"
+      receiver: 'ntfy-info'
+      group_wait: 1m
+      group_interval: 10m
+      repeat_interval: 12h
+      continue: false
+
+# Receivers define where alerts are sent
+receivers:
+  # Default receiver (fallback)
+  - name: 'ntfy-default'
+    webhook_configs:
+      - url: 'http://ntfy.ntfy.svc.cluster.local/homelab-alerts'
+        send_resolved: true
+        http_config:
+          follow_redirects: true
+
+  # Critical alerts - high priority with dashboard link
+  - name: 'ntfy-critical'
+    webhook_configs:
+      - url: 'http://ntfy.ntfy.svc.cluster.local/homelab-alerts'
+        send_resolved: true
+        http_config:
+          follow_redirects: true
+          headers:
+            X-Click: 'https://grafana.chocolandia.com/d/alerting'
+            X-Priority: '5'
+            X-Tags: 'rotating_light,warning'
+
+  # Warning alerts - default priority with dashboard link
+  - name: 'ntfy-warning'
+    webhook_configs:
+      - url: 'http://ntfy.ntfy.svc.cluster.local/homelab-alerts'
+        send_resolved: true
+        http_config:
+          follow_redirects: true
+          headers:
+            X-Click: 'https://grafana.chocolandia.com/d/alerting'
+            X-Priority: '3'
+            X-Tags: 'warning'
+
+  # Info alerts - low priority with dashboard link
+  - name: 'ntfy-info'
+    webhook_configs:
+      - url: 'http://ntfy.ntfy.svc.cluster.local/homelab-alerts'
+        send_resolved: true
+        http_config:
+          follow_redirects: true
+          headers:
+            X-Click: 'https://grafana.chocolandia.com/d/alerting'
+            X-Priority: '2'
+            X-Tags: 'information_source'
+
+# Templates for notification formatting
+templates:
+  - '/etc/alertmanager/config/*.tmpl'
+
+---
+# Notification Template for Ntfy
+# File: ntfy.tmpl
+# This will be mounted as ConfigMap
+
+{{ define "ntfy.title" }}
+[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}
+{{ end }}
+
+{{ define "ntfy.message" }}
+{{ if eq .Status "firing" }}
+🚨 {{ .CommonAnnotations.summary }}
+
+{{ .CommonAnnotations.description }}
+
+Namespace: {{ .CommonLabels.namespace }}
+Severity: {{ .CommonLabels.severity }}
+Started: {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+{{ else }}
+✅ RESOLVED: {{ .CommonAnnotations.summary }}
+
+Alert resolved at {{ .EndsAt.Format "2006-01-02 15:04:05" }}
+{{ end }}
+{{ end }}
+
+{{ define "ntfy.priority" }}
+{{ if eq .CommonLabels.severity "critical" }}5{{ else if eq .CommonLabels.severity "warning" }}3{{ else }}2{{ end }}
+{{ end }}
+
+{{ define "ntfy.tags" }}
+{{ if eq .Status "firing" }}
+{{ if eq .CommonLabels.severity "critical" }}rotating_light,warning{{ else if eq .CommonLabels.severity "warning" }}warning{{ else }}information_source{{ end }}
+{{ else }}
+white_check_mark
+{{ end }}
+{{ end }}

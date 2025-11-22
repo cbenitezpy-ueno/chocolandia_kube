@@ -1,0 +1,180 @@
+# Alert Rules Contract
+# These rules will be deployed as PrometheusRule CRD
+# Feature: 014-monitoring-alerts
+
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: homelab-alerts
+  namespace: monitoring
+  labels:
+    release: prometheus-stack
+spec:
+  groups:
+    # ============================================
+    # Node Alerts (P1 - Critical Infrastructure)
+    # ============================================
+    - name: node-alerts
+      rules:
+        - alert: NodeDown
+          expr: up{job="node-exporter"} == 0
+          for: 1m
+          labels:
+            severity: critical
+            category: infrastructure
+          annotations:
+            summary: "Node {{ $labels.instance }} is down"
+            description: "Node {{ $labels.instance }} has been unreachable for more than 1 minute."
+            runbook_url: "https://github.com/cbenitez/chocolandia_kube/wiki/Runbook-NodeDown"
+
+        - alert: NodeNotReady
+          expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+          for: 2m
+          labels:
+            severity: critical
+            category: infrastructure
+          annotations:
+            summary: "Node {{ $labels.node }} is NotReady"
+            description: "Kubernetes node {{ $labels.node }} has been in NotReady state for more than 2 minutes."
+
+        - alert: NodeHighCPU
+          expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+          for: 5m
+          labels:
+            severity: warning
+            category: resources
+          annotations:
+            summary: "High CPU usage on {{ $labels.instance }}"
+            description: "CPU usage on {{ $labels.instance }} is above 85% for more than 5 minutes. Current: {{ $value | printf \"%.1f\" }}%"
+
+        - alert: NodeHighMemory
+          expr: (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 > 85
+          for: 5m
+          labels:
+            severity: warning
+            category: resources
+          annotations:
+            summary: "High memory usage on {{ $labels.instance }}"
+            description: "Memory usage on {{ $labels.instance }} is above 85% for more than 5 minutes. Current: {{ $value | printf \"%.1f\" }}%"
+
+        - alert: NodeDiskSpaceWarning
+          expr: (1 - node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes) * 100 > 80
+          for: 5m
+          labels:
+            severity: warning
+            category: resources
+          annotations:
+            summary: "Disk space warning on {{ $labels.instance }}"
+            description: "Disk {{ $labels.mountpoint }} on {{ $labels.instance }} is above 80% full. Current: {{ $value | printf \"%.1f\" }}%"
+
+        - alert: NodeDiskSpaceCritical
+          expr: (1 - node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes) * 100 > 90
+          for: 2m
+          labels:
+            severity: critical
+            category: resources
+          annotations:
+            summary: "Disk space critical on {{ $labels.instance }}"
+            description: "Disk {{ $labels.mountpoint }} on {{ $labels.instance }} is above 90% full. Immediate action required! Current: {{ $value | printf \"%.1f\" }}%"
+
+    # ============================================
+    # Service Alerts (P1 - Application Health)
+    # ============================================
+    - name: service-alerts
+      rules:
+        - alert: DeploymentUnavailable
+          expr: kube_deployment_status_replicas_available == 0 and kube_deployment_spec_replicas > 0
+          for: 2m
+          labels:
+            severity: critical
+            category: application
+          annotations:
+            summary: "Deployment {{ $labels.namespace }}/{{ $labels.deployment }} has no available replicas"
+            description: "Deployment {{ $labels.deployment }} in namespace {{ $labels.namespace }} has 0 available replicas for more than 2 minutes."
+
+        - alert: PodCrashLooping
+          expr: increase(kube_pod_container_status_restarts_total[15m]) > 3
+          for: 3m
+          labels:
+            severity: warning
+            category: application
+          annotations:
+            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is crash looping"
+            description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has restarted {{ $value | printf \"%.0f\" }} times in the last 15 minutes."
+
+        - alert: PodNotReady
+          expr: kube_pod_status_phase{phase=~"Pending|Unknown"} == 1
+          for: 5m
+          labels:
+            severity: warning
+            category: application
+          annotations:
+            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is not ready"
+            description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has been in {{ $labels.phase }} state for more than 5 minutes."
+
+        - alert: PodImagePullError
+          expr: kube_pod_container_status_waiting_reason{reason=~"ImagePullBackOff|ErrImagePull"} == 1
+          for: 3m
+          labels:
+            severity: warning
+            category: application
+          annotations:
+            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} has image pull error"
+            description: "Container {{ $labels.container }} in pod {{ $labels.pod }} ({{ $labels.namespace }}) cannot pull image."
+
+    # ============================================
+    # Golden Signals Alerts (P2 - Performance)
+    # ============================================
+    - name: golden-signals
+      rules:
+        - alert: HighErrorRate
+          expr: |
+            sum(rate(traefik_service_requests_total{code=~"5.."}[5m])) by (service)
+            /
+            sum(rate(traefik_service_requests_total[5m])) by (service)
+            > 0.05
+          for: 5m
+          labels:
+            severity: warning
+            category: performance
+          annotations:
+            summary: "High error rate for {{ $labels.service }}"
+            description: "Service {{ $labels.service }} has error rate above 5%. Current: {{ $value | printf \"%.2f\" }}%"
+
+        - alert: HighLatency
+          expr: |
+            histogram_quantile(0.95,
+              sum(rate(traefik_service_request_duration_seconds_bucket[5m])) by (service, le)
+            ) > 2
+          for: 5m
+          labels:
+            severity: warning
+            category: performance
+          annotations:
+            summary: "High latency for {{ $labels.service }}"
+            description: "Service {{ $labels.service }} has p95 latency above 2 seconds. Current: {{ $value | printf \"%.2f\" }}s"
+
+    # ============================================
+    # Monitoring Stack Health
+    # ============================================
+    - name: monitoring-health
+      rules:
+        - alert: PrometheusTargetDown
+          expr: up == 0
+          for: 5m
+          labels:
+            severity: warning
+            category: monitoring
+          annotations:
+            summary: "Prometheus target {{ $labels.job }}/{{ $labels.instance }} is down"
+            description: "Prometheus cannot scrape target {{ $labels.instance }} for job {{ $labels.job }}."
+
+        - alert: NtfyDown
+          expr: up{job="ntfy"} == 0
+          for: 2m
+          labels:
+            severity: critical
+            category: monitoring
+          annotations:
+            summary: "Ntfy notification service is down"
+            description: "Ntfy service is unreachable. Alerts will not be delivered to mobile devices!"
