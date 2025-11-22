@@ -1,0 +1,172 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "24"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"beersystem","argocd.argoproj.io/instance":"beersystem-staging","component":"backend"},"name":"beersystem-backend","namespace":"beersystem"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"beersystem","component":"backend"}},"template":{"metadata":{"labels":{"app":"beersystem","component":"backend"}},"spec":{"containers":[{"env":[{"name":"DATABASE_URL","valueFrom":{"secretKeyRef":{"key":"DATABASE_URL","name":"beersystem-db-credentials"}}},{"name":"DB_HOST","valueFrom":{"secretKeyRef":{"key":"DB_HOST","name":"beersystem-db-credentials"}}},{"name":"DB_PORT","valueFrom":{"secretKeyRef":{"key":"DB_PORT","name":"beersystem-db-credentials"}}},{"name":"DB_NAME","valueFrom":{"secretKeyRef":{"key":"DB_NAME","name":"beersystem-db-credentials"}}},{"name":"DB_USER","valueFrom":{"secretKeyRef":{"key":"DB_USER","name":"beersystem-db-credentials"}}},{"name":"DB_PASSWORD","valueFrom":{"secretKeyRef":{"key":"DB_PASSWORD","name":"beersystem-db-credentials"}}},{"name":"DB_PASS","valueFrom":{"secretKeyRef":{"key":"DB_PASSWORD","name":"beersystem-db-credentials"}}},{"name":"JWT_SECRET","valueFrom":{"secretKeyRef":{"key":"JWT_SECRET","name":"beersystem-db-credentials"}}},{"name":"NODE_ENV","valueFrom":{"configMapKeyRef":{"key":"NODE_ENV","name":"beersystem-config"}}},{"name":"LOG_LEVEL","valueFrom":{"configMapKeyRef":{"key":"LOG_LEVEL","name":"beersystem-config"}}},{"name":"PORT","value":"3001"},{"name":"AWS_S3_BUCKET_NAME","value":"beersystem-files-staging"},{"name":"AWS_REGION","value":"us-east-1"},{"name":"REDIS_HOST","value":"redis.beersystem.svc.cluster.local"},{"name":"REDIS_PORT","value":"6379"},{"name":"DB_SSL","value":"false"},{"name":"GOOGLE_CLIENT_ID","value":"dummy-client-id-for-staging"},{"name":"GOOGLE_CLIENT_SECRET","value":"dummy-client-secret-for-staging"}],"image":"992382722562.dkr.ecr.us-east-1.amazonaws.com/beer-awards-backend:staging","imagePullPolicy":"Always","livenessProbe":{"failureThreshold":3,"httpGet":{"path":"/api/v1/health","port":"http"},"initialDelaySeconds":30,"periodSeconds":10,"timeoutSeconds":5},"name":"backend","ports":[{"containerPort":3001,"name":"http","protocol":"TCP"}],"readinessProbe":{"failureThreshold":2,"httpGet":{"path":"/api/v1/health","port":"http"},"initialDelaySeconds":10,"periodSeconds":5,"timeoutSeconds":3},"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"100m","memory":"256Mi"}}}],"imagePullSecrets":[{"name":"ecr-registry-secret"}],"securityContext":{"fsGroup":1000,"runAsNonRoot":true,"runAsUser":1000}}}}}
+  creationTimestamp: "2025-11-16T00:13:08Z"
+  generation: 25
+  labels:
+    app: beersystem
+    argocd.argoproj.io/instance: beersystem-staging
+    component: backend
+  name: beersystem-backend
+  namespace: beersystem
+  resourceVersion: "2394714"
+  uid: 24f8033e-16fa-4b68-94e0-488060a8aab0
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: beersystem
+      component: backend
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/restartedAt: "2025-11-16T09:56:14-03:00"
+      creationTimestamp: null
+      labels:
+        app: beersystem
+        component: backend
+    spec:
+      containers:
+      - env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              key: DATABASE_URL
+              name: beersystem-db-credentials
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              key: DB_HOST
+              name: beersystem-db-credentials
+        - name: DB_PORT
+          valueFrom:
+            secretKeyRef:
+              key: DB_PORT
+              name: beersystem-db-credentials
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              key: DB_NAME
+              name: beersystem-db-credentials
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              key: DB_USER
+              name: beersystem-db-credentials
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: DB_PASSWORD
+              name: beersystem-db-credentials
+        - name: DB_PASS
+          valueFrom:
+            secretKeyRef:
+              key: DB_PASSWORD
+              name: beersystem-db-credentials
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              key: JWT_SECRET
+              name: beersystem-db-credentials
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              key: NODE_ENV
+              name: beersystem-config
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              key: LOG_LEVEL
+              name: beersystem-config
+        - name: PORT
+          value: "3001"
+        - name: AWS_S3_BUCKET_NAME
+          value: beersystem-files-staging
+        - name: AWS_REGION
+          value: us-east-1
+        - name: REDIS_HOST
+          value: redis.beersystem.svc.cluster.local
+        - name: REDIS_PORT
+          value: "6379"
+        - name: DB_SSL
+          value: "false"
+        - name: GOOGLE_CLIENT_ID
+          value: dummy-client-id-for-staging
+        - name: GOOGLE_CLIENT_SECRET
+          value: dummy-client-secret-for-staging
+        image: 992382722562.dkr.ecr.us-east-1.amazonaws.com/beer-awards-backend:staging
+        imagePullPolicy: Always
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /api/v1/health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        name: backend
+        ports:
+        - containerPort: 3001
+          name: http
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 2
+          httpGet:
+            path: /api/v1/health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 3
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 256Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      imagePullSecrets:
+      - name: ecr-registry-secret
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        fsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2025-11-16T12:56:30Z"
+    lastUpdateTime: "2025-11-16T12:56:30Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2025-11-16T12:39:34Z"
+    lastUpdateTime: "2025-11-20T22:53:14Z"
+    message: ReplicaSet "beersystem-backend-69db977dd8" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 25
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1

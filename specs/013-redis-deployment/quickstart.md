@@ -620,6 +620,327 @@ redis-cli -h localhost -p 6379 -a "$REDIS_PASSWORD"
 
 ---
 
+## Beersystem Migration Rollback Procedure
+
+This section documents the rollback procedure if the beersystem migration to redis-shared fails or causes issues.
+
+### When to Rollback
+
+Initiate rollback if any of these conditions occur:
+
+1. **Health Checks Failing**: `/api/v1/health` endpoint returns errors after migration
+2. **High Error Rate**: Backend logs show connection errors to Redis
+3. **Authentication Failures**: NOAUTH or WRONGPASS errors in logs
+4. **Application Not Starting**: Beersystem backend pods in CrashLoopBackOff
+5. **Functional Testing Fails**: Core beersystem features not working after migration
+
+### Rollback Decision Window
+
+- **Immediate Rollback** (0-30 minutes): If migration causes immediate failures
+- **Quick Rollback** (30 minutes - 4 hours): If issues discovered during validation
+- **Considered Rollback** (4-24 hours): If performance degradation or intermittent issues detected
+- **Full Analysis Required** (>24 hours): Requires investigation before rollback decision
+
+---
+
+### Method 1: Kubectl Restore (Fastest - 2-3 minutes)
+
+Use this method for immediate rollback when speed is critical.
+
+#### Step 1: Scale Down Current Deployment
+
+```bash
+# Scale down the migrated deployment
+kubectl scale deployment beersystem-backend -n beersystem --replicas=0
+
+# Wait for pods to terminate
+kubectl get pods -n beersystem -w
+# Press Ctrl+C when no backend pods remain
+```
+
+#### Step 2: Verify Old Redis is Still Running
+
+```bash
+# Check if original Redis deployment exists
+kubectl get deployment redis -n beersystem
+
+# Expected output:
+# NAME    READY   UP-TO-DATE   AVAILABLE   AGE
+# redis   1/1     1            1           XXd
+
+# If Redis was already deleted, you need to restore it first:
+kubectl apply -f specs/013-redis-deployment/beersystem-redis-backup-original.yaml
+kubectl wait --for=condition=available deployment/redis -n beersystem --timeout=60s
+```
+
+#### Step 3: Restore Original Deployment
+
+```bash
+# Apply the backup deployment manifest
+kubectl apply -f specs/013-redis-deployment/beersystem-backend-backup-original.yaml
+
+# Wait for deployment to become available
+kubectl rollout status deployment/beersystem-backend -n beersystem --timeout=120s
+
+# Verify pod is running
+kubectl get pods -n beersystem -l component=backend
+```
+
+#### Step 4: Validate Restoration
+
+```bash
+# Run beersystem validation tests
+./scripts/redis-shared/test-beersystem.sh
+
+# Check backend logs for errors
+kubectl logs -n beersystem -l component=backend --tail=50
+
+# Verify health endpoint
+kubectl run curl-test \
+  --namespace=beersystem \
+  --image=curlimages/curl:latest \
+  --restart=Never \
+  --command -- curl -s http://beersystem-backend:3001/api/v1/health
+
+# Expected response should contain: "status":"ok" or "status":"healthy"
+
+# Cleanup test pod
+kubectl delete pod curl-test -n beersystem
+```
+
+**Expected Recovery Time**: 2-3 minutes from Step 1 to operational backend
+
+---
+
+### Method 2: OpenTofu Rollback (Clean State - 5-10 minutes)
+
+Use this method when you need to ensure Terraform state is consistent.
+
+#### Step 1: Comment Out Migration Module
+
+```bash
+# Edit environment configuration
+cd terraform/environments/chocolandiadc-mvp
+
+# Edit beersystem-migration.tf
+# Comment out the entire module block:
+# module "beersystem_migration" {
+#   source = "../../modules/beersystem-migration"
+#   ...
+# }
+```
+
+#### Step 2: Apply to Remove Migration
+
+```bash
+# Plan the removal
+tofu plan -out=rollback.tfplan
+
+# Review plan - should show destruction of beersystem-backend manifest
+# Apply the plan
+tofu apply rollback.tfplan
+```
+
+#### Step 3: Restore Original Deployment
+
+```bash
+# Verify old Redis is running
+kubectl get deployment redis -n beersystem
+
+# Restore original beersystem-backend
+kubectl apply -f specs/013-redis-deployment/beersystem-backend-backup-original.yaml
+
+# Wait for rollout
+kubectl rollout status deployment/beersystem-backend -n beersystem
+```
+
+#### Step 4: Validate and Clean Up
+
+```bash
+# Run validation
+./scripts/redis-shared/test-beersystem.sh
+
+# Remove commented migration module from beersystem-migration.tf
+# Or delete the file entirely if migration is permanently abandoned
+```
+
+**Expected Recovery Time**: 5-10 minutes from Step 1 to operational backend
+
+---
+
+### Method 3: Partial Rollback (Keep redis-shared Running)
+
+Use this if other services are already using redis-shared successfully.
+
+This method only rolls back beersystem while keeping redis-shared operational for future migrations.
+
+#### Step 1: Scale Down Beersystem
+
+```bash
+# Scale down migrated beersystem
+kubectl scale deployment beersystem-backend -n beersystem --replicas=0
+kubectl get pods -n beersystem -w
+```
+
+#### Step 2: Update Deployment to Point Back to Old Redis
+
+```bash
+# Edit beersystem-migration.tf
+cd terraform/environments/chocolandiadc-mvp
+
+# Change replicas temporarily to 0
+# module "beersystem_migration" {
+#   ...
+#   replicas = 0
+# }
+
+# Apply to ensure state is synchronized
+tofu apply -auto-approve
+
+# Now restore original deployment
+kubectl apply -f specs/013-redis-deployment/beersystem-backend-backup-original.yaml
+```
+
+#### Step 3: Remove Migration Module from State
+
+```bash
+# Remove the migration module from Terraform state
+tofu state rm module.beersystem_migration.kubernetes_manifest.beersystem_backend_patch
+
+# Comment out or delete beersystem-migration.tf
+```
+
+#### Step 4: Keep redis-shared for Future Use
+
+```bash
+# Verify redis-shared is still operational
+kubectl get pods -n redis
+helm list -n redis | grep redis-shared
+
+# redis-shared remains available for other applications or future retry
+```
+
+**Expected Recovery Time**: 5-7 minutes
+
+---
+
+### Post-Rollback Actions
+
+After successful rollback, perform these actions:
+
+#### 1. Incident Documentation
+
+```bash
+# Create incident report
+cat > specs/013-redis-deployment/rollback-$(date +%Y%m%d-%H%M).md <<EOF
+# Beersystem Migration Rollback Report
+
+**Date**: $(date)
+**Rollback Reason**: [Describe why rollback was needed]
+**Rollback Method Used**: [Method 1, 2, or 3]
+**Recovery Time**: [Actual time from detection to operational]
+
+## Timeline
+- [HH:MM] Migration executed
+- [HH:MM] Issue detected: [Description]
+- [HH:MM] Rollback initiated
+- [HH:MM] Service restored
+
+## Root Cause
+[Describe what went wrong]
+
+## Lessons Learned
+[What to do differently next time]
+
+## Next Steps
+[How to prevent this issue in future migration attempts]
+EOF
+```
+
+#### 2. Verify Beersystem Functionality
+
+```bash
+# Extended validation (5-10 minutes)
+./scripts/redis-shared/test-beersystem.sh
+
+# Monitor logs for 5 minutes
+kubectl logs -n beersystem -l component=backend -f
+# Press Ctrl+C after 5 minutes of clean logs
+
+# Check metrics in Grafana (if available)
+# - Request rate back to normal
+# - Error rate returned to baseline
+# - Response time within SLA
+```
+
+#### 3. Clean Up Migration Artifacts (Optional)
+
+```bash
+# If migration is permanently abandoned:
+
+# Delete beersystem-migration.tf
+rm terraform/environments/chocolandiadc-mvp/beersystem-migration.tf
+
+# Remove migration module
+rm -rf terraform/modules/beersystem-migration/
+
+# Update tasks.md to mark migration as abandoned
+# Document reason in specs/013-redis-deployment/spec.md
+```
+
+#### 4. Retain for Future Retry (Recommended)
+
+```bash
+# Keep migration artifacts for investigation and future retry:
+
+# Keep backups
+ls -lh specs/013-redis-deployment/*backup*.yaml
+
+# Keep migration module for analysis
+ls -lh terraform/modules/beersystem-migration/
+
+# Keep validation scripts
+ls -lh scripts/redis-shared/test-beersystem.sh
+
+# Document issues found for next attempt
+vim specs/013-redis-deployment/migration-issues.md
+```
+
+---
+
+### Rollback Validation Checklist
+
+After rollback, verify all items before considering rollback complete:
+
+- [ ] **Backend Pods Running**: `kubectl get pods -n beersystem -l component=backend` shows 1/1 Ready
+- [ ] **Health Endpoint Responding**: `/api/v1/health` returns 200 OK
+- [ ] **Redis Connection Working**: Backend logs show successful Redis connection
+- [ ] **No Errors in Logs**: Last 100 log lines show no ERROR or FATAL messages
+- [ ] **Original Redis Running**: `kubectl get deployment redis -n beersystem` shows 1/1 Ready
+- [ ] **Environment Variables Correct**: `REDIS_HOST=redis.beersystem.svc.cluster.local`
+- [ ] **Database Connection Working**: Backend can query PostgreSQL successfully
+- [ ] **Frontend Accessible**: Beersystem frontend loads and can communicate with backend
+- [ ] **Core Features Working**: Login, data retrieval, basic operations functional
+- [ ] **5-Minute Stability**: No crashes or restarts for 5 continuous minutes
+
+**All items must be checked before declaring rollback successful.**
+
+---
+
+### Prevention for Next Migration Attempt
+
+Before retrying migration, address these items:
+
+1. **Test in Staging First**: If production, deploy to staging environment first
+2. **Gradual Traffic Shift**: Consider using multiple replicas with gradual cutover
+3. **Extended Monitoring**: Set up alerts before migration (error rate, latency)
+4. **Dry Run**: Test migration module with `replicas=0` first to verify config
+5. **Backup Verification**: Ensure backups are restorable before starting
+6. **Communication Plan**: Notify users of maintenance window
+7. **Rollback Rehearsal**: Practice rollback procedure before actual migration
+
+---
+
 ## Troubleshooting
 
 ### Issue 1: Pod Not Starting
