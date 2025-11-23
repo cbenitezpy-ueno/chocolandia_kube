@@ -6,7 +6,7 @@ module "registry" {
 
   namespace    = "registry"
   storage_size = "30Gi"
-  hostname     = "registry.homelab.local"
+  hostname     = "registry.chocolandiadc.local"
   auth_secret  = "registry-auth"
 
   # Use existing cert-manager cluster issuer
@@ -20,7 +20,7 @@ module "registry" {
 
   # Enable Registry UI
   enable_ui   = true
-  ui_hostname = "registry-ui.homelab.local"
+  ui_hostname = "registry-ui.chocolandiadc.local"
 }
 
 # Outputs for registry

@@ -110,9 +110,12 @@ resource "kubernetes_deployment" "localstack" {
             value = var.lambda_executor
           }
 
-          env {
-            name  = "DOCKER_HOST"
-            value = "unix:///var/run/docker.sock"
+          dynamic "env" {
+            for_each = var.mount_docker_socket ? [1] : []
+            content {
+              name  = "DOCKER_HOST"
+              value = "unix:///var/run/docker.sock"
+            }
           }
 
           env {
@@ -137,9 +140,12 @@ resource "kubernetes_deployment" "localstack" {
             mount_path = "/var/lib/localstack"
           }
 
-          volume_mount {
-            name       = "docker-sock"
-            mount_path = "/var/run/docker.sock"
+          dynamic "volume_mount" {
+            for_each = var.mount_docker_socket ? [1] : []
+            content {
+              name       = "docker-sock"
+              mount_path = "/var/run/docker.sock"
+            }
           }
 
           # Liveness Probe on /_localstack/health
@@ -185,11 +191,14 @@ resource "kubernetes_deployment" "localstack" {
           }
         }
 
-        volume {
-          name = "docker-sock"
-          host_path {
-            path = "/var/run/docker.sock"
-            type = "Socket"
+        dynamic "volume" {
+          for_each = var.mount_docker_socket ? [1] : []
+          content {
+            name = "docker-sock"
+            host_path {
+              path = "/var/run/docker.sock"
+              type = "Socket"
+            }
           }
         }
       }

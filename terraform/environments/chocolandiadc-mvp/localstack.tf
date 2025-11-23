@@ -6,14 +6,15 @@ module "localstack" {
 
   namespace     = "localstack"
   storage_size  = "20Gi"
-  hostname      = "localstack.homelab.local"
+  hostname      = "localstack.chocolandiadc.local"
   services_list = "s3,sqs,sns,dynamodb,lambda"
 
   # Enable persistence for data across restarts
   enable_persistence = true
 
-  # Use Docker executor for Lambda functions
-  lambda_executor = "docker"
+  # Use local executor for Lambda (K3s uses containerd, no Docker socket available)
+  lambda_executor = "local"
+  mount_docker_socket = false
 
   # Use existing cert-manager cluster issuer
   cluster_issuer = "letsencrypt-prod"

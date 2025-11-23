@@ -194,10 +194,9 @@ resource "kubernetes_deployment" "registry" {
             read_only  = true
           }
 
-          # Liveness Probe on /v2/
+          # Liveness Probe - TCP socket (HTTP /v2/ requires auth)
           liveness_probe {
-            http_get {
-              path = "/v2/"
+            tcp_socket {
               port = 5000
             }
             initial_delay_seconds = 30
@@ -206,10 +205,9 @@ resource "kubernetes_deployment" "registry" {
             failure_threshold     = 3
           }
 
-          # Readiness Probe on /v2/
+          # Readiness Probe - TCP socket (HTTP /v2/ requires auth)
           readiness_probe {
-            http_get {
-              path = "/v2/"
+            tcp_socket {
               port = 5000
             }
             initial_delay_seconds = 10

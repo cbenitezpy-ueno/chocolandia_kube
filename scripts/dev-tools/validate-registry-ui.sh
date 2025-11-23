@@ -5,7 +5,7 @@
 set -e
 
 # Configuration
-REGISTRY_UI_HOST="${REGISTRY_UI_HOST:-registry-ui.homelab.local}"
+REGISTRY_UI_HOST="${REGISTRY_UI_HOST:-registry-ui.chocolandiadc.local}"
 
 # Colors for output
 RED='\033[0;31m'

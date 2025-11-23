@@ -5,7 +5,7 @@
 set -e
 
 # Configuration
-REGISTRY_HOST="${REGISTRY_HOST:-registry.homelab.local}"
+REGISTRY_HOST="${REGISTRY_HOST:-registry.chocolandiadc.local}"
 REGISTRY_USER="${REGISTRY_USER:-admin}"
 REGISTRY_PASSWORD="${REGISTRY_PASSWORD:-K0tnob1+9F5ZbQtOS+1bPV2pctQTdZZk}"
 TEST_IMAGE="alpine:latest"

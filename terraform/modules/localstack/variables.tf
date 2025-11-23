@@ -78,5 +78,11 @@ variable "enable_persistence" {
 variable "lambda_executor" {
   description = "Lambda execution mode (docker or local)"
   type        = string
-  default     = "docker"
+  default     = "local"
+}
+
+variable "mount_docker_socket" {
+  description = "Mount Docker socket for Lambda docker executor (not available in K3s with containerd)"
+  type        = bool
+  default     = false
 }
