@@ -322,9 +322,39 @@ resource "helm_release" "kube_prometheus_stack" {
             }
           }
         }
+
+        # Configure sidecar to pick up ConfigMaps with dashboards
+        sidecar = {
+          dashboards = {
+            enabled         = true
+            label           = "grafana_dashboard"
+            labelValue      = "1"
+            searchNamespace = "ALL"
+          }
+        }
       }
     })
   ]
+}
+
+# ============================================================================
+# Custom Dashboard - Homelab Overview
+# ============================================================================
+
+resource "kubernetes_config_map" "homelab_overview_dashboard" {
+  depends_on = [null_resource.monitoring_namespace]
+
+  metadata {
+    name      = "homelab-overview-dashboard"
+    namespace = "monitoring"
+    labels = {
+      grafana_dashboard = "1"
+    }
+  }
+
+  data = {
+    "homelab-overview.json" = file("${path.module}/../../dashboards/homelab-overview.json")
+  }
 }
 
 # ============================================================================
