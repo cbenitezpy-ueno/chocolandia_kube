@@ -332,7 +332,7 @@
       "gridPos": { "h": 7, "w": 12, "x": 12, "y": 10 },
       "id": 31,
       "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "right", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
-      "targets": [{ "expr": "(1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 * on(instance) group_left(nodename) node_uname_info", "legendFormat": "{{nodename}}", "refId": "A" }],
+      "targets": [{ "expr": "max by (nodename) ((1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 * on(instance) group_left(nodename) node_uname_info)", "legendFormat": "{{nodename}}", "refId": "A" }],
       "title": "Memory Usage",
       "type": "timeseries"
     },
@@ -432,8 +432,8 @@
       "id": 54,
       "options": { "legend": { "calcs": ["mean"], "displayMode": "table", "placement": "right", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
       "targets": [
-        { "expr": "rate(node_network_receive_bytes_total{device!~\"lo|veth.*|cni.*|flannel.*\"}[5m]) * on(instance) group_left(nodename) node_uname_info", "legendFormat": "{{nodename}} RX", "refId": "A" },
-        { "expr": "-rate(node_network_transmit_bytes_total{device!~\"lo|veth.*|cni.*|flannel.*\"}[5m]) * on(instance) group_left(nodename) node_uname_info", "legendFormat": "{{nodename}} TX", "refId": "B" }
+        { "expr": "sum by (nodename) (rate(node_network_receive_bytes_total{device!~\"lo|veth.*|cni.*|flannel.*\"}[5m]) * on(instance) group_left(nodename) node_uname_info)", "legendFormat": "{{nodename}} RX", "refId": "A" },
+        { "expr": "-sum by (nodename) (rate(node_network_transmit_bytes_total{device!~\"lo|veth.*|cni.*|flannel.*\"}[5m]) * on(instance) group_left(nodename) node_uname_info)", "legendFormat": "{{nodename}} TX", "refId": "B" }
       ],
       "title": "Network I/O",
       "type": "timeseries"
