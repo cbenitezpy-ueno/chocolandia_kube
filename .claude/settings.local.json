@@ -99,7 +99,8 @@
       "Bash(.specify/scripts/bash/update-agent-context.sh:*)",
       "Bash(brew install:*)",
       "Bash(redis-cli:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": [],
     "ask": []
