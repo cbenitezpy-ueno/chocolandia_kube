@@ -82,9 +82,9 @@ resource "cloudflare_zero_trust_access_identity_provider" "google_oauth" {
 # Cloudflare Access - Applications
 # ============================================================================
 
-# Create Access Application for each ingress hostname
+# Create Access Application for each ingress hostname (excluding public hostnames)
 resource "cloudflare_zero_trust_access_application" "services" {
-  for_each = { for rule in var.ingress_rules : rule.hostname => rule }
+  for_each = { for rule in var.ingress_rules : rule.hostname => rule if !contains(var.public_hostnames, rule.hostname) }
 
   account_id = var.cloudflare_account_id
   name       = title(split(".", each.value.hostname)[0]) # e.g., "Pihole" from "pihole.chocolandiadc.com"
@@ -112,9 +112,9 @@ resource "cloudflare_zero_trust_access_application" "services" {
 # Cloudflare Access - Policies
 # ============================================================================
 
-# Create email-based authorization policy for each application
+# Create email-based authorization policy for each application (excluding public hostnames)
 resource "cloudflare_zero_trust_access_policy" "email_authorization" {
-  for_each = { for rule in var.ingress_rules : rule.hostname => rule }
+  for_each = { for rule in var.ingress_rules : rule.hostname => rule if !contains(var.public_hostnames, rule.hostname) }
 
   application_id = cloudflare_zero_trust_access_application.services[each.key].id
   account_id     = var.cloudflare_account_id

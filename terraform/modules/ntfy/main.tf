@@ -60,8 +60,10 @@ resource "kubernetes_config_map" "ntfy_config" {
       attachment-cache-dir: "/var/cache/ntfy/attachments"
       behind-proxy: true
 
-      # Enable web UI
+      # Enable web UI with login
       enable-web: true
+      enable-login: true
+      enable-signup: false
 
       # Authentication
       auth-file: "/var/cache/ntfy/user.db"

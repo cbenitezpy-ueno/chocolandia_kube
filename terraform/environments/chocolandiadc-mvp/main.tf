@@ -249,6 +249,9 @@ module "cloudflare_tunnel" {
   google_oauth_client_secret = var.google_oauth_client_secret
   authorized_emails          = var.authorized_emails
 
+  # Public services (no Cloudflare Access protection)
+  public_hostnames = ["ntfy.chocolandiadc.com"]
+
   # Ensure cluster is ready before deploying tunnel
   depends_on = [
     null_resource.wait_for_cluster_ready

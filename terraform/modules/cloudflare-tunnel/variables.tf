@@ -182,3 +182,9 @@ variable "access_policy_name" {
   type        = string
   default     = "Email Authorization Policy"
 }
+
+variable "public_hostnames" {
+  description = "List of hostnames that should NOT have Cloudflare Access protection (public services)"
+  type        = list(string)
+  default     = []
+}
