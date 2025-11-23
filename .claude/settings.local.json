@@ -96,7 +96,10 @@
       "Bash(tofu output:*)",
       "Bash(tofu state show:*)",
       "Bash(.gitignore)",
-      "Bash(.specify/scripts/bash/update-agent-context.sh:*)"
+      "Bash(.specify/scripts/bash/update-agent-context.sh:*)",
+      "Bash(brew install:*)",
+      "Bash(redis-cli:*)",
+      "Bash(git stash:*)"
     ],
     "deny": [],
     "ask": []
