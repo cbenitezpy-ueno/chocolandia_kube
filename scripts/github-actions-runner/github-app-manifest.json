@@ -1,0 +1,16 @@
+{
+  "name": "homelab-runner-controller",
+  "url": "https://github.com/cbenitezpy-ueno/chocolandia_kube",
+  "hook_attributes": {
+    "active": false
+  },
+  "redirect_url": "https://github.com/cbenitezpy-ueno/chocolandia_kube",
+  "public": false,
+  "default_permissions": {
+    "actions": "read",
+    "administration": "write",
+    "checks": "read",
+    "metadata": "read"
+  },
+  "default_events": []
+}
