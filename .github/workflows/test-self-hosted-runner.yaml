@@ -21,7 +21,7 @@ on:
 jobs:
   test-runner:
     name: Test Runner Environment
-    runs-on: [self-hosted, linux, x64, homelab]
+    runs-on: homelab-runner
     timeout-minutes: 10
 
     steps:
