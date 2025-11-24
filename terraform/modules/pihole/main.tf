@@ -30,9 +30,42 @@ resource "kubernetes_config_map" "pihole_custom_dns" {
     "02-custom.conf" = <<-EOT
       # Custom DNS records for local services
       # Format: address=/domain/ip
+      # All services point to Traefik LoadBalancer IP: 192.168.4.202
 
+      # ============================================
+      # Production Services (.chocolandiadc.com)
+      # ============================================
       # MinIO S3 API - accessible via Traefik on private network
       address=/s3.chocolandiadc.com/192.168.4.202
+
+      # ============================================
+      # Local Network Services (.chocolandiadc.local)
+      # ============================================
+      # Core Infrastructure
+      address=/argocd.chocolandiadc.local/192.168.4.202
+      address=/grafana.chocolandiadc.local/192.168.4.202
+      address=/headlamp.chocolandiadc.local/192.168.4.202
+      address=/homepage.chocolandiadc.local/192.168.4.202
+      address=/longhorn.chocolandiadc.local/192.168.4.202
+      address=/pihole.chocolandiadc.local/192.168.4.202
+      address=/ntfy.chocolandiadc.local/192.168.4.202
+
+      # Storage Services
+      address=/minio.chocolandiadc.local/192.168.4.202
+
+      # Applications
+      address=/beer.chocolandiadc.local/192.168.4.202
+
+      # Dev Tools - Local Container Registry
+      address=/registry.chocolandiadc.local/192.168.4.202
+      address=/registry-ui.chocolandiadc.local/192.168.4.202
+
+      # Dev Tools - LocalStack (AWS emulation)
+      address=/localstack.chocolandiadc.local/192.168.4.202
+
+      # Dev Tools - Nexus Repository Manager
+      address=/nexus.chocolandiadc.local/192.168.4.202
+      address=/docker.nexus.chocolandiadc.local/192.168.4.202
     EOT
   }
 }
@@ -147,6 +180,13 @@ resource "kubernetes_deployment" "pihole" {
           env {
             name  = "FTLCONF_dns_listeningMode"
             value = "all"
+          }
+
+          # Custom DNS hosts for local services (Pi-hole v6 format)
+          # Format: "IP HOSTNAME" entries separated by semicolons
+          env {
+            name  = "FTLCONF_dns_hosts"
+            value = join(";", var.custom_dns_hosts)
           }
 
           env {

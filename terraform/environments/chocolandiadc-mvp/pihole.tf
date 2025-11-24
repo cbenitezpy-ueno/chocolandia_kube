@@ -11,6 +11,39 @@ module "pihole" {
   timezone     = "America/New_York" # Adjust to your timezone
   upstream_dns = "1.1.1.1;8.8.8.8"  # Cloudflare + Google DNS
 
+  # Custom DNS hosts for local services (Pi-hole v6 format: "IP HOSTNAME")
+  # All services point to Traefik LoadBalancer IP: 192.168.4.202
+  custom_dns_hosts = [
+    # Production Services (.chocolandiadc.com)
+    "192.168.4.202 s3.chocolandiadc.com",
+
+    # Local Network Services (.chocolandiadc.local) - Core Infrastructure
+    "192.168.4.202 argocd.chocolandiadc.local",
+    "192.168.4.202 grafana.chocolandiadc.local",
+    "192.168.4.202 headlamp.chocolandiadc.local",
+    "192.168.4.202 homepage.chocolandiadc.local",
+    "192.168.4.202 longhorn.chocolandiadc.local",
+    "192.168.4.202 pihole.chocolandiadc.local",
+    "192.168.4.202 ntfy.chocolandiadc.local",
+
+    # Storage Services
+    "192.168.4.202 minio.chocolandiadc.local",
+
+    # Applications
+    "192.168.4.202 beer.chocolandiadc.local",
+
+    # Dev Tools - Container Registry
+    "192.168.4.202 registry.chocolandiadc.local",
+    "192.168.4.202 registry-ui.chocolandiadc.local",
+
+    # Dev Tools - LocalStack (AWS emulation)
+    "192.168.4.202 localstack.chocolandiadc.local",
+
+    # Dev Tools - Nexus Repository Manager
+    "192.168.4.202 nexus.chocolandiadc.local",
+    "192.168.4.202 docker.nexus.chocolandiadc.local",
+  ]
+
   # Kubernetes Configuration
   namespace = "default"
   image     = "pihole/pihole:latest"
