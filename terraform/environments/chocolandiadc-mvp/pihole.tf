@@ -38,6 +38,10 @@ module "pihole" {
 
     # Dev Tools - LocalStack (AWS emulation)
     "192.168.4.202 localstack.chocolandiadc.local",
+
+    # Dev Tools - Nexus Repository Manager
+    "192.168.4.202 nexus.chocolandiadc.local",
+    "192.168.4.202 docker.nexus.chocolandiadc.local",
   ]
 
   # Kubernetes Configuration
