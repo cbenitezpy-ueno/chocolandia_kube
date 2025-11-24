@@ -119,6 +119,7 @@ sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keyc
 mkdir -p ~/.docker/certs.d/docker.nexus.chocolandiadc.local
 cp chocolandia-local-ca.crt ~/.docker/certs.d/docker.nexus.chocolandiadc.local/ca.crt
 # Then restart Docker Desktop
+# Note: Repeat this for each Docker registry hostname using this CA
 ```
 
 **Export CA from cluster (if needed):**
