@@ -61,7 +61,7 @@ variable "resource_requests_cpu" {
 variable "cluster_issuer" {
   description = "cert-manager ClusterIssuer name for TLS certificates"
   type        = string
-  default     = "letsencrypt-prod"
+  default     = "letsencrypt-production"
 }
 
 variable "traefik_entrypoint" {

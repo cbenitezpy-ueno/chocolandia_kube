@@ -19,7 +19,7 @@ module "nexus" {
   jvm_heap_size            = "1200m"
 
   # TLS and ingress
-  cluster_issuer     = "letsencrypt-prod"
+  cluster_issuer     = "local-ca"  # Using self-signed CA for .local domains
   traefik_entrypoint = "websecure"
 
   # Enable Prometheus metrics

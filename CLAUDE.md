@@ -26,6 +26,10 @@ Auto-generated from all feature plans. Last updated: 2025-11-08
 - N/A (infrastructure deployment) + Redis 7.x (Bitnami Helm chart), MetalLB LoadBalancer, Prometheus Redis Exporter (013-redis-deployment)
 - HCL (OpenTofu 1.6+), YAML (Kubernetes manifests), Bash (scripts de validación) + Prometheus (kube-prometheus-stack Helm chart), Grafana, Alertmanager, Ntfy (014-monitoring-alerts)
 - Kubernetes PersistentVolumes via local-path-provisioner (métricas 7-14 días retención) (014-monitoring-alerts)
+- HCL (OpenTofu 1.6+), YAML (Kubernetes manifests), Bash (validation scripts) + Docker Registry v2, LocalStack (Community Edition), Traefik Ingress, cert-manager (015-dev-tools-local)
+- PersistentVolumes via local-path-provisioner (30GB registry + 20GB LocalStack) (015-dev-tools-local)
+- HCL (OpenTofu 1.6+), YAML (Kubernetes manifests) + Nexus Repository OSS 3.x, Kubernetes provider ~> 2.23, cert-manager, Traefik (016-nexus-repository)
+- Kubernetes PersistentVolume via local-path-provisioner (50Gi recommended) (016-nexus-repository)
 
 - HCL (OpenTofu) 1.6+, Bash scripting for validation (001-k3s-cluster-setup)
 
@@ -45,9 +49,9 @@ tests/
 HCL (Terraform) 1.6+, Bash scripting for validation: Follow standard conventions
 
 ## Recent Changes
+- 016-nexus-repository: Added HCL (OpenTofu 1.6+), YAML (Kubernetes manifests) + Nexus Repository OSS 3.x, Kubernetes provider ~> 2.23, cert-manager, Traefik
+- 015-dev-tools-local: Added HCL (OpenTofu 1.6+), YAML (Kubernetes manifests), Bash (validation scripts) + Docker Registry v2, LocalStack (Community Edition), Traefik Ingress, cert-manager
 - 014-monitoring-alerts: Added HCL (OpenTofu 1.6+), YAML (Kubernetes manifests), Bash (scripts de validación) + Prometheus (kube-prometheus-stack Helm chart), Grafana, Alertmanager, Ntfy
-- 013-redis-deployment: Added N/A (infrastructure deployment) + Redis 7.x (Bitnami Helm chart), MetalLB LoadBalancer, Prometheus Redis Exporter
-- 013-redis-deployment: Added N/A (infrastructure deployment) + Redis 7.x (Docker image), Helm chart (bitnami/redis or equivalent), MetalLB LoadBalancer, Prometheus Redis Exporter
 
 
 <!-- MANUAL ADDITIONS START -->
@@ -88,6 +92,92 @@ MetalLB Pool Configuration:
 - Pi-hole DNS service: `type = "LoadBalancer"` in `terraform/modules/pihole/main.tf`
 - PostgreSQL service: Managed by Helm chart (already configured as LoadBalancer)
 - Traefik service: Managed by Helm chart (already configured as LoadBalancer)
+
+## Local CA for .local Domains
+
+Since Let's Encrypt cannot issue certificates for `.local` TLD, we use a self-signed CA managed by cert-manager.
+
+### ClusterIssuers Available
+| Issuer Name | Type | Use Case |
+|-------------|------|----------|
+| `letsencrypt-production` | ACME | Public domains (*.chocolandiadc.com) via Cloudflare DNS |
+| `local-ca` | Self-signed CA | Private domains (*.chocolandiadc.local) |
+
+### CA Certificate Location
+- **Kubernetes Secret**: `local-ca-secret` in `cert-manager` namespace
+- **Local file**: `terraform/environments/chocolandiadc-mvp/chocolandia-local-ca.crt`
+
+### Trusting the CA on Client Machines
+
+**macOS (for curl, browsers):**
+```bash
+sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain chocolandia-local-ca.crt
+```
+
+**Docker Desktop:**
+```bash
+mkdir -p ~/.docker/certs.d/docker.nexus.chocolandiadc.local
+cp chocolandia-local-ca.crt ~/.docker/certs.d/docker.nexus.chocolandiadc.local/ca.crt
+# Then restart Docker Desktop
+```
+
+**Export CA from cluster (if needed):**
+```bash
+kubectl get secret -n cert-manager local-ca-secret -o jsonpath='{.data.ca\.crt}' | base64 -d > chocolandia-local-ca.crt
+```
+
+## Nexus Repository Manager
+
+Multi-format artifact repository for Docker, Helm, NPM, Maven, and APT packages.
+
+### URLs
+| Service | URL | Description |
+|---------|-----|-------------|
+| Web UI | https://nexus.chocolandiadc.local | Admin interface |
+| Docker Registry | https://docker.nexus.chocolandiadc.local | Docker push/pull |
+
+### Configured Repositories
+| Repository | Type | Format | Description |
+|------------|------|--------|-------------|
+| `docker-hosted` | hosted | Docker | Private Docker images (port 8082) |
+| `helm-hosted` | hosted | Helm | Private Helm charts |
+| `npm-proxy` | proxy | NPM | Cache for npmjs.org |
+| `apt-ubuntu` | proxy | APT | Cache for Ubuntu packages |
+| `maven-central` | proxy | Maven | Cache for Maven Central (pre-configured) |
+| `maven-releases` | hosted | Maven | Release artifacts (pre-configured) |
+| `maven-snapshots` | hosted | Maven | Snapshot artifacts (pre-configured) |
+| `maven-public` | group | Maven | Aggregated Maven repos (pre-configured) |
+
+### Docker Usage
+```bash
+# Login
+docker login docker.nexus.chocolandiadc.local -u admin
+
+# Tag and push
+docker tag myimage:latest docker.nexus.chocolandiadc.local/myimage:latest
+docker push docker.nexus.chocolandiadc.local/myimage:latest
+
+# Pull
+docker pull docker.nexus.chocolandiadc.local/myimage:latest
+```
+
+### Helm Usage
+```bash
+# Add repo (requires helm-nexus-push plugin)
+helm repo add nexus https://nexus.chocolandiadc.local/repository/helm-hosted/ --username admin --password <password>
+
+# Push chart
+helm push mychart-0.1.0.tgz nexus
+```
+
+### NPM Usage
+```bash
+# Configure npm to use Nexus proxy
+npm config set registry https://nexus.chocolandiadc.local/repository/npm-proxy/
+
+# Or per-project in .npmrc
+registry=https://nexus.chocolandiadc.local/repository/npm-proxy/
+```
 
 <!-- MANUAL ADDITIONS END -->
 - ~/.ssh/id_ed25519_k3s  es el key para entrar a los nodos
