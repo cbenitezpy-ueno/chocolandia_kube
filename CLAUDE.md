@@ -30,6 +30,8 @@ Auto-generated from all feature plans. Last updated: 2025-11-08
 - PersistentVolumes via local-path-provisioner (30GB registry + 20GB LocalStack) (015-dev-tools-local)
 - HCL (OpenTofu 1.6+), YAML (Kubernetes manifests) + Nexus Repository OSS 3.x, Kubernetes provider ~> 2.23, cert-manager, Traefik (016-nexus-repository)
 - Kubernetes PersistentVolume via local-path-provisioner (50Gi recommended) (016-nexus-repository)
+- HCL (OpenTofu 1.6+), YAML (Kubernetes manifests), Bash (validation scripts) + Actions Runner Controller (ARC) Helm chart, Kubernetes provider ~> 2.23, Helm provider ~> 2.12 (017-github-actions-runner)
+- Kubernetes PersistentVolume via local-path-provisioner (runner work directory, configuration state) (017-github-actions-runner)
 
 - HCL (OpenTofu) 1.6+, Bash scripting for validation (001-k3s-cluster-setup)
 
@@ -49,9 +51,9 @@ tests/
 HCL (Terraform) 1.6+, Bash scripting for validation: Follow standard conventions
 
 ## Recent Changes
+- 017-github-actions-runner: Added HCL (OpenTofu 1.6+), YAML (Kubernetes manifests), Bash (validation scripts) + Actions Runner Controller (ARC) Helm chart, Kubernetes provider ~> 2.23, Helm provider ~> 2.12
 - 016-nexus-repository: Added HCL (OpenTofu 1.6+), YAML (Kubernetes manifests) + Nexus Repository OSS 3.x, Kubernetes provider ~> 2.23, cert-manager, Traefik
 - 015-dev-tools-local: Added HCL (OpenTofu 1.6+), YAML (Kubernetes manifests), Bash (validation scripts) + Docker Registry v2, LocalStack (Community Edition), Traefik Ingress, cert-manager
-- 014-monitoring-alerts: Added HCL (OpenTofu 1.6+), YAML (Kubernetes manifests), Bash (scripts de validación) + Prometheus (kube-prometheus-stack Helm chart), Grafana, Alertmanager, Ntfy
 
 
 <!-- MANUAL ADDITIONS START -->
