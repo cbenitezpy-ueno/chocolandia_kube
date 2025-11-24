@@ -153,30 +153,17 @@ resource "helm_release" "arc_runner_scale_set" {
       runnerScaleSetName = var.runner_name
 
       # ==========================================================================
-      # Container Mode Configuration
-      # ==========================================================================
-      # Using Kubernetes mode (not DinD) for better security
-      containerMode = {
-        type = "kubernetes"
-        kubernetesModeWorkVolumeClaim = {
-          accessModes      = ["ReadWriteOnce"]
-          storageClassName = "local-path"
-          resources = {
-            requests = {
-              storage = "10Gi"
-            }
-          }
-        }
-      }
-
-      # ==========================================================================
       # Pod Template (T013)
       # ==========================================================================
+      # No containerMode - using simple runner pods without DinD or Kubernetes mode
+      # This is for running workflows that don't require container actions
       template = {
         spec = {
           containers = [
             {
-              name = "runner"
+              name    = "runner"
+              image   = "ghcr.io/actions/actions-runner:latest"
+              command = ["/home/runner/run.sh"]
               resources = {
                 limits = {
                   cpu    = var.cpu_limit
