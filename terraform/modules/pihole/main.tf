@@ -13,62 +13,10 @@ terraform {
 }
 
 # ============================================================================
-# ConfigMap for Custom DNS Records
+# NOTE: Custom DNS records are now configured via FTLCONF_dns_hosts env var
+# for Pi-hole v6+ compatibility. The legacy dnsmasq ConfigMap approach has
+# been removed. See var.custom_dns_hosts in the environment configuration.
 # ============================================================================
-
-resource "kubernetes_config_map" "pihole_custom_dns" {
-  metadata {
-    name      = "pihole-custom-dns"
-    namespace = var.namespace
-
-    labels = {
-      app = "pihole"
-    }
-  }
-
-  data = {
-    "02-custom.conf" = <<-EOT
-      # Custom DNS records for local services
-      # Format: address=/domain/ip
-      # All services point to Traefik LoadBalancer IP: 192.168.4.202
-
-      # ============================================
-      # Production Services (.chocolandiadc.com)
-      # ============================================
-      # MinIO S3 API - accessible via Traefik on private network
-      address=/s3.chocolandiadc.com/192.168.4.202
-
-      # ============================================
-      # Local Network Services (.chocolandiadc.local)
-      # ============================================
-      # Core Infrastructure
-      address=/argocd.chocolandiadc.local/192.168.4.202
-      address=/grafana.chocolandiadc.local/192.168.4.202
-      address=/headlamp.chocolandiadc.local/192.168.4.202
-      address=/homepage.chocolandiadc.local/192.168.4.202
-      address=/longhorn.chocolandiadc.local/192.168.4.202
-      address=/pihole.chocolandiadc.local/192.168.4.202
-      address=/ntfy.chocolandiadc.local/192.168.4.202
-
-      # Storage Services
-      address=/minio.chocolandiadc.local/192.168.4.202
-
-      # Applications
-      address=/beer.chocolandiadc.local/192.168.4.202
-
-      # Dev Tools - Local Container Registry
-      address=/registry.chocolandiadc.local/192.168.4.202
-      address=/registry-ui.chocolandiadc.local/192.168.4.202
-
-      # Dev Tools - LocalStack (AWS emulation)
-      address=/localstack.chocolandiadc.local/192.168.4.202
-
-      # Dev Tools - Nexus Repository Manager
-      address=/nexus.chocolandiadc.local/192.168.4.202
-      address=/docker.nexus.chocolandiadc.local/192.168.4.202
-    EOT
-  }
-}
 
 # ============================================================================
 # Kubernetes Secret for Admin Password
@@ -224,12 +172,6 @@ resource "kubernetes_deployment" "pihole" {
             mount_path = "/etc/pihole"
           }
 
-          volume_mount {
-            name       = "custom-dns"
-            mount_path = "/etc/dnsmasq.d/02-custom.conf"
-            sub_path   = "02-custom.conf"
-          }
-
           # Security Context
           security_context {
             capabilities {
@@ -282,13 +224,6 @@ resource "kubernetes_deployment" "pihole" {
           }
         }
 
-        volume {
-          name = "custom-dns"
-          config_map {
-            name = kubernetes_config_map.pihole_custom_dns.metadata[0].name
-          }
-        }
-
         # DNS Configuration (prevents DNS loop)
         dns_config {
           nameservers = ["8.8.8.8", "1.1.1.1"]
@@ -300,11 +235,10 @@ resource "kubernetes_deployment" "pihole" {
   # Wait for deployment to be ready
   wait_for_rollout = true
 
-  # Ensure PVC, Secret and ConfigMap exist first
+  # Ensure PVC and Secret exist first
   depends_on = [
     kubernetes_persistent_volume_claim.pihole_config,
-    kubernetes_secret.pihole_admin_password,
-    kubernetes_config_map.pihole_custom_dns
+    kubernetes_secret.pihole_admin_password
   ]
 }
 

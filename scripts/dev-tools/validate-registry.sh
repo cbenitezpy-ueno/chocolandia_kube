@@ -7,7 +7,7 @@ set -e
 # Configuration
 REGISTRY_HOST="${REGISTRY_HOST:-registry.chocolandiadc.local}"
 REGISTRY_USER="${REGISTRY_USER:-admin}"
-REGISTRY_PASSWORD="${REGISTRY_PASSWORD:-K0tnob1+9F5ZbQtOS+1bPV2pctQTdZZk}"
+REGISTRY_PASSWORD="${REGISTRY_PASSWORD:?Please set the REGISTRY_PASSWORD environment variable}"
 TEST_IMAGE="alpine:latest"
 TEST_TAG="validate-test-$(date +%s)"
 
