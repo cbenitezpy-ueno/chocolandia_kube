@@ -114,9 +114,9 @@
 - [x] T029 [P] Update module README with usage examples in terraform/modules/github-actions-runner/README.md
 - [x] T030 [P] Add GitHub App setup instructions to specs/017-github-actions-runner/quickstart.md
 - [x] T031 Run tofu validate and tofu fmt on all module files
-- [ ] T032 Run full validation: scripts/github-actions-runner/validate-runner.sh
-- [ ] T033 Verify monitoring: scripts/github-actions-runner/validate-monitoring.sh
-- [ ] T034 Execute end-to-end test: scripts/github-actions-runner/test-workflow.sh
+- [x] T032 Run full validation: scripts/github-actions-runner/validate-runner.sh
+- [x] T033 Verify monitoring: scripts/github-actions-runner/validate-monitoring.sh
+- [x] T034 Execute end-to-end test: scripts/github-actions-runner/test-workflow.sh
 
 ---
 
