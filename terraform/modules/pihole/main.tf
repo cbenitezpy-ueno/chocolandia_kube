@@ -178,6 +178,13 @@ resource "kubernetes_deployment" "pihole" {
             value = "all"
           }
 
+          # Custom DNS hosts for local services (Pi-hole v6 format)
+          # Format: "IP HOSTNAME" entries separated by semicolons
+          env {
+            name  = "FTLCONF_dns_hosts"
+            value = join(";", var.custom_dns_hosts)
+          }
+
           env {
             name  = "PIHOLE_UID"
             value = "1000"

@@ -37,6 +37,12 @@ variable "upstream_dns" {
   }
 }
 
+variable "custom_dns_hosts" {
+  description = "List of custom DNS entries in 'IP HOSTNAME' format for Pi-hole v6"
+  type        = list(string)
+  default     = []
+}
+
 # ============================================================================
 # Kubernetes Configuration
 # ============================================================================
