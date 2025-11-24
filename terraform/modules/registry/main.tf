@@ -75,6 +75,11 @@ resource "kubernetes_config_map" "registry_config" {
         addr: :5000
         headers:
           X-Content-Type-Options: [nosniff]
+          Access-Control-Allow-Origin: ['https://${var.ui_hostname}']
+          Access-Control-Allow-Methods: ['HEAD', 'GET', 'OPTIONS', 'DELETE']
+          Access-Control-Allow-Headers: ['Authorization', 'Accept', 'Cache-Control']
+          Access-Control-Expose-Headers: ['Docker-Content-Digest']
+          Access-Control-Allow-Credentials: [true]
         debug:
           addr: :5001
           prometheus:
