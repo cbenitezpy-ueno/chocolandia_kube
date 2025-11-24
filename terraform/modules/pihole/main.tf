@@ -62,6 +62,10 @@ resource "kubernetes_config_map" "pihole_custom_dns" {
 
       # Dev Tools - LocalStack (AWS emulation)
       address=/localstack.chocolandiadc.local/192.168.4.202
+
+      # Dev Tools - Nexus Repository Manager
+      address=/nexus.chocolandiadc.local/192.168.4.202
+      address=/docker.nexus.chocolandiadc.local/192.168.4.202
     EOT
   }
 }
