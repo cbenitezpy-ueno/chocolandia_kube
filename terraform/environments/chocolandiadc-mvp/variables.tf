@@ -443,3 +443,51 @@ variable "netdata_storage_size" {
   type        = string
   default     = "10Gi"
 }
+
+# ============================================================================
+# GitHub Actions Runner Configuration (Feature 017)
+# ============================================================================
+
+variable "github_actions_config_url" {
+  description = "GitHub repository or organization URL for runner registration (e.g., https://github.com/owner/repo)"
+  type        = string
+  default     = "https://github.com/cbenitezpy-ueno/chocolandia_kube"
+
+  validation {
+    condition     = can(regex("^https://github.com/", var.github_actions_config_url))
+    error_message = "GitHub config URL must start with https://github.com/"
+  }
+}
+
+variable "github_app_id" {
+  description = "GitHub App ID for runner authentication"
+  type        = string
+  sensitive   = true
+
+  validation {
+    condition     = can(regex("^[0-9]+$", var.github_app_id))
+    error_message = "GitHub App ID must be a numeric string"
+  }
+}
+
+variable "github_app_installation_id" {
+  description = "GitHub App Installation ID"
+  type        = string
+  sensitive   = true
+
+  validation {
+    condition     = can(regex("^[0-9]+$", var.github_app_installation_id))
+    error_message = "GitHub App Installation ID must be a numeric string"
+  }
+}
+
+variable "github_app_private_key" {
+  description = "GitHub App private key in PEM format"
+  type        = string
+  sensitive   = true
+
+  validation {
+    condition     = can(regex("^-----BEGIN", var.github_app_private_key))
+    error_message = "GitHub App private key must be in PEM format (starting with -----BEGIN)"
+  }
+}

@@ -1,0 +1,55 @@
+# T007: ServiceAccount and RBAC for GitHub Actions Runner
+# Provides minimal permissions for runner pods
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: github-runner-sa
+  namespace: github-actions
+  labels:
+    app.kubernetes.io/name: github-actions-runner
+    app.kubernetes.io/component: service-account
+    app.kubernetes.io/part-of: github-actions
+    app.kubernetes.io/managed-by: opentofu
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: github-runner-role
+  namespace: github-actions
+  labels:
+    app.kubernetes.io/name: github-actions-runner
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: github-actions
+rules:
+  # Pod management for job execution
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "create", "delete"]
+  # Pod logs access for debugging
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get"]
+  # Secrets access for GitHub App credentials
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["github-app-secret"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: github-runner-rolebinding
+  namespace: github-actions
+  labels:
+    app.kubernetes.io/name: github-actions-runner
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: github-actions
+subjects:
+  - kind: ServiceAccount
+    name: github-runner-sa
+    namespace: github-actions
+roleRef:
+  kind: Role
+  name: github-runner-role
+  apiGroup: rbac.authorization.k8s.io

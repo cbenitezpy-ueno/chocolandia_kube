@@ -1,0 +1,11 @@
+# T006: GitHub Actions Runner Namespace
+# Isolates all runner-related resources
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: github-actions
+  labels:
+    app.kubernetes.io/name: github-actions-runner
+    app.kubernetes.io/component: namespace
+    app.kubernetes.io/part-of: github-actions
+    app.kubernetes.io/managed-by: opentofu

@@ -1,0 +1,107 @@
+# T017: Test workflow for GitHub Actions self-hosted runner
+# Feature 017: GitHub Actions Self-Hosted Runner
+#
+# This workflow tests the self-hosted runner deployment on the homelab K3s cluster.
+# It runs basic checks to verify the runner is working correctly.
+#
+# Usage: Manually trigger this workflow from GitHub Actions UI or use:
+#   gh workflow run test-self-hosted-runner.yaml
+
+name: Test Self-Hosted Runner
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner_label:
+        description: 'Runner label to test'
+        required: false
+        default: 'homelab-runner'
+        type: string
+
+jobs:
+  test-runner:
+    name: Test Runner Environment
+    runs-on: [self-hosted, linux, x64, homelab]
+    timeout-minutes: 10
+
+    steps:
+      - name: Display runner info
+        run: |
+          echo "=== Runner Information ==="
+          echo "Runner name: ${{ runner.name }}"
+          echo "Runner OS: ${{ runner.os }}"
+          echo "Runner arch: ${{ runner.arch }}"
+          echo "Runner temp: ${{ runner.temp }}"
+          echo "Runner tool cache: ${{ runner.tool_cache }}"
+
+      - name: Check system info
+        run: |
+          echo "=== System Information ==="
+          echo "Hostname: $(hostname)"
+          echo "Kernel: $(uname -r)"
+          echo "OS: $(cat /etc/os-release | grep PRETTY_NAME | cut -d'"' -f2)"
+          echo "CPU: $(nproc) cores"
+          echo "Memory: $(free -h | grep Mem | awk '{print $2}')"
+          echo "Disk: $(df -h / | tail -1 | awk '{print $4}') available"
+
+      - name: Check network connectivity
+        run: |
+          echo "=== Network Connectivity ==="
+          echo "Testing DNS resolution..."
+          nslookup github.com || echo "DNS resolution failed"
+          echo ""
+          echo "Testing HTTPS connectivity..."
+          curl -s -o /dev/null -w "GitHub API: %{http_code}\n" https://api.github.com || echo "GitHub API unreachable"
+
+      - name: Check container runtime
+        run: |
+          echo "=== Container Runtime ==="
+          if command -v docker &> /dev/null; then
+            echo "Docker version: $(docker --version)"
+          elif command -v podman &> /dev/null; then
+            echo "Podman version: $(podman --version)"
+          else
+            echo "No container runtime found (expected in Kubernetes mode)"
+          fi
+
+      - name: Test git
+        run: |
+          echo "=== Git Information ==="
+          git --version
+          git config --global --list 2>/dev/null || echo "No global git config"
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify checkout
+        run: |
+          echo "=== Repository Checkout ==="
+          echo "Current directory: $(pwd)"
+          echo "Files in root:"
+          ls -la
+          echo ""
+          echo "Git status:"
+          git status
+
+      - name: Simple script test
+        run: |
+          echo "=== Script Execution Test ==="
+          echo "Running simple bash script..."
+          for i in 1 2 3; do
+            echo "Count: $i"
+            sleep 1
+          done
+          echo "Script completed successfully!"
+
+      - name: Test workflow complete
+        run: |
+          echo ""
+          echo "============================================"
+          echo "  Self-hosted runner test PASSED!"
+          echo "============================================"
+          echo ""
+          echo "Runner: ${{ runner.name }}"
+          echo "Job: ${{ github.job }}"
+          echo "Workflow: ${{ github.workflow }}"
+          echo "Run ID: ${{ github.run_id }}"
+          echo ""
