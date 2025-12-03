@@ -32,6 +32,10 @@ Auto-generated from all feature plans. Last updated: 2025-11-08
 - Kubernetes PersistentVolume via local-path-provisioner (50Gi recommended) (016-nexus-repository)
 - HCL (OpenTofu 1.6+), YAML (Kubernetes manifests), Bash (validation scripts) + Actions Runner Controller (ARC) Helm chart, Kubernetes provider ~> 2.23, Helm provider ~> 2.12 (017-github-actions-runner)
 - Kubernetes PersistentVolume via local-path-provisioner (runner work directory, configuration state) (017-github-actions-runner)
+- YAML (Home Assistant configuration), HCL (OpenTofu 1.6+) + Home Assistant Core (container), Govee integration (HACS), Prometheus integration, Ntfy integration (018-home-assistant)
+- Kubernetes PersistentVolume via local-path-provisioner (Home Assistant config directory) (018-home-assistant)
+- YAML (Kubernetes manifests) / HCL (OpenTofu) 1.6+ + Home Assistant Core (ghcr.io/home-assistant/home-assistant:stable), HACS, ha-prometheus-sensor (018-home-assistant)
+- Kubernetes PersistentVolume via local-path-provisioner (10Gi for /config) (018-home-assistant)
 
 - HCL (OpenTofu) 1.6+, Bash scripting for validation (001-k3s-cluster-setup)
 
@@ -51,9 +55,9 @@ tests/
 HCL (Terraform) 1.6+, Bash scripting for validation: Follow standard conventions
 
 ## Recent Changes
+- 018-home-assistant: Added YAML (Kubernetes manifests) / HCL (OpenTofu) 1.6+ + Home Assistant Core (ghcr.io/home-assistant/home-assistant:stable), HACS, ha-prometheus-sensor
+- 018-home-assistant: Added YAML (Home Assistant configuration), HCL (OpenTofu 1.6+) + Home Assistant Core (container), Govee integration (HACS), Prometheus integration, Ntfy integration
 - 017-github-actions-runner: Added HCL (OpenTofu 1.6+), YAML (Kubernetes manifests), Bash (validation scripts) + Actions Runner Controller (ARC) Helm chart, Kubernetes provider ~> 2.23, Helm provider ~> 2.12
-- 016-nexus-repository: Added HCL (OpenTofu 1.6+), YAML (Kubernetes manifests) + Nexus Repository OSS 3.x, Kubernetes provider ~> 2.23, cert-manager, Traefik
-- 015-dev-tools-local: Added HCL (OpenTofu 1.6+), YAML (Kubernetes manifests), Bash (validation scripts) + Docker Registry v2, LocalStack (Community Edition), Traefik Ingress, cert-manager
 
 
 <!-- MANUAL ADDITIONS START -->

@@ -1,0 +1,52 @@
+# Home Assistant Configuration Schema
+# Feature: 018-home-assistant
+# Scope: Phase 1 - Base Installation + Prometheus Integration
+# Purpose: Core configuration for Prometheus sensor integration
+
+---
+# configuration.yaml structure (created by HA onboarding wizard)
+homeassistant:
+  name: "Chocolandia Home"
+  unit_system: metric
+  time_zone: "America/Chicago"
+  currency: USD
+
+# Enable default config components
+default_config:
+
+# Logging configuration
+logger:
+  default: info
+  logs:
+    custom_components.prometheus_sensor: debug
+
+---
+# sensors.yaml - Prometheus sensor configuration
+# Added to configuration.yaml after installing ha-prometheus-sensor via HACS
+sensor:
+  - platform: prometheus_sensor
+    url: "http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090"
+    queries:
+      - name: "Node CPU Temperature"
+        unique_id: node_cpu_temperature
+        expr: max(node_hwmon_temp_celsius{job="node-exporter"})
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+
+---
+# recorder.yaml - Database configuration for history (Phase 1)
+recorder:
+  purge_keep_days: 7
+  include:
+    entities:
+      - sensor.node_cpu_temperature
+
+---
+# history.yaml - History panel configuration (Phase 1)
+history:
+  include:
+    entities:
+      - sensor.node_cpu_temperature
+
+# NOTE: Govee, Ntfy, and automation configurations deferred to Phase 2
