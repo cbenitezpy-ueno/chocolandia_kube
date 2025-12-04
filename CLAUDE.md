@@ -36,6 +36,8 @@ Auto-generated from all feature plans. Last updated: 2025-11-08
 - Kubernetes PersistentVolume via local-path-provisioner (Home Assistant config directory) (018-home-assistant)
 - YAML (Kubernetes manifests) / HCL (OpenTofu) 1.6+ + Home Assistant Core (ghcr.io/home-assistant/home-assistant:stable), HACS, ha-prometheus-sensor (018-home-assistant)
 - Kubernetes PersistentVolume via local-path-provisioner (10Gi for /config) (018-home-assistant)
+- YAML (Kubernetes manifests), HCL (OpenTofu 1.6+) + govee2mqtt (ghcr.io/wez/govee2mqtt), Eclipse Mosquitto (MQTT broker), Home Assistant MQTT integration (019-govee2mqtt)
+- PersistentVolume para caché de govee2mqtt (opcional), PV para Mosquitto (persistencia de mensajes) (019-govee2mqtt)
 
 - HCL (OpenTofu) 1.6+, Bash scripting for validation (001-k3s-cluster-setup)
 
@@ -55,9 +57,9 @@ tests/
 HCL (Terraform) 1.6+, Bash scripting for validation: Follow standard conventions
 
 ## Recent Changes
+- 019-govee2mqtt: Added YAML (Kubernetes manifests), HCL (OpenTofu 1.6+) + govee2mqtt (ghcr.io/wez/govee2mqtt), Eclipse Mosquitto (MQTT broker), Home Assistant MQTT integration
 - 018-home-assistant: Added YAML (Kubernetes manifests) / HCL (OpenTofu) 1.6+ + Home Assistant Core (ghcr.io/home-assistant/home-assistant:stable), HACS, ha-prometheus-sensor
 - 018-home-assistant: Added YAML (Home Assistant configuration), HCL (OpenTofu 1.6+) + Home Assistant Core (container), Govee integration (HACS), Prometheus integration, Ntfy integration
-- 017-github-actions-runner: Added HCL (OpenTofu 1.6+), YAML (Kubernetes manifests), Bash (validation scripts) + Actions Runner Controller (ARC) Helm chart, Kubernetes provider ~> 2.23, Helm provider ~> 2.12
 
 
 <!-- MANUAL ADDITIONS START -->
