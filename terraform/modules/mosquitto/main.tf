@@ -180,7 +180,7 @@ resource "kubernetes_deployment" "mosquitto" {
             run_as_group               = 1883
             run_as_non_root            = true
             allow_privilege_escalation = false
-            read_only_root_filesystem  = false
+            read_only_root_filesystem  = true
           }
         }
 

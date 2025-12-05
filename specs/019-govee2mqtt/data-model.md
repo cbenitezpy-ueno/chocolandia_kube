@@ -17,10 +17,9 @@ Este feature no introduce entidades de base de datos tradicionales. En su lugar,
 # Deployment
 mosquitto:
   replicas: 1
-  image: eclipse-mosquitto:latest
+  image: eclipse-mosquitto:2.0.18
   ports:
     - 1883 (MQTT)
-    - 9001 (WebSockets, optional)
   volumes:
     - config: /mosquitto/config
     - data: /mosquitto/data

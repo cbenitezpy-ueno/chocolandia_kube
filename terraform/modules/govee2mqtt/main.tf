@@ -63,6 +63,9 @@ resource "kubernetes_deployment" "govee2mqtt" {
       spec {
         # REQUIRED: hostNetwork for Govee LAN device discovery
         # govee2mqtt uses multicast/broadcast to find devices on local network
+        # SECURITY NOTE: hostNetwork grants access to host's network namespace.
+        # This is necessary for LAN discovery but increases attack surface.
+        # Mitigations: dedicated namespace, no privileged mode, resource limits.
         host_network = true
         dns_policy   = "ClusterFirstWithHostNet"
 
@@ -113,8 +116,17 @@ resource "kubernetes_deployment" "govee2mqtt" {
             }
           }
 
-          # Note: govee2mqtt doesn't expose HTTP endpoints for probes
-          # Container will restart automatically if it crashes
+          # Liveness probe using exec to detect hung processes
+          # govee2mqtt doesn't expose HTTP endpoints, so we check if process is running
+          liveness_probe {
+            exec {
+              command = ["pgrep", "-f", "govee2mqtt"]
+            }
+            initial_delay_seconds = 30
+            period_seconds        = 60
+            timeout_seconds       = 5
+            failure_threshold     = 3
+          }
         }
 
         restart_policy = "Always"
