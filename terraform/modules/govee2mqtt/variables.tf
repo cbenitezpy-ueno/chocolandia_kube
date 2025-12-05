@@ -16,7 +16,7 @@ variable "app_name" {
 variable "image" {
   description = "govee2mqtt Docker image"
   type        = string
-  default     = "ghcr.io/wez/govee2mqtt:latest"
+  default     = "ghcr.io/wez/govee2mqtt:2025.11.25-60a39bcc"
 }
 
 # ============================================================================

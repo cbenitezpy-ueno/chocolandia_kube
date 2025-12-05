@@ -7,7 +7,7 @@
 
 Before starting, ensure you have:
 
-1. **Govee API Key**: `8547b572-a090-495d-91af-ffd5e3a28d39` (provided by user)
+1. **Govee API Key**: Obtain from [Govee Developer Portal](https://developer.govee.com/)
 2. **K3s cluster** running with Home Assistant deployed
 3. **Govee devices** with LAN API enabled (in Govee app: Device → Settings → Enable LAN Control)
 4. **OpenTofu** installed locally
@@ -17,7 +17,7 @@ Before starting, ensure you have:
 ### Step 1: Set Environment Variables
 
 ```bash
-export TF_VAR_govee_api_key="8547b572-a090-495d-91af-ffd5e3a28d39"
+export TF_VAR_govee_api_key="<YOUR_GOVEE_API_KEY>"
 # Optional: If you want IoT features (scenes, music modes)
 # export TF_VAR_govee_email="your-email@example.com"
 # export TF_VAR_govee_password="your-password"

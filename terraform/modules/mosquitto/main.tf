@@ -26,8 +26,9 @@ resource "kubernetes_config_map" "mosquitto_config" {
       # Authentication
       allow_anonymous ${var.allow_anonymous}
 
-      # Persistence - disabled to avoid permission issues
-      persistence false
+      # Persistence configuration
+      persistence ${var.persistence_enabled}
+      persistence_location /mosquitto/data/
 
       # Logging
       log_dest stdout
@@ -112,7 +113,7 @@ resource "kubernetes_deployment" "mosquitto" {
         # Init container to fix permissions on data directory
         init_container {
           name  = "fix-permissions"
-          image = "busybox:latest"
+          image = "busybox:1.36"
           command = ["sh", "-c", "chown -R 1883:1883 /mosquitto/data && chmod -R 755 /mosquitto/data"]
 
           volume_mount {

@@ -16,7 +16,7 @@ variable "app_name" {
 variable "image" {
   description = "Mosquitto Docker image"
   type        = string
-  default     = "eclipse-mosquitto:latest"
+  default     = "eclipse-mosquitto:2.0.18"
 }
 
 variable "storage_size" {

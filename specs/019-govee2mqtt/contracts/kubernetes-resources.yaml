@@ -77,7 +77,7 @@ spec:
     spec:
       containers:
         - name: mosquitto
-          image: eclipse-mosquitto:latest
+          image: eclipse-mosquitto:2.0.18
           ports:
             - name: mqtt
               containerPort: 1883
@@ -138,16 +138,14 @@ spec:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: govee-credentials
+  name: govee2mqtt-credentials
   namespace: home-assistant
   labels:
     app.kubernetes.io/name: govee2mqtt
+    app.kubernetes.io/component: iot-bridge
 type: Opaque
 stringData:
   GOVEE_API_KEY: "${GOVEE_API_KEY}"  # Will be replaced by OpenTofu
-  # Optional credentials for IoT features:
-  # GOVEE_EMAIL: "${GOVEE_EMAIL}"
-  # GOVEE_PASSWORD: "${GOVEE_PASSWORD}"
 
 ---
 apiVersion: apps/v1
@@ -174,12 +172,12 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: govee2mqtt
-          image: ghcr.io/wez/govee2mqtt:latest
+          image: ghcr.io/wez/govee2mqtt:2025.11.25-60a39bcc
           env:
             - name: GOVEE_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: govee-credentials
+                  name: govee2mqtt-credentials
                   key: GOVEE_API_KEY
             - name: GOVEE_MQTT_HOST
               value: "mosquitto.home-assistant.svc.cluster.local"

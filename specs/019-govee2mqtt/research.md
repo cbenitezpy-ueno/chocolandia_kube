@@ -109,8 +109,8 @@
 
 | Dependency | Version | Source |
 |------------|---------|--------|
-| Eclipse Mosquitto | 2.0.x | eclipse-mosquitto:latest |
-| govee2mqtt | latest | ghcr.io/wez/govee2mqtt:latest |
+| Eclipse Mosquitto | 2.0.18 | eclipse-mosquitto:2.0.18 |
+| govee2mqtt | 2025.11.25 | ghcr.io/wez/govee2mqtt:2025.11.25-60a39bcc |
 | Home Assistant | existing | Already deployed in cluster |
 
 ## Risks and Mitigations

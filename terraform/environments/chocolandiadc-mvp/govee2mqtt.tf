@@ -42,7 +42,7 @@ module "govee2mqtt" {
 
   namespace = "home-assistant"
   app_name  = "govee2mqtt"
-  image     = "ghcr.io/wez/govee2mqtt:latest"
+  image     = "ghcr.io/wez/govee2mqtt:2025.11.25-60a39bcc"
 
   # Govee credentials (from environment variable)
   govee_api_key = var.govee_api_key
@@ -75,20 +75,9 @@ variable "govee_api_key" {
   sensitive   = true
 }
 
-# Optional: Govee account credentials for IoT features
-variable "govee_email" {
-  description = "Govee account email (optional, for IoT features)"
-  type        = string
-  default     = ""
-  sensitive   = true
-}
-
-variable "govee_password" {
-  description = "Govee account password (optional, for IoT features)"
-  type        = string
-  default     = ""
-  sensitive   = true
-}
+# Note: govee_email and govee_password variables exist in the module but are
+# not yet implemented. They are reserved for future IoT features (scenes, music modes).
+# When implementing, add them to the module call and pass them to the container.
 
 # ============================================================================
 # Outputs
