@@ -116,17 +116,11 @@ resource "kubernetes_deployment" "govee2mqtt" {
             }
           }
 
-          # Liveness probe using exec to detect hung processes
-          # govee2mqtt doesn't expose HTTP endpoints, so we check if process is running
-          liveness_probe {
-            exec {
-              command = ["pgrep", "-f", "govee2mqtt"]
-            }
-            initial_delay_seconds = 30
-            period_seconds        = 60
-            timeout_seconds       = 5
-            failure_threshold     = 3
-          }
+          # NOTE: Liveness probe removed because:
+          # 1. govee2mqtt container is minimal (no pgrep, ls, or shell tools)
+          # 2. No HTTP endpoint exposed for httpGet probe
+          # 3. Kubernetes restart policy already handles container crashes
+          # 4. Process is stable - if it fails, container exits and restarts
         }
 
         restart_policy = "Always"
