@@ -7,7 +7,7 @@ module "localstack" {
   namespace     = "localstack"
   storage_size  = "20Gi"
   hostname      = "localstack.chocolandiadc.local"
-  services_list = "s3,sqs,sns,dynamodb,lambda"
+  services_list = "s3,sqs,sns,ses,dynamodb,lambda"
 
   # Enable persistence for data across restarts
   enable_persistence = true
