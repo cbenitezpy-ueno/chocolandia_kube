@@ -12,6 +12,20 @@ variable "grafana_hostname" {
 }
 
 # ==============================================================================
+# Locals - Common values for DRY principle
+# ==============================================================================
+
+locals {
+  grafana_namespace = "monitoring"
+  grafana_app_name  = "grafana"
+  grafana_common_labels = {
+    "app.kubernetes.io/name"       = local.grafana_app_name
+    "app.kubernetes.io/managed-by" = "opentofu"
+  }
+  grafana_service_name = "${helm_release.kube_prometheus_stack.name}-grafana"
+}
+
+# ==============================================================================
 # cert-manager Certificate
 # ==============================================================================
 
@@ -28,17 +42,15 @@ resource "kubernetes_manifest" "grafana_certificate" {
     kind       = "Certificate"
     metadata = {
       name      = "grafana-tls"
-      namespace = "monitoring"
-      labels = {
-        "app.kubernetes.io/name"       = "grafana"
-        "app.kubernetes.io/component"  = "certificate"
-        "app.kubernetes.io/managed-by" = "opentofu"
-      }
+      namespace = local.grafana_namespace
+      labels = merge(local.grafana_common_labels, {
+        "app.kubernetes.io/component" = "certificate"
+      })
     }
     spec = {
       secretName = "grafana-tls"
       issuerRef = {
-        name = "local-ca"
+        name = module.local_ca.issuer_name
         kind = "ClusterIssuer"
       }
       dnsNames = [var.grafana_hostname]
@@ -56,12 +68,10 @@ resource "kubernetes_manifest" "grafana_https_redirect" {
     kind       = "Middleware"
     metadata = {
       name      = "grafana-https-redirect"
-      namespace = "monitoring"
-      labels = {
-        "app.kubernetes.io/name"       = "grafana"
-        "app.kubernetes.io/component"  = "middleware"
-        "app.kubernetes.io/managed-by" = "opentofu"
-      }
+      namespace = local.grafana_namespace
+      labels = merge(local.grafana_common_labels, {
+        "app.kubernetes.io/component" = "middleware"
+      })
     }
     spec = {
       redirectScheme = {
@@ -82,12 +92,10 @@ resource "kubernetes_manifest" "grafana_ingressroute_http" {
     kind       = "IngressRoute"
     metadata = {
       name      = "grafana-http"
-      namespace = "monitoring"
-      labels = {
-        "app.kubernetes.io/name"       = "grafana"
-        "app.kubernetes.io/component"  = "ingress"
-        "app.kubernetes.io/managed-by" = "opentofu"
-      }
+      namespace = local.grafana_namespace
+      labels = merge(local.grafana_common_labels, {
+        "app.kubernetes.io/component" = "ingress"
+      })
     }
     spec = {
       entryPoints = ["web"]
@@ -98,7 +106,7 @@ resource "kubernetes_manifest" "grafana_ingressroute_http" {
           middlewares = [
             {
               name      = "grafana-https-redirect"
-              namespace = "monitoring"
+              namespace = local.grafana_namespace
             }
           ]
           services = [
@@ -127,12 +135,10 @@ resource "kubernetes_manifest" "grafana_ingressroute_https" {
     kind       = "IngressRoute"
     metadata = {
       name      = "grafana-https"
-      namespace = "monitoring"
-      labels = {
-        "app.kubernetes.io/name"       = "grafana"
-        "app.kubernetes.io/component"  = "ingress"
-        "app.kubernetes.io/managed-by" = "opentofu"
-      }
+      namespace = local.grafana_namespace
+      labels = merge(local.grafana_common_labels, {
+        "app.kubernetes.io/component" = "ingress"
+      })
     }
     spec = {
       entryPoints = ["websecure"]
@@ -142,9 +148,9 @@ resource "kubernetes_manifest" "grafana_ingressroute_https" {
           kind  = "Rule"
           services = [
             {
-              name      = "kube-prometheus-stack-grafana"
+              name      = local.grafana_service_name
               port      = 80
-              namespace = "monitoring"
+              namespace = local.grafana_namespace
             }
           ]
         }

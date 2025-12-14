@@ -39,6 +39,11 @@ resource "kubernetes_manifest" "selfsigned_issuer" {
 # ==============================================================================
 
 resource "kubernetes_manifest" "local_ca_certificate" {
+  computed_fields = [
+    "spec.duration",
+    "spec.renewBefore"
+  ]
+
   manifest = {
     apiVersion = "cert-manager.io/v1"
     kind       = "Certificate"
