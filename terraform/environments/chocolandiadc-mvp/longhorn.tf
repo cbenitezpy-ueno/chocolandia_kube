@@ -8,6 +8,9 @@
 module "longhorn" {
   source = "../../modules/longhorn"
 
+  # Longhorn chart version - upgrade path: 1.5.5 → 1.6.3 → 1.7.3 → 1.8.2 → 1.9.2 → 1.10.1
+  chart_version = "1.10.1"
+
   # Replica configuration (2 replicas for balance between capacity and HA)
   replica_count = var.longhorn_replica_count
 
