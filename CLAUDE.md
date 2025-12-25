@@ -38,6 +38,10 @@ Auto-generated from all feature plans. Last updated: 2025-11-08
 - Kubernetes PersistentVolume via local-path-provisioner (10Gi for /config) (018-home-assistant)
 - YAML (Kubernetes manifests), HCL (OpenTofu 1.6+) + govee2mqtt (ghcr.io/wez/govee2mqtt), Eclipse Mosquitto (MQTT broker), Home Assistant MQTT integration (019-govee2mqtt)
 - PersistentVolume para caché de govee2mqtt (opcional), PV para Mosquitto (persistencia de mensajes) (019-govee2mqtt)
+- Bash (scripts de validación), HCL/OpenTofu 1.6+ (manifiestos existentes) + kubectl, helm, k3s installer, apt package manager (020-cluster-version-audit)
+- etcd (K3s), Longhorn (persistent volumes), PostgreSQL, Redis (020-cluster-version-audit)
+- HCL (OpenTofu 1.6+), Bash scripting for validation + OpenTofu, Helm provider (~> 2.12), Kubernetes provider (~> 2.23), kubectl (020-cluster-version-audit)
+- N/A (infrastructure operations only) (020-cluster-version-audit)
 
 - HCL (OpenTofu) 1.6+, Bash scripting for validation (001-k3s-cluster-setup)
 
@@ -57,9 +61,9 @@ tests/
 HCL (Terraform) 1.6+, Bash scripting for validation: Follow standard conventions
 
 ## Recent Changes
+- 020-cluster-version-audit: Added HCL (OpenTofu 1.6+), Bash scripting for validation + OpenTofu, Helm provider (~> 2.12), Kubernetes provider (~> 2.23), kubectl
+- 020-cluster-version-audit: Added Bash (scripts de validación), HCL/OpenTofu 1.6+ (manifiestos existentes) + kubectl, helm, k3s installer, apt package manager
 - 019-govee2mqtt: Added YAML (Kubernetes manifests), HCL (OpenTofu 1.6+) + govee2mqtt (ghcr.io/wez/govee2mqtt), Eclipse Mosquitto (MQTT broker), Home Assistant MQTT integration
-- 018-home-assistant: Added YAML (Kubernetes manifests) / HCL (OpenTofu) 1.6+ + Home Assistant Core (ghcr.io/home-assistant/home-assistant:stable), HACS, ha-prometheus-sensor
-- 018-home-assistant: Added YAML (Home Assistant configuration), HCL (OpenTofu 1.6+) + Home Assistant Core (container), Govee integration (HACS), Prometheus integration, Ntfy integration
 
 
 <!-- MANUAL ADDITIONS START -->
