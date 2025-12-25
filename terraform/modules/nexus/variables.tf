@@ -31,7 +31,7 @@ variable "storage_class" {
 variable "nexus_image" {
   description = "Nexus Repository Manager container image"
   type        = string
-  default     = "sonatype/nexus3:latest"
+  default     = "sonatype/nexus3:3.87.1"  # Pinned from :latest
 }
 
 variable "resource_limits_memory" {

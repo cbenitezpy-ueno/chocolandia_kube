@@ -17,7 +17,7 @@ variable "app_name" {
 variable "image" {
   description = "Home Assistant container image"
   type        = string
-  default     = "ghcr.io/home-assistant/home-assistant:stable"
+  default     = "ghcr.io/home-assistant/home-assistant:2025.12.4"  # Pinned from :stable
 }
 
 variable "timezone" {

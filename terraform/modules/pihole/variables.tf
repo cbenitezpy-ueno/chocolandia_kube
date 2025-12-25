@@ -56,7 +56,7 @@ variable "namespace" {
 variable "image" {
   description = "Pi-hole Docker image"
   type        = string
-  default     = "pihole/pihole:2024.07.0"
+  default     = "pihole/pihole:2025.11.1"  # Pinned from latest (2024.07.0 → 2025.11.1)
 }
 
 variable "replicas" {

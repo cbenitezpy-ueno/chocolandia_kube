@@ -30,7 +30,7 @@ variable "storage_class" {
 variable "localstack_image" {
   description = "LocalStack image to deploy"
   type        = string
-  default     = "localstack/localstack:latest"
+  default     = "localstack/localstack:4.10.0"  # Pinned from :latest
 }
 
 variable "resource_limits_memory" {
