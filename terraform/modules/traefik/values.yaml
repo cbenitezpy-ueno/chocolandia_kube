@@ -61,11 +61,8 @@ resources:
     cpu: "500m"
     memory: "256Mi"
 
-# Health checks
+# Health checks (chart 38.x schema - probe type is internal)
 readinessProbe:
-  httpGet:
-    path: /ping
-    port: 9000
   initialDelaySeconds: 10
   periodSeconds: 10
   timeoutSeconds: 2
@@ -73,9 +70,6 @@ readinessProbe:
   failureThreshold: 3
 
 livenessProbe:
-  httpGet:
-    path: /ping
-    port: 9000
   initialDelaySeconds: 10
   periodSeconds: 10
   timeoutSeconds: 2
@@ -133,6 +127,6 @@ securityContext:
 rbac:
   enabled: true
 
-# Service Account
+# Service Account (chart 38.x schema - creation is automatic)
 serviceAccount:
-  create: true
+  name: ""  # Empty means auto-create using fullname template
