@@ -117,3 +117,9 @@ variable "access_auto_redirect" {
   type        = bool
   default     = true
 }
+
+variable "minio_image" {
+  description = "MinIO container image"
+  type        = string
+  default     = "quay.io/minio/minio:RELEASE.2025-01-20T14-49-07Z"  # Upgraded from RELEASE.2024-01-01
+}

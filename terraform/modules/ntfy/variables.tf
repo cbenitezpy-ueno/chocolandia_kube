@@ -10,7 +10,7 @@ variable "namespace" {
 variable "image_tag" {
   description = "Ntfy container image tag"
   type        = string
-  default     = "latest"
+  default     = "v2.15.0"  # Pinned from v2.8.0
 }
 
 variable "ingress_host" {
