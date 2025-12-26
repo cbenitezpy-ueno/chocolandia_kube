@@ -82,13 +82,13 @@ MetalLB Pool Configuration:
 
 | Service | Namespace | External IP | Ports | Description |
 |---------|-----------|-------------|-------|-------------|
-| postgres-ha-postgresql-primary | postgresql | 192.168.4.200 | 5432/TCP | PostgreSQL HA Primary - Main database endpoint |
-| pihole-dns | default | 192.168.4.201 | 53/TCP, 53/UDP | Pi-hole DNS - Network-wide ad blocking and DNS |
+| pihole-dns | default | 192.168.4.200 | 53/TCP, 53/UDP | Pi-hole DNS - Network-wide ad blocking and DNS |
 | traefik | traefik | 192.168.4.202 | 80/TCP, 443/TCP, 9100/TCP | Traefik Ingress Controller - Entry point for all HTTPS traffic + Prometheus metrics |
-| redis-shared-external | redis | 192.168.4.203 | 6379/TCP | Redis Shared - Cluster-wide caching service (primary + replica) |
+| redis-shared-external | redis | 192.168.4.203 | 6379/TCP | Redis Shared - Cluster-wide caching service (groundhog2k/redis with official images) |
+| postgres-ha-external | postgresql | 192.168.4.204 | 5432/TCP | PostgreSQL - Main database endpoint (groundhog2k/postgres with official images) |
 
 ### Available IPs
-- 192.168.4.204 - 192.168.4.210 (7 IPs available)
+- 192.168.4.201, 192.168.4.205 - 192.168.4.210 (7 IPs available)
 
 ### Important Notes
 1. **Always use LoadBalancer type** for services that need to be accessible on standard ports (53, 80, 443, 5432, etc.)

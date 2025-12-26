@@ -1,79 +1,88 @@
-# PostgreSQL HA Cluster Deployment
+# PostgreSQL Database Service (Groundhog2k)
 # Feature 011: PostgreSQL Cluster Database Service
 #
-# Deploys PostgreSQL HA cluster with primary-replica topology for:
-# - Application database connectivity (User Story 1)
-# - Internal network administrator access (User Story 2)
+# Deploys PostgreSQL using official Docker images (not Bitnami) for better
+# long-term support and availability. Migrated from Bitnami due to
+# licensing changes in August 2025.
+#
+# Uses groundhog2k/postgres chart with official docker.io/postgres images.
 
-module "postgresql_cluster" {
-  source = "../../modules/postgresql-cluster"
+module "postgresql" {
+  source = "../../modules/postgresql-groundhog2k"
 
-  # Basic configuration
-  namespace          = "postgresql"
-  release_name       = "postgres-ha"
-  postgresql_version = "16"
+  # Core Configuration
+  release_name = "postgres-ha"
+  namespace    = "postgresql"
 
-  # High availability configuration
-  replica_count    = 2 # 1 primary + 1 replica
-  replication_mode = "async"
+  # Helm Chart Version
+  chart_repository = "https://groundhog2k.github.io/helm-charts/"
+  chart_version    = "1.6.1"
+  helm_timeout     = 600
 
-  # Storage configuration
+  # PostgreSQL Image (official)
+  postgres_image_tag = "17-alpine"
+
+  # Database Configuration
+  postgres_database    = "app_db"
+  postgres_user        = "app_user"
+  additional_databases = ["beersystem_stage"]
+
+  # Storage Configuration
+  storage_class = "local-path"
   storage_size  = "50Gi"
-  storage_class = "local-path" # K3s local-path-provisioner
 
-  # Resource limits (per pod)
-  resources_limits_cpu      = "2"
-  resources_limits_memory   = "4Gi"
-  resources_requests_cpu    = "500m"
-  resources_requests_memory = "1Gi"
+  # Resource Limits
+  cpu_request    = "500m"
+  cpu_limit      = "2"
+  memory_request = "1Gi"
+  memory_limit   = "4Gi"
 
-  # Network configuration
-  enable_external_access = true
-  metallb_ip_pool        = "eero-pool"
+  # Private Network Access (MetalLB LoadBalancer)
+  # Note: 192.168.4.200 is used by pihole-dns, using 192.168.4.204 (first available)
+  loadbalancer_ip = "192.168.4.204"
+  metallb_ip_pool = "eero-pool"
 
-  # Monitoring configuration
+  # Monitoring Integration
   enable_metrics         = true
   enable_service_monitor = true
-
-  # Security configuration
-  create_random_passwords = true # Auto-generate secure passwords
-
-  # Helm chart configuration
-  chart_version = "18.1.9"  # Keep: Bitnami images unavailable in newer versions
-  helm_timeout  = 600      # 10 minutes for initial deployment
+  monitoring_namespace   = "monitoring"
 }
 
 # ==============================================================================
-# Outputs for PostgreSQL Connection Information
+# Outputs
 # ==============================================================================
 
-output "postgresql_cluster_ip_endpoint" {
-  description = "PostgreSQL ClusterIP service endpoint for cluster-internal access"
-  value       = module.postgresql_cluster.cluster_ip_service_endpoint
+output "postgresql_service" {
+  description = "PostgreSQL service DNS (for read/write operations)"
+  value       = module.postgresql.postgresql_service
 }
 
-output "postgresql_read_replica_endpoint" {
-  description = "PostgreSQL read replica service endpoint"
-  value       = module.postgresql_cluster.read_replica_service_endpoint
+output "postgresql_external_ip" {
+  description = "PostgreSQL LoadBalancer IP (private network 192.168.4.0/24)"
+  value       = module.postgresql.postgresql_external_ip
 }
 
-output "postgresql_external_ip_command" {
-  description = "Command to get PostgreSQL external IP (MetalLB LoadBalancer)"
-  value       = module.postgresql_cluster.external_ip
+output "postgresql_secret_name" {
+  description = "Kubernetes Secret containing PostgreSQL credentials"
+  value       = module.postgresql.postgresql_secret_name
 }
 
-output "postgresql_credentials_secret" {
-  description = "Kubernetes Secret name containing PostgreSQL credentials"
-  value       = module.postgresql_cluster.credentials_secret_name
+output "postgresql_connection_url_internal" {
+  description = "PostgreSQL connection URL for cluster applications"
+  value       = module.postgresql.postgresql_connection_url_internal
 }
 
-output "postgresql_password_command" {
-  description = "Command to retrieve postgres superuser password"
-  value       = module.postgresql_cluster.postgres_password_command
-  sensitive   = true
+output "postgresql_connection_url_external" {
+  description = "PostgreSQL connection URL for private network access"
+  value       = module.postgresql.postgresql_connection_url_external
+}
+
+output "postgresql_image" {
+  description = "PostgreSQL Docker image being used"
+  value       = module.postgresql.postgresql_image
 }
 
 output "postgresql_verification_commands" {
-  description = "Useful commands for verifying PostgreSQL deployment"
-  value       = module.postgresql_cluster.verification_commands
+  description = "Commands to verify PostgreSQL deployment"
+  value       = module.postgresql.verification_commands
 }
