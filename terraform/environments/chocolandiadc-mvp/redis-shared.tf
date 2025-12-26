@@ -24,7 +24,7 @@ module "redis_shared" {
 
   # Helm Chart Version
   chart_repository = "https://charts.bitnami.com/bitnami"
-  chart_version    = "23.2.12" # Redis 8.2.x
+  chart_version    = "23.2.12"  # Keep: Bitnami images unavailable in newer versions
   helm_timeout     = 600       # 10 minutes
 
   # Storage Configuration

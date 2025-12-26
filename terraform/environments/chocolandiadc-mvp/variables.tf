@@ -491,3 +491,18 @@ variable "github_app_private_key" {
     error_message = "GitHub App private key must be in PEM format (starting with -----BEGIN)"
   }
 }
+
+# ============================================================================
+# MetalLB Load Balancer Configuration
+# ============================================================================
+
+variable "metallb_ip_range" {
+  description = "IP range for MetalLB LoadBalancer services (e.g., 192.168.4.200-192.168.4.210)"
+  type        = string
+  default     = "192.168.4.200-192.168.4.210"
+
+  validation {
+    condition     = can(regex("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}-(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$", var.metallb_ip_range))
+    error_message = "MetalLB IP range must be in format: start_ip-end_ip (e.g., 192.168.4.200-192.168.4.210)"
+  }
+}
