@@ -8,7 +8,7 @@
 # Cloudflare Access Application
 # ==============================================================================
 
-resource "cloudflare_access_application" "argocd" {
+resource "cloudflare_zero_trust_access_application" "argocd" {
   account_id = var.cloudflare_account_id
 
   name                      = "ArgoCD (${var.argocd_domain})"
@@ -41,9 +41,9 @@ resource "cloudflare_access_application" "argocd" {
 # Cloudflare Access Policy - Authorized Users
 # ==============================================================================
 
-resource "cloudflare_access_policy" "argocd_authorized_users" {
+resource "cloudflare_zero_trust_access_policy" "argocd_authorized_users" {
   account_id     = var.cloudflare_account_id
-  application_id = cloudflare_access_application.argocd.id
+  application_id = cloudflare_zero_trust_access_application.argocd.id
 
   name       = "ArgoCD Authorized Users"
   decision   = "allow"
