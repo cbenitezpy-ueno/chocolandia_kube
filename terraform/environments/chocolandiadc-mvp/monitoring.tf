@@ -114,14 +114,16 @@ resource "helm_release" "kube_prometheus_stack" {
   }
 
   # Deploy node-exporter on all nodes
+  # Note: hostNetwork disabled due to persistent K3s scheduler port conflict issue
+  # The scheduler falsely reports port 9100 as in-use even when it's not
   set {
     name  = "prometheus-node-exporter.hostNetwork"
-    value = "true"
+    value = "false"
   }
 
   set {
     name  = "prometheus-node-exporter.hostPID"
-    value = "true"
+    value = "false"
   }
 
   # ============================================================================
