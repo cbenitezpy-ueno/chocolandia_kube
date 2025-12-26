@@ -458,6 +458,162 @@ Algunos upgrades fueron diferidos por ser de baja prioridad o requerir planifica
 
 ---
 
+## Actualización: Upgrades de Prioridad Media (26 de Diciembre, 2025)
+
+Un día después del upgrade principal, completamos los componentes de prioridad media que habían quedado pendientes.
+
+### Componentes Actualizados
+
+| Componente | Versión Anterior | Versión Nueva | Función |
+|------------|------------------|---------------|---------|
+| **ntfy** | v2.8.0 | v2.15.0 | Push notifications para alertas |
+| **MinIO** | RELEASE.2024-01-01 | RELEASE.2025-01-20 | Object storage S3-compatible |
+| **MetalLB** | 0.14.8 | 0.15.3 | LoadBalancer para bare-metal |
+
+### Desafío #4: Migración de MetalLB a Helm
+
+MetalLB presentó el desafío más interesante. Originalmente fue desplegado con `kubectl apply`, pero queríamos migrarlo a gestión via Helm para consistencia con el resto del cluster.
+
+```mermaid
+sequenceDiagram
+    participant TF as OpenTofu
+    participant HELM as Helm
+    participant K8S as Kubernetes
+    participant CRD as CRDs MetalLB
+
+    TF->>HELM: helm install metallb
+    HELM->>K8S: Buscar recursos existentes
+    K8S-->>HELM: CRDs encontrados sin labels Helm
+    HELM-->>TF: Error: cannot import<br/>missing app.kubernetes.io/managed-by=Helm
+
+    Note over TF,CRD: Solución: Adoptar recursos existentes
+
+    TF->>K8S: kubectl label crd/*.metallb.io<br/>app.kubernetes.io/managed-by=Helm
+    TF->>K8S: kubectl annotate crd/*.metallb.io<br/>meta.helm.sh/release-name=metallb
+
+    TF->>HELM: helm install metallb (retry)
+    HELM->>K8S: Recursos adoptados exitosamente
+    K8S-->>TF: Deployed!
+```
+
+El problema era que Helm no puede "adoptar" recursos existentes a menos que tengan las etiquetas correctas:
+
+```bash
+# Error original
+Error: CustomResourceDefinition "ipaddresspools.metallb.io" exists and
+cannot be imported: missing key "app.kubernetes.io/managed-by": must be set to "Helm"
+
+# Solución: Etiquetar los 7 CRDs + recursos relacionados
+kubectl label crd bfdprofiles.metallb.io bgpadvertisements.metallb.io \
+  bgppeers.metallb.io communities.metallb.io ipaddresspools.metallb.io \
+  l2advertisements.metallb.io servicel2statuses.metallb.io \
+  app.kubernetes.io/managed-by=Helm --overwrite
+
+kubectl annotate crd bfdprofiles.metallb.io bgpadvertisements.metallb.io \
+  bgppeers.metallb.io communities.metallb.io ipaddresspools.metallb.io \
+  l2advertisements.metallb.io servicel2statuses.metallb.io \
+  meta.helm.sh/release-name=metallb \
+  meta.helm.sh/release-namespace=metallb-system --overwrite
+```
+
+### Desafío #5: Volúmenes RWO Durante Rolling Update de MinIO
+
+MinIO usa un PersistentVolumeClaim con `ReadWriteOnce` (RWO). Durante un rolling update normal, Kubernetes intenta crear el nuevo pod antes de terminar el viejo, causando un deadlock:
+
+```mermaid
+graph TB
+    subgraph "Problema: RWO Deadlock"
+        POD_OLD[Pod Viejo<br/>minio-xxx-old]
+        POD_NEW[Pod Nuevo<br/>minio-xxx-new]
+        PVC[PVC: minio-data<br/>RWO - ReadWriteOnce]
+
+        POD_OLD -->|Attached| PVC
+        POD_NEW -->|Multi-Attach Error| PVC
+
+        style POD_NEW fill:#FF6B6B
+    end
+```
+
+```mermaid
+graph TB
+    subgraph "Solución: Scale Down/Up"
+        S1[1. Scale to 0]
+        S2[2. Pod viejo termina]
+        S3[3. PVC liberado]
+        S4[4. Scale to 1]
+        S5[5. Pod nuevo arranca]
+
+        S1 --> S2 --> S3 --> S4 --> S5
+
+        style S5 fill:#90EE90
+    end
+```
+
+**Comandos ejecutados:**
+```bash
+# Escalar a 0 para liberar el volumen
+kubectl scale deployment minio -n minio --replicas=0
+
+# Esperar que termine
+kubectl wait --for=delete pod -l app=minio -n minio --timeout=60s
+
+# Escalar de vuelta
+kubectl scale deployment minio -n minio --replicas=1
+```
+
+### Estado Final de LoadBalancer Services
+
+Después de los upgrades, verificamos que todos los servicios LoadBalancer mantienen sus IPs asignadas:
+
+```mermaid
+graph LR
+    subgraph "MetalLB v0.15.3 - IP Pool"
+        IP200[192.168.4.200<br/>Pi-hole DNS]
+        IP201[192.168.4.201<br/>PostgreSQL]
+        IP202[192.168.4.202<br/>Traefik]
+        IP203[192.168.4.203<br/>Redis]
+    end
+
+    subgraph "Disponibles"
+        IP204[192.168.4.204]
+        IP205[192.168.4.205]
+        IP206[...]
+        IP210[192.168.4.210]
+    end
+
+    style IP200 fill:#90EE90
+    style IP201 fill:#90EE90
+    style IP202 fill:#90EE90
+    style IP203 fill:#90EE90
+```
+
+### Resumen de Mejoras de Código
+
+Como parte de estos upgrades, también mejoramos la infraestructura como código:
+
+1. **MinIO**: Convertimos la imagen hardcodeada a una variable de Terraform para facilitar futuros upgrades
+2. **ntfy**: Eliminamos el tag `latest` del default y lo pinneamos a una versión específica
+3. **MetalLB**: Migramos de kubectl manifests a módulo Terraform con Helm release
+
+```hcl
+# Antes (hardcoded)
+image = "quay.io/minio/minio:RELEASE.2024-01-01T16-36-33Z"
+
+# Después (variable)
+variable "minio_image" {
+  default = "quay.io/minio/minio:RELEASE.2025-01-20T14-49-07Z"
+}
+image = var.minio_image
+```
+
+### Lecciones Adicionales
+
+1. **Helm Adoption**: Cuando migras recursos de kubectl a Helm, necesitas etiquetar todos los recursos existentes con los labels de Helm ownership antes de hacer el install
+2. **RWO Volumes**: Para deployments con volúmenes RWO, considera usar `strategy.type: Recreate` en lugar de `RollingUpdate`
+3. **Environment Overrides**: Siempre verifica si el environment está sobreescribiendo valores del módulo - el problema del ntfy que seguía en v2.8.0 se debía a esto
+
+---
+
 ## Referencias
 
 - [K3s Release Notes v1.33](https://github.com/k3s-io/k3s/releases/tag/v1.33.7%2Bk3s1)
