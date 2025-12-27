@@ -3,6 +3,9 @@
 # ============================================================================
 # This module deploys MetalLB via Helm chart for bare-metal LoadBalancer
 # services in K3s cluster.
+#
+# Refactored to use declarative kubernetes_manifest resources instead of
+# null_resource provisioners for accurate plan visibility and state tracking.
 # ============================================================================
 
 terraform {
@@ -14,6 +17,10 @@ terraform {
     kubernetes = {
       source  = "hashicorp/kubernetes"
       version = "~> 2.23"
+    }
+    time = {
+      source  = "hashicorp/time"
+      version = "~> 0.11"
     }
   }
 }
@@ -37,65 +44,63 @@ resource "helm_release" "metallb" {
   }
 }
 
-# Wait for MetalLB CRDs to be ready
-resource "null_resource" "wait_for_crds" {
+# Wait for MetalLB CRDs to be registered after Helm release
+resource "time_sleep" "wait_for_crds" {
   depends_on = [helm_release.metallb]
 
-  provisioner "local-exec" {
-    command = <<-EOT
-      echo "Waiting for MetalLB CRDs to be ready..."
-      for i in {1..30}; do
-        if kubectl get crd ipaddresspools.metallb.io >/dev/null 2>&1; then
-          echo "CRDs are ready"
-          exit 0
-        fi
-        echo "Waiting for CRDs... attempt $i/30"
-        sleep 2
-      done
-      echo "Timeout waiting for CRDs"
-      exit 1
-    EOT
-  }
+  create_duration = var.crd_wait_duration
 }
 
 # IPAddressPool for LoadBalancer IPs
-resource "null_resource" "ip_address_pool" {
-  depends_on = [null_resource.wait_for_crds]
+resource "kubernetes_manifest" "ip_address_pool" {
+  depends_on = [time_sleep.wait_for_crds]
 
-  triggers = {
-    pool_name = var.pool_name
-    ip_range  = var.ip_range
+  manifest = {
+    apiVersion = "metallb.io/v1beta1"
+    kind       = "IPAddressPool"
+    metadata = {
+      name      = var.pool_name
+      namespace = var.namespace
+      labels = {
+        "app.kubernetes.io/name"       = "metallb"
+        "app.kubernetes.io/component"  = "ip-pool"
+        "app.kubernetes.io/managed-by" = "opentofu"
+      }
+    }
+    spec = {
+      addresses = [var.ip_range]
+    }
   }
 
-  provisioner "local-exec" {
-    command = <<-EOT
-      cat <<'EOF' | kubectl apply -f -
-apiVersion: metallb.io/v1beta1
-kind: IPAddressPool
-metadata:
-  name: ${var.pool_name}
-  namespace: ${var.namespace}
-spec:
-  addresses:
-    - ${var.ip_range}
----
-apiVersion: metallb.io/v1beta1
-kind: L2Advertisement
-metadata:
-  name: ${var.pool_name}-l2
-  namespace: ${var.namespace}
-spec:
-  ipAddressPools:
-    - ${var.pool_name}
-EOF
-    EOT
+  field_manager {
+    name            = "opentofu"
+    force_conflicts = true
+  }
+}
+
+# L2Advertisement for Layer 2 mode IP announcement
+resource "kubernetes_manifest" "l2_advertisement" {
+  depends_on = [kubernetes_manifest.ip_address_pool]
+
+  manifest = {
+    apiVersion = "metallb.io/v1beta1"
+    kind       = "L2Advertisement"
+    metadata = {
+      name      = "${var.pool_name}-l2"
+      namespace = var.namespace
+      labels = {
+        "app.kubernetes.io/name"       = "metallb"
+        "app.kubernetes.io/component"  = "l2-advertisement"
+        "app.kubernetes.io/managed-by" = "opentofu"
+      }
+    }
+    spec = {
+      ipAddressPools = [var.pool_name]
+    }
   }
 
-  provisioner "local-exec" {
-    when    = destroy
-    command = <<-EOT
-      kubectl delete ipaddresspool ${self.triggers.pool_name} -n metallb-system --ignore-not-found=true
-      kubectl delete l2advertisement ${self.triggers.pool_name}-l2 -n metallb-system --ignore-not-found=true
-    EOT
+  field_manager {
+    name            = "opentofu"
+    force_conflicts = true
   }
 }

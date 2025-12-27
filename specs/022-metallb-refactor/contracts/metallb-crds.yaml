@@ -1,0 +1,65 @@
+# MetalLB Custom Resource Definitions Contract
+# API Version: metallb.io/v1beta1
+# Purpose: Define the expected structure for MetalLB resources managed by OpenTofu
+
+---
+# IPAddressPool Contract
+# Defines a pool of IP addresses for LoadBalancer services
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  # Required: Unique name within namespace
+  name: "${pool_name}"
+  # Required: Must match MetalLB namespace
+  namespace: "${namespace}"
+  # Optional but recommended: Labels for identification
+  labels:
+    app.kubernetes.io/name: metallb
+    app.kubernetes.io/component: ip-pool
+    app.kubernetes.io/managed-by: opentofu
+spec:
+  # Required: List of IP address ranges or CIDRs
+  # Formats:
+  #   - Range: "192.168.4.200-192.168.4.210"
+  #   - CIDR: "192.168.4.0/24"
+  #   - Single IP: "192.168.4.200/32"
+  addresses:
+    - "${ip_range}"
+
+  # Optional: Automatically assign IPs to services (default: true)
+  # Set to false for manual IP assignment via service annotation
+  autoAssign: true
+
+  # Optional: Avoid .0 and .255 addresses (default: false)
+  # Useful for networks with strict router/broadcast requirements
+  # avoidBuggyIPs: false
+
+---
+# L2Advertisement Contract
+# Enables Layer 2 mode for IP announcement via ARP/NDP
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  # Required: Unique name (convention: ${pool_name}-l2)
+  name: "${pool_name}-l2"
+  # Required: Must match MetalLB namespace
+  namespace: "${namespace}"
+  # Optional but recommended: Labels for identification
+  labels:
+    app.kubernetes.io/name: metallb
+    app.kubernetes.io/component: l2-advertisement
+    app.kubernetes.io/managed-by: opentofu
+spec:
+  # Required: Reference to IPAddressPool(s) to advertise
+  # WARNING: Empty list advertises ALL pools!
+  ipAddressPools:
+    - "${pool_name}"
+
+  # Optional: Limit advertisement to specific nodes
+  # nodeSelectors:
+  #   - matchLabels:
+  #       kubernetes.io/hostname: node1
+
+  # Optional: Limit advertisement to specific interfaces
+  # interfaces:
+  #   - eth0
