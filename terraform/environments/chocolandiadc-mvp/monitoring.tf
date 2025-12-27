@@ -25,7 +25,7 @@ resource "null_resource" "monitoring_namespace" {
 # ============================================================================
 
 locals {
-  prometheus_stack_version = "55.5.0" # TODO: Upgrade requires significant values.yaml changes (see 020-cluster-version-audit)
+  prometheus_stack_version = "68.4.0" # Upgraded from 55.5.0 (021-monitoring-stack-upgrade)
 }
 
 resource "helm_release" "kube_prometheus_stack" {
