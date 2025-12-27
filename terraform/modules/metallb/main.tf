@@ -68,13 +68,14 @@ resource "kubernetes_manifest" "ip_address_pool" {
       }
     }
     spec = {
-      addresses = [var.ip_range]
+      addresses  = [var.ip_range]
+      autoAssign = true
     }
   }
 
   field_manager {
     name            = "opentofu"
-    force_conflicts = true
+    force_conflicts = false
   }
 }
 
@@ -101,6 +102,6 @@ resource "kubernetes_manifest" "l2_advertisement" {
 
   field_manager {
     name            = "opentofu"
-    force_conflicts = true
+    force_conflicts = false
   }
 }
