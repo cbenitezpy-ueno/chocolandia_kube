@@ -46,7 +46,7 @@ Los CRDs de Prometheus Operator entre v0.70.0 y v0.75.x+ incluyen cambios en la 
 
 ### Action Items
 1. Exportar todos los ServiceMonitors actuales: `kubectl get servicemonitors -A -o yaml > backup-servicemonitors.yaml`
-2. Revisar changelog de Prometheus Operator v0.75.x
+2. Revisar changelog de Prometheus Operator v0.79.2
 3. Identificar campos deprecados o nuevos requeridos
 4. Actualizar CRDs antes del upgrade del chart
 
@@ -228,7 +228,7 @@ set {
 | Version | Release Date | K8s Compat | Prometheus | Grafana | Notes |
 |---------|-------------|------------|------------|---------|-------|
 | 68.1.0 | 2024-11 | 1.28-1.31 | v2.54.x | v11.2.x | LTS candidate |
-| 68.4.0 | 2024-12 | 1.28-1.32 | v2.55.x | v11.3.x | Latest stable |
+| 68.4.0 | 2024-12 | 1.28-1.32 | v2.55.x | v11.4.0 | Latest stable ✅ Selected |
 | 80.x | 2025-12 | 1.30-1.33+ | v3.0.x | v11.4.x | Major version jump |
 
 ### Decision
@@ -265,8 +265,9 @@ kubectl get pods -n monitoring
 kubectl port-forward svc/kube-prometheus-stack-prometheus 9090:9090 -n monitoring
 # Abrir http://localhost:9090 y verificar query de prueba
 
-# 4. Verificar alertas
+# 4. Verificar alertas (v55.5.0 uses Alertmanager v0.26.x with v1 API)
 curl -X POST http://alertmanager:9093/api/v1/alerts -d '[{"labels":{"alertname":"test"}}]'
+# Note: After upgrade to v68.4.0, use /api/v2/alerts instead
 ```
 
 ### Time Estimate

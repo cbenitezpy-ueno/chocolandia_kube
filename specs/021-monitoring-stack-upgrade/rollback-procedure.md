@@ -21,7 +21,7 @@ This document describes how to rollback kube-prometheus-stack from version 68.4.
 
 ```bash
 # Set kubeconfig
-export KUBECONFIG=/Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/kubeconfig
+export KUBECONFIG=<repo-root>/terraform/environments/chocolandiadc-mvp/kubeconfig
 
 # View available revisions
 helm history kube-prometheus-stack -n monitoring
@@ -49,7 +49,7 @@ locals {
 2. **Apply the change:**
 
 ```bash
-cd /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp
+cd <repo-root>/terraform/environments/chocolandiadc-mvp
 
 TF_VAR_github_token="dummy" \
 TF_VAR_github_app_id="dummy" \
@@ -92,13 +92,13 @@ kubectl get svc kube-prometheus-stack-grafana -n monitoring -o jsonpath='{.spec.
 # Expected: 30000
 
 # 5. Verify Grafana accessible
-curl -s http://192.168.4.101:30000/api/health | jq
+curl -s http://<node-ip>:30000/api/health | jq
 # Expected: {"database":"ok",...}
 
-# 6. Verify alerts working
+# 6. Verify alerts working (v55.5.0 uses Alertmanager v0.26.x with v1 API)
 kubectl port-forward svc/kube-prometheus-stack-alertmanager 9093:9093 -n monitoring &
 sleep 3
-curl -X POST http://localhost:9093/api/v2/alerts -H "Content-Type: application/json" \
+curl -X POST http://localhost:9093/api/v1/alerts -H "Content-Type: application/json" \
   -d '[{"labels":{"alertname":"RollbackTestAlert","severity":"info"}}]'
 # Check Ntfy for alert
 ```

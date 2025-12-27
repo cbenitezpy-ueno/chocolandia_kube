@@ -11,9 +11,9 @@ Upgrade del stack de monitoreo kube-prometheus-stack de la versión 55.5.0 a 68.
 
 **Language/Version**: HCL (OpenTofu 1.6+), YAML (Helm values)
 **Primary Dependencies**:
-- kube-prometheus-stack Helm chart (actual: 55.5.0 → target: 68.x+)
-- Prometheus Operator v0.70.0 → v0.75.x+
-- Grafana 10.x → 11.x
+- kube-prometheus-stack Helm chart (actual: 55.5.0 → target: 68.4.0)
+- Prometheus Operator v0.70.0 → v0.79.2
+- Grafana 10.x → 11.4.0
 - Alertmanager v0.26.x → v0.27.x
 **Storage**: PersistentVolume 10Gi (Prometheus), 5Gi (Grafana) via local-path-provisioner
 **Testing**: kubectl, helm, tofu validate/plan, curl (alertas de prueba)
@@ -90,12 +90,12 @@ terraform/
 - Alertmanager: v0.26.x
 - Node Exporter: v1.7.x
 
-### Target State (v68.x)
-- Prometheus Operator: v0.75.x+ (CRD changes)
-- Prometheus: v2.53.x+
-- Grafana: v11.x (sidecar label changes)
-- Alertmanager: v0.27.x (receiver structure changes)
-- Node Exporter: v1.8.x (hostNetwork config changes)
+### Target State (v68.4.0 - Achieved)
+- Prometheus Operator: v0.79.2
+- Prometheus: v2.55.x
+- Grafana: v11.4.0
+- Alertmanager: v0.27.x (uses v2 API, v1 deprecated)
+- Node Exporter: v1.8.x (hostNetwork kept false)
 
 ### Breaking Changes Identified (from /speckit.clarify)
 

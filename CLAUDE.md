@@ -210,8 +210,8 @@ registry=https://nexus.chocolandiadc.local/repository/npm-proxy/
 
 ### Key Configuration
 - **Retention**: 15 days
-- **Grafana Access**: NodePort 30000 (http://192.168.4.101:30000)
-- **Grafana Password**: `prom-operator` (admin user)
+- **Grafana Access**: NodePort 30000 (http://<node-ip>:30000)
+- **Grafana Credentials**: admin user - password in `monitoring.tf` (grafana.adminPassword)
 - **Alert Notifications**: Ntfy (homelab-alerts topic)
 - **Storage**: 10Gi Prometheus, 5Gi Grafana (local-path-provisioner)
 

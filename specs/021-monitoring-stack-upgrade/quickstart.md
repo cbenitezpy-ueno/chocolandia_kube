@@ -21,7 +21,7 @@ helm list -n monitoring
 kubectl get pods -n monitoring
 
 # Verificar acceso a Grafana
-curl -s http://192.168.4.101:30000/api/health | jq
+curl -s http://<node-ip>:30000/api/health | jq
 
 # Verificar ServiceMonitors
 kubectl get servicemonitors -A --no-headers | wc -l
@@ -66,7 +66,7 @@ kubectl get svc -n monitoring kube-prometheus-stack-grafana -o jsonpath='{.spec.
 ### Step 3: Update OpenTofu Configuration
 
 ```bash
-cd /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp
+cd <repo-root>/terraform/environments/chocolandiadc-mvp
 
 # Editar monitoring.tf
 # Cambiar: local.prometheus_stack_version = "55.5.0"
@@ -84,9 +84,9 @@ locals {
 ### Step 4: Validate OpenTofu Plan
 
 ```bash
-export KUBECONFIG=/Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp/kubeconfig
+export KUBECONFIG=<repo-root>/terraform/environments/chocolandiadc-mvp/kubeconfig
 
-cd /Users/cbenitez/chocolandia_kube/terraform/environments/chocolandiadc-mvp
+cd <repo-root>/terraform/environments/chocolandiadc-mvp
 
 # Validar sintaxis
 tofu validate
@@ -157,7 +157,7 @@ kubectl get cm -n monitoring -l grafana_dashboard=1 --no-headers | wc -l
 # Generar alerta de prueba
 kubectl port-forward svc/kube-prometheus-stack-alertmanager 9093:9093 -n monitoring &
 
-curl -X POST http://localhost:9093/api/v1/alerts \
+curl -X POST http://localhost:9093/api/v2/alerts \
   -H "Content-Type: application/json" \
   -d '[
     {
