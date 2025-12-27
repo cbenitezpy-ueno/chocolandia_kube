@@ -8,8 +8,8 @@ module "cert_manager" {
   # Namespace configuration
   namespace = "cert-manager"
 
-  # Helm chart version
-  chart_version = "v1.13.3"
+  # Helm chart version (upgraded from v1.13.3)
+  chart_version = "v1.19.2"
 
   # ACME account configuration
   acme_email = var.cert_manager_acme_email

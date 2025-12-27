@@ -19,7 +19,7 @@ variable "argocd_namespace" {
 variable "argocd_chart_version" {
   description = "ArgoCD Helm chart version"
   type        = string
-  default     = "5.51.0" # ArgoCD v2.9.x
+  default     = "7.9.0" # Upgraded from 5.51.0 (ArgoCD v2.9.x → v3.2.x)
 }
 
 # ==============================================================================

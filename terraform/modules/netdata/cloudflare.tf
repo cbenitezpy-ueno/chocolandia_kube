@@ -21,7 +21,7 @@ resource "cloudflare_record" "netdata" {
 # Cloudflare Access Application
 # ============================================================================
 
-resource "cloudflare_access_application" "netdata" {
+resource "cloudflare_zero_trust_access_application" "netdata" {
   account_id       = var.cloudflare_account_id
   name             = "Netdata Hardware Monitoring"
   domain           = var.domain
@@ -48,8 +48,8 @@ resource "cloudflare_access_application" "netdata" {
 # Access Policy - Google OAuth Email Authorization
 # ============================================================================
 
-resource "cloudflare_access_policy" "netdata_email" {
-  application_id = cloudflare_access_application.netdata.id
+resource "cloudflare_zero_trust_access_policy" "netdata_email" {
+  application_id = cloudflare_zero_trust_access_application.netdata.id
   account_id     = var.cloudflare_account_id
   name           = "Allow authorized emails"
   precedence     = 1

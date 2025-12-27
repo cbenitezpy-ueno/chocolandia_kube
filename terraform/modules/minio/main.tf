@@ -74,7 +74,7 @@ resource "kubernetes_deployment" "minio" {
     labels = {
       "app"                       = "minio"
       "app.kubernetes.io/name"    = "minio"
-      "app.kubernetes.io/version" = "RELEASE.2024-01-01T16-36-33Z"
+      "app.kubernetes.io/version" = regex("RELEASE\\.[0-9T-]+Z?", var.minio_image)
     }
   }
 
@@ -92,14 +92,14 @@ resource "kubernetes_deployment" "minio" {
         labels = {
           "app"                       = "minio"
           "app.kubernetes.io/name"    = "minio"
-          "app.kubernetes.io/version" = "RELEASE.2024-01-01T16-36-33Z"
+          "app.kubernetes.io/version" = regex("RELEASE\\.[0-9T-]+Z?", var.minio_image)
         }
       }
 
       spec {
         container {
           name  = "minio"
-          image = "quay.io/minio/minio:RELEASE.2024-01-01T16-36-33Z"
+          image = var.minio_image
 
           args = [
             "server",

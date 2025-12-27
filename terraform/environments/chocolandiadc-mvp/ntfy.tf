@@ -6,7 +6,7 @@ module "ntfy" {
   source = "../../modules/ntfy"
 
   namespace      = "ntfy"
-  image_tag      = "v2.8.0"
+  image_tag      = "v2.15.0"  # Upgraded from v2.8.0
   ingress_host   = "ntfy.chocolandiadc.com"
   cluster_issuer = "letsencrypt-prod"
   storage_class  = "local-path"

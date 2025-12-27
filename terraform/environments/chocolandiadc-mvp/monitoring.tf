@@ -24,6 +24,10 @@ resource "null_resource" "monitoring_namespace" {
 # Kube-Prometheus-Stack Helm Release
 # ============================================================================
 
+locals {
+  prometheus_stack_version = "55.5.0" # TODO: Upgrade requires significant values.yaml changes (see 020-cluster-version-audit)
+}
+
 resource "helm_release" "kube_prometheus_stack" {
   depends_on = [
     module.master1,
@@ -34,7 +38,7 @@ resource "helm_release" "kube_prometheus_stack" {
   name       = "kube-prometheus-stack"
   repository = "https://prometheus-community.github.io/helm-charts"
   chart      = "kube-prometheus-stack"
-  version    = "55.5.0" # Compatible with K3s v1.28
+  version    = local.prometheus_stack_version
   namespace  = "monitoring"
 
   timeout = 600 # 10 minutes for initial deployment
@@ -110,14 +114,16 @@ resource "helm_release" "kube_prometheus_stack" {
   }
 
   # Deploy node-exporter on all nodes
+  # Note: hostNetwork disabled due to persistent K3s scheduler port conflict issue
+  # The scheduler falsely reports port 9100 as in-use even when it's not
   set {
     name  = "prometheus-node-exporter.hostNetwork"
-    value = "true"
+    value = "false"
   }
 
   set {
     name  = "prometheus-node-exporter.hostPID"
-    value = "true"
+    value = "false"
   }
 
   # ============================================================================

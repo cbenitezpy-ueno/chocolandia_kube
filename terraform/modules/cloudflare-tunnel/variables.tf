@@ -74,7 +74,7 @@ variable "replica_count" {
 variable "cloudflared_image" {
   description = "Cloudflared Docker image"
   type        = string
-  default     = "cloudflare/cloudflared:latest"
+  default     = "cloudflare/cloudflared:2025.11.1"  # Pinned from :latest
 }
 
 variable "resource_limits_cpu" {

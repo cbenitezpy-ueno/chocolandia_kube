@@ -11,7 +11,7 @@ module "argocd" {
   # Core Configuration
   argocd_domain        = var.argocd_domain
   argocd_namespace     = "argocd"
-  argocd_chart_version = "5.51.0" # ArgoCD v2.9.x
+  argocd_chart_version = "7.9.0" # Upgraded from 5.51.0 (ArgoCD v2.9.x → v3.2.x)
 
   # GitHub Repository Authentication
   github_token    = var.github_token

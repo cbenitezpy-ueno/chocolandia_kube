@@ -2,6 +2,12 @@
 # Longhorn Module Variables
 # ============================================================================
 
+variable "chart_version" {
+  description = "Longhorn Helm chart version for upgrades"
+  type        = string
+  default     = "1.5.5"
+}
+
 variable "replica_count" {
   description = "Number of replicas for Longhorn volumes (balance capacity vs HA)"
   type        = number

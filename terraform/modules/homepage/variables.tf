@@ -3,7 +3,7 @@
 variable "homepage_image" {
   description = "Docker image for Homepage"
   type        = string
-  default     = "ghcr.io/gethomepage/homepage:latest"
+  default     = "ghcr.io/gethomepage/homepage:v1.4.6"  # Pinned from :latest
 }
 
 variable "namespace" {

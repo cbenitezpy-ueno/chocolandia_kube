@@ -36,8 +36,8 @@ module "github_actions_runner" {
   memory_limit   = "4Gi"
 
   # ARC Versions
-  arc_controller_version = "0.9.3"
-  arc_runner_version     = "0.9.3"
+  arc_controller_version = "0.11.0"  # Upgraded from 0.9.3
+  arc_runner_version     = "0.11.0"  # Upgraded from 0.9.3
 
   # Monitoring
   enable_monitoring = true

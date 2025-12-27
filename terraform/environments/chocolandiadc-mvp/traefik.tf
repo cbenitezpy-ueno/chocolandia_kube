@@ -6,7 +6,7 @@ module "traefik" {
   source = "../../modules/traefik"
 
   release_name    = "traefik"
-  chart_version   = "30.0.2" # Traefik v3.2.0
+  chart_version   = "38.0.1" # Upgraded from 30.0.2 (Traefik v3.4.x)
   namespace       = "traefik"
   replicas        = 2
   loadbalancer_ip = "192.168.4.202"  # Changed from .201 to avoid conflict with Pi-hole
