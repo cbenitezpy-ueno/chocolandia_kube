@@ -42,6 +42,8 @@ Auto-generated from all feature plans. Last updated: 2025-11-08
 - etcd (K3s), Longhorn (persistent volumes), PostgreSQL, Redis (020-cluster-version-audit)
 - HCL (OpenTofu 1.6+), Bash scripting for validation + OpenTofu, Helm provider (~> 2.12), Kubernetes provider (~> 2.23), kubectl (020-cluster-version-audit)
 - N/A (infrastructure operations only) (020-cluster-version-audit)
+- HCL (OpenTofu 1.6+), YAML (Helm values) (021-monitoring-stack-upgrade)
+- PersistentVolume 10Gi (Prometheus), 5Gi (Grafana) via local-path-provisioner (021-monitoring-stack-upgrade)
 
 - HCL (OpenTofu) 1.6+, Bash scripting for validation (001-k3s-cluster-setup)
 
@@ -61,9 +63,9 @@ tests/
 HCL (Terraform) 1.6+, Bash scripting for validation: Follow standard conventions
 
 ## Recent Changes
+- 021-monitoring-stack-upgrade: Added HCL (OpenTofu 1.6+), YAML (Helm values)
 - 020-cluster-version-audit: Added HCL (OpenTofu 1.6+), Bash scripting for validation + OpenTofu, Helm provider (~> 2.12), Kubernetes provider (~> 2.23), kubectl
 - 020-cluster-version-audit: Added Bash (scripts de validación), HCL/OpenTofu 1.6+ (manifiestos existentes) + kubectl, helm, k3s installer, apt package manager
-- 019-govee2mqtt: Added YAML (Kubernetes manifests), HCL (OpenTofu 1.6+) + govee2mqtt (ghcr.io/wez/govee2mqtt), Eclipse Mosquitto (MQTT broker), Home Assistant MQTT integration
 
 
 <!-- MANUAL ADDITIONS START -->
@@ -191,6 +193,48 @@ npm config set registry https://nexus.chocolandiadc.local/repository/npm-proxy/
 # Or per-project in .npmrc
 registry=https://nexus.chocolandiadc.local/repository/npm-proxy/
 ```
+
+## Monitoring Stack (kube-prometheus-stack)
+
+**Current Version**: 68.4.0 (Upgraded 2025-12-27 from 55.5.0)
+
+### Components
+| Component | Version | Description |
+|-----------|---------|-------------|
+| Prometheus Operator | v0.79.2 | CRD-based monitoring configuration |
+| Prometheus | v2.55.x | Metrics collection and storage |
+| Grafana | v11.4.0 | Visualization and dashboards |
+| Alertmanager | v0.27.x | Alert routing and notifications |
+| kube-state-metrics | v2.14.x | Kubernetes object metrics |
+| prometheus-node-exporter | v1.8.x | Node-level metrics |
+
+### Key Configuration
+- **Retention**: 15 days
+- **Grafana Access**: NodePort 30000 (http://<node-ip>:30000)
+- **Grafana Credentials**: admin user - password in `monitoring.tf` (grafana.adminPassword)
+- **Alert Notifications**: Ntfy (homelab-alerts topic)
+- **Storage**: 10Gi Prometheus, 5Gi Grafana (local-path-provisioner)
+
+### Important Notes
+1. **hostNetwork disabled** for node-exporter due to K3s scheduler port conflict
+2. **ServiceMonitor discovery** enabled across ALL namespaces
+3. **Alertmanager v2 API** - v1 API removed in 0.27.0
+4. **Rollback available**: `helm rollback kube-prometheus-stack 15 -n monitoring`
+
+### Custom Dashboards (6)
+- K3s cluster overview
+- Node Exporter Full
+- Traefik Official
+- Redis Dashboard
+- PostgreSQL Database
+- Longhorn
+
+### Alert Receivers
+| Receiver | Destination | Use Case |
+|----------|-------------|----------|
+| ntfy-homelab | http://ntfy.ntfy.svc.cluster.local/homelab-alerts | Default alerts |
+| ntfy-critical | http://ntfy.ntfy.svc.cluster.local/homelab-alerts | Critical severity |
+| null | (discarded) | Watchdog alerts |
 
 <!-- MANUAL ADDITIONS END -->
 - ~/.ssh/id_ed25519_k3s  es el key para entrar a los nodos
