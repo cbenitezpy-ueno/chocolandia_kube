@@ -155,7 +155,7 @@
 
     - Prometheus:
         icon: si-prometheus
-        description: "Metrics DB | kubectl port-forward -n monitoring svc/prometheus 9090"
+        description: "Metrics DB | kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090:9090"
         widget:
           type: prometheus
           url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
@@ -198,15 +198,16 @@
     - SSH Access:
         icon: mdi-console
         description: |
-          Master1: ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.101
-          Nodo03: ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.102
-          Nodo04: ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.104
+          master1: ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.101
+          nodo1: ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.102
+          nodo03: ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.103
+          nodo04: ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.104
 
     - Port Forwards:
         icon: mdi-transit-connection-variant
         description: |
-          Prometheus: kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090
-          Alertmanager: kubectl port-forward -n monitoring svc/kube-prometheus-stack-alertmanager 9093
+          Prometheus: kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090:9090
+          Alertmanager: kubectl port-forward -n monitoring svc/kube-prometheus-stack-alertmanager 9093:9093
 
     - MetalLB IPs:
         icon: mdi-ip-network
