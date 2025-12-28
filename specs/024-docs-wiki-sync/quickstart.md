@@ -57,7 +57,7 @@ cd /Users/cbenitez/chocolandia_kube
 ./scripts/wiki/sync-to-wiki.sh --dry-run
 
 # Check output for:
-# - All 24 features listed
+# - All 26 features listed
 # - No errors during generation
 # - Generated files in /tmp/chocolandia_kube.wiki/
 ```
@@ -105,7 +105,7 @@ open https://github.com/cbenitezpy-ueno/chocolandia_kube/wiki
 - [ ] K3s encryption section is accurate
 - [ ] Recent Changes includes features 020-024
 - [ ] Wiki sync --dry-run completes without errors
-- [ ] Wiki homepage lists all 24 features
+- [ ] Wiki homepage lists all 26 features
 - [ ] Wiki feature pages load correctly
 - [ ] No credentials or secrets visible in wiki
 

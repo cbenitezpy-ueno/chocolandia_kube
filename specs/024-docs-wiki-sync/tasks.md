@@ -17,7 +17,7 @@
 
 | Story | Title | Priority | Spec Reference |
 |-------|-------|----------|----------------|
-| US1 | Audit All Feature Documentation | P1 | Review all 24 feature specs |
+| US1 | Audit All Feature Documentation | P1 | Review all 26 feature specs |
 | US2 | Update CLAUDE.md Project Guidelines | P1 | Verify and update project context |
 | US3 | Sync Documentation to GitHub Wiki | P2 | Run wiki sync and verify |
 | US4 | Verify Wiki Script Functionality | P2 | Test scripts before full sync |
@@ -55,7 +55,7 @@
 
 ## Phase 3: User Story 1 - Audit All Feature Documentation (Priority: P1) 🎯 MVP
 
-**Goal**: Review all 24 feature specifications and identify outdated or incomplete documentation
+**Goal**: Review all 26 feature specifications and identify outdated or incomplete documentation
 
 **Independent Test**: All features audited, findings documented, no critical issues remain
 
@@ -106,7 +106,7 @@
 - [ ] T024 [US4] Check wiki scripts exist in scripts/wiki/
 - [ ] T025 [US4] Verify scripts are executable via `ls -la scripts/wiki/*.sh`
 - [ ] T026 [US4] Run `./scripts/wiki/sync-to-wiki.sh --dry-run` from repo root
-- [ ] T027 [US4] Verify all 24 features appear in generated output
+- [ ] T027 [US4] Verify all 26 features appear in generated output
 - [ ] T028 [US4] Check for any errors or warnings in dry-run output
 - [ ] T029 [US4] Examine generated files in /tmp/chocolandia_kube.wiki/ for correctness
 - [ ] T030 [US4] Update audit-checklist.yaml with wiki sync section status
@@ -119,7 +119,7 @@
 
 **Goal**: Sync all documentation to GitHub Wiki and verify accessibility
 
-**Independent Test**: GitHub Wiki displays all 24 features with working navigation
+**Independent Test**: GitHub Wiki displays all 26 features with working navigation
 
 ### Implementation for User Story 3
 

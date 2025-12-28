@@ -77,13 +77,13 @@ A discrepancy found during documentation audit.
 
 | Status | Count | Examples |
 |--------|-------|----------|
-| Implemented | 23 | 001-023 |
+| Implemented | 25 | 001-023 (includes multiple features numbered 001) |
 | In Progress | 1 | 024 |
 | Deprecated | 0 | - |
 
 ### Artifact Coverage
 
-All 23 implemented features have complete artifact sets (6 files each).
+All 25 implemented features have complete artifact sets (6 files each).
 
 Total documentation files: ~150 markdown files
 
@@ -106,7 +106,7 @@ Not Synced → Dry Run OK → Synced → (on repo change) → Needs Sync
 ```
 Repository
 ├── CLAUDE.md (1)
-├── specs/ (24 feature directories)
+├── specs/ (26 feature directories)
 │   └── XXX-feature/
 │       ├── spec.md
 │       ├── plan.md

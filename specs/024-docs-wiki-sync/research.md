@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-The chocolandia_kube repository has comprehensive documentation across 24 feature directories (specs/001-* through specs/024-*). All features have complete spec artifacts (spec.md, plan.md, research.md, data-model.md, quickstart.md, tasks.md). The existing wiki sync scripts (scripts/wiki/) are ready to use. CLAUDE.md needs verification against current cluster state.
+The chocolandia_kube repository has comprehensive documentation across 26 feature directories. All features have complete spec artifacts (spec.md, plan.md, research.md, data-model.md, quickstart.md, tasks.md). The existing wiki sync scripts (scripts/wiki/) are ready to use. CLAUDE.md needs verification against current cluster state.
 
 ## Current Documentation State
 
@@ -20,7 +20,7 @@ The chocolandia_kube repository has comprehensive documentation across 24 featur
 | 020-023 | 4 features | 6-7 each | Complete (recent) |
 | 024 | 1 feature | 2 (in progress) | This feature |
 
-**Total**: 24 feature directories, ~150 markdown files
+**Total**: 26 feature directories, ~150 markdown files
 
 ### Documentation Completeness by Feature
 
@@ -72,7 +72,7 @@ Some features have additional files:
 
 **Test Plan**:
 1. Run `./scripts/wiki/sync-to-wiki.sh --dry-run`
-2. Verify all 24 features generate pages
+2. Verify all 26 features generate pages
 3. Check for any errors or warnings
 
 ### RQ-003: Is GitHub Wiki initialized?

@@ -49,7 +49,7 @@ As a team member or contributor, I want to access project documentation through 
 
 **Acceptance Scenarios**:
 
-1. **Given** documentation has been audited and updated, **When** I run the wiki sync script, **Then** all 24 features appear in the GitHub Wiki
+1. **Given** documentation has been audited and updated, **When** I run the wiki sync script, **Then** all 26 features appear in the GitHub Wiki
 2. **Given** the Wiki homepage exists, **When** I view it, **Then** I see a table of contents with all features listed
 3. **Given** I click on a feature link in the Wiki, **When** the page loads, **Then** I see the consolidated documentation (spec, plan, quickstart, etc.)
 
@@ -83,7 +83,7 @@ As a project maintainer, I want to ensure the existing wiki sync scripts work co
 
 ### Functional Requirements
 
-- **FR-001**: System MUST audit all feature directories (specs/001-* through specs/024-*) for documentation completeness
+- **FR-001**: System MUST audit all 26 feature directories for documentation completeness
 - **FR-002**: System MUST verify CLAUDE.md accuracy against actual cluster state and recent changes
 - **FR-003**: System MUST identify outdated information in specifications (version numbers, IP addresses, configurations)
 - **FR-004**: System MUST update documentation to reflect current state of infrastructure
@@ -106,7 +106,7 @@ As a project maintainer, I want to ensure the existing wiki sync scripts work co
 
 ### Measurable Outcomes
 
-- **SC-001**: 100% of feature directories (24 features) have been audited for documentation accuracy
+- **SC-001**: 100% of feature directories (26 features) have been audited for documentation accuracy
 - **SC-002**: CLAUDE.md contains accurate information matching current cluster state (verified via kubectl/tofu)
 - **SC-003**: GitHub Wiki displays all features with working navigation links
 - **SC-004**: Wiki sync script runs without errors on all current features

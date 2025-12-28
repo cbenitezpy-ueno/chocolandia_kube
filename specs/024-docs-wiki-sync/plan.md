@@ -5,7 +5,7 @@
 
 ## Summary
 
-Audit all 24 feature specifications to identify outdated or incomplete documentation, update CLAUDE.md to reflect current cluster state, and synchronize all documentation to the GitHub Wiki using existing scripts. This is a documentation maintenance feature with no new code development.
+Audit all 26 feature specifications to identify outdated or incomplete documentation, update CLAUDE.md to reflect current cluster state, and synchronize all documentation to the GitHub Wiki using existing scripts. This is a documentation maintenance feature with no new code development.
 
 ## Technical Context
 
@@ -17,7 +17,7 @@ Audit all 24 feature specifications to identify outdated or incomplete documenta
 **Project Type**: Documentation/Operations (no application code)
 **Performance Goals**: N/A (documentation task)
 **Constraints**: Must not expose sensitive information in public Wiki
-**Scale/Scope**: 24 feature directories, 1 CLAUDE.md file, 1 GitHub Wiki
+**Scale/Scope**: 26 feature directories, 1 CLAUDE.md file, 1 GitHub Wiki
 
 ## Constitution Check
 
@@ -68,7 +68,7 @@ scripts/wiki/
 
 ### Phase 1: Documentation Audit
 
-1. List all 24 feature directories
+1. List all 26 feature directories
 2. For each feature, verify spec.md exists and is complete
 3. Cross-reference with current Terraform state and kubectl output
 4. Identify outdated information (versions, IPs, configurations)

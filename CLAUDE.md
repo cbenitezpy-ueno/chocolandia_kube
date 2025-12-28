@@ -67,7 +67,7 @@ tests/
 HCL (Terraform) 1.6+, Bash scripting for validation: Follow standard conventions
 
 ## Recent Changes
-- 024-docs-wiki-sync: Added Bash scripting (wiki sync scripts), Markdown (documentation) + Git, gh CLI, kubectl, existing wiki scripts in scripts/wiki/
+- 024-docs-wiki-sync: Documentation audit and GitHub Wiki synchronization
 - 023-k3s-secret-encryption: Added Bash scripting for validation, K3s encryption configuration
 - 022-metallb-refactor: Added HCL (OpenTofu 1.6+) + hashicorp/kubernetes ~> 2.23, hashicorp/helm ~> 2.11, hashicorp/time ~> 0.11
 
