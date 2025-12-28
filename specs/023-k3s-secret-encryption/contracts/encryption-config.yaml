@@ -1,0 +1,69 @@
+# K3s Encryption Configuration Contract
+#
+# This file documents the expected format of the encryption configuration
+# that K3s generates when --secrets-encryption is enabled.
+#
+# Location: /var/lib/rancher/k3s/server/cred/encryption-config.json
+# Managed by: K3s (do not manually edit)
+
+---
+# Schema Definition (for documentation - actual file is JSON)
+apiVersion: apiserver.config.k8s.io/v1
+kind: EncryptionConfiguration
+
+# Resources to encrypt
+resources:
+  - resources:
+      - secrets  # Only secrets are encrypted by default
+    providers:
+      # Primary encryption provider
+      - aescbc:
+          keys:
+            - name: aescbckey-<generated>
+              # 32-byte key, base64 encoded
+              # Example (DO NOT USE): "cHJvZHVjdGlvbi1zZWNyZXQta2V5LTMyLWJ5dGVz"
+              secret: "<base64-encoded-32-byte-key>"
+
+      # Identity provider for reading unencrypted secrets during migration
+      - identity: {}
+
+---
+# Validation Contract
+#
+# After enabling encryption, the following must be true:
+#
+# 1. File exists at expected location:
+#    /var/lib/rancher/k3s/server/cred/encryption-config.json
+#
+# 2. File permissions are restrictive:
+#    -rw------- 1 root root
+#
+# 3. At least one encryption key exists
+#
+# 4. Identity provider is last in list (for migration compatibility)
+
+---
+# CLI Contract
+#
+# Status Check:
+# $ k3s secrets-encrypt status
+#
+# Expected Output (after enable + reencrypt):
+# Encryption Status: Enabled
+# Current Rotation Stage: reencrypt_finished
+# Server Encryption Hash: <32-char-hash>
+# Active Key Type: AES-CBC
+# Active Key Name: aescbckey-<timestamp>
+
+---
+# Verification Contract
+#
+# Test secret creation:
+# $ kubectl create secret generic test-encryption --from-literal=key=value
+# $ kubectl get secret test-encryption -o jsonpath='{.data.key}' | base64 -d
+# Expected: "value"
+#
+# Test that direct DB read shows encrypted data:
+# $ sqlite3 /var/lib/rancher/k3s/server/db/state.db \
+#     "SELECT value FROM kine WHERE name LIKE '%test-encryption%'" | strings
+# Expected: No plaintext "value" visible

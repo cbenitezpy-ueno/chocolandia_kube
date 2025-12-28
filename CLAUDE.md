@@ -44,6 +44,8 @@ Auto-generated from all feature plans. Last updated: 2025-11-08
 - N/A (infrastructure operations only) (020-cluster-version-audit)
 - HCL (OpenTofu 1.6+), YAML (Helm values) (021-monitoring-stack-upgrade)
 - PersistentVolume 10Gi (Prometheus), 5Gi (Grafana) via local-path-provisioner (021-monitoring-stack-upgrade)
+- HCL (OpenTofu 1.6+) + hashicorp/kubernetes ~> 2.23, hashicorp/helm ~> 2.11, hashicorp/time ~> 0.11 (022-metallb-refactor)
+- Kubernetes CRDs (metallb.io/v1beta1), Terraform state file (local) (022-metallb-refactor)
 
 - HCL (OpenTofu) 1.6+, Bash scripting for validation (001-k3s-cluster-setup)
 
@@ -63,9 +65,9 @@ tests/
 HCL (Terraform) 1.6+, Bash scripting for validation: Follow standard conventions
 
 ## Recent Changes
+- 023-k3s-secret-encryption: Added Bash scripting for validation, K3s encryption configuration
+- 022-metallb-refactor: Added HCL (OpenTofu 1.6+) + hashicorp/kubernetes ~> 2.23, hashicorp/helm ~> 2.11, hashicorp/time ~> 0.11
 - 021-monitoring-stack-upgrade: Added HCL (OpenTofu 1.6+), YAML (Helm values)
-- 020-cluster-version-audit: Added HCL (OpenTofu 1.6+), Bash scripting for validation + OpenTofu, Helm provider (~> 2.12), Kubernetes provider (~> 2.23), kubectl
-- 020-cluster-version-audit: Added Bash (scripts de validación), HCL/OpenTofu 1.6+ (manifiestos existentes) + kubectl, helm, k3s installer, apt package manager
 
 
 <!-- MANUAL ADDITIONS START -->
@@ -236,5 +238,54 @@ registry=https://nexus.chocolandiadc.local/repository/npm-proxy/
 | ntfy-critical | http://ntfy.ntfy.svc.cluster.local/homelab-alerts | Critical severity |
 | null | (discarded) | Watchdog alerts |
 
+## K3s Secret Encryption at Rest
+
+**Status**: Enabled (2025-12-27)
+**Encryption Provider**: AES-CBC
+**Active Key**: aescbckey-2025-12-27T23:36:11Z
+
+### Encryption Key Location
+- **Primary**: `/var/lib/rancher/k3s/server/cred/encryption-config.json` (on master1)
+- **Backup**: `~/k3s-encryption-backup-YYYYMMDD/encryption-config-backup.json` (local machine)
+
+### Important Notes
+1. Encryption is managed from master1 (192.168.4.101)
+2. Secondary server (nodo03) syncs automatically via etcd
+3. Agent nodes (nodo1, nodo04) do not require encryption config
+
+### Recovery Procedures
+
+**If K3s fails to start after encryption change:**
+```bash
+# Check K3s logs
+ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.101 "sudo journalctl -u k3s -n 100 --no-pager"
+
+# Restore encryption config from backup
+scp ~/k3s-encryption-backup-YYYYMMDD/encryption-config-backup.json chocolim@192.168.4.101:/tmp/
+ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.101 "sudo cp /tmp/encryption-config-backup.json /var/lib/rancher/k3s/server/cred/encryption-config.json && sudo systemctl restart k3s"
+```
+
+**If encryption key is lost:**
+- Secrets CANNOT be decrypted without the key
+- **WARNING: This procedure restores secrets from a backup taken *before* encryption was enabled. Any secrets created or updated since that backup will be PERMANENTLY LOST.**
+- Restore from secrets backup: `~/k3s-encryption-backup-YYYYMMDD/all-secrets-backup.yaml`
+- May require cluster rebuild if no backup exists
+
+### Rollback (Disable Encryption)
+```bash
+# On master1
+ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.101
+sudo k3s secrets-encrypt disable
+sudo k3s secrets-encrypt rotate-keys
+sudo systemctl restart k3s
+# Then restart nodo03
+```
+
+### Verify Encryption Status
+```bash
+ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.101 "sudo k3s secrets-encrypt status"
+# Expected: Encryption Status: Enabled, Current Rotation Stage: reencrypt_finished
+```
+
 <!-- MANUAL ADDITIONS END -->
-- ~/.ssh/id_ed25519_k3s  es el key para entrar a los nodos
+- ~/.ssh/id_ed25519_k3s  es el key para entrar a los nodos (usuario: chocolim)
