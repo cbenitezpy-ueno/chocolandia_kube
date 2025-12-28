@@ -73,7 +73,7 @@ sudo k3s secrets-encrypt status
 # On master1 (primary server)
 ssh user@192.168.4.101
 
-sudo k3s secrets-encrypt reencrypt
+sudo k3s secrets-encrypt rotate-keys
 
 # Monitor progress (112 secrets ≈ 22 seconds)
 sudo k3s secrets-encrypt status
@@ -169,7 +169,7 @@ sudo k3s secrets-encrypt disable
 sudo k3s secrets-encrypt status
 
 # Re-encrypt to plaintext
-sudo k3s secrets-encrypt reencrypt
+sudo k3s secrets-encrypt rotate-keys
 
 # Restart servers
 sudo systemctl restart k3s

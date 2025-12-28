@@ -65,7 +65,7 @@ tests/
 HCL (Terraform) 1.6+, Bash scripting for validation: Follow standard conventions
 
 ## Recent Changes
-- 023-k3s-secret-encryption: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
+- 023-k3s-secret-encryption: Added Bash scripting for validation, K3s encryption configuration
 - 022-metallb-refactor: Added HCL (OpenTofu 1.6+) + hashicorp/kubernetes ~> 2.23, hashicorp/helm ~> 2.11, hashicorp/time ~> 0.11
 - 021-monitoring-stack-upgrade: Added HCL (OpenTofu 1.6+), YAML (Helm values)
 
@@ -267,6 +267,7 @@ ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.101 "sudo cp /tmp/encryption-con
 
 **If encryption key is lost:**
 - Secrets CANNOT be decrypted without the key
+- **WARNING: This procedure restores secrets from a backup taken *before* encryption was enabled. Any secrets created or updated since that backup will be PERMANENTLY LOST.**
 - Restore from secrets backup: `~/k3s-encryption-backup-YYYYMMDD/all-secrets-backup.yaml`
 - May require cluster rebuild if no backup exists
 
@@ -275,7 +276,7 @@ ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.101 "sudo cp /tmp/encryption-con
 # On master1
 ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.101
 sudo k3s secrets-encrypt disable
-sudo k3s secrets-encrypt reencrypt
+sudo k3s secrets-encrypt rotate-keys
 sudo systemctl restart k3s
 # Then restart nodo03
 ```

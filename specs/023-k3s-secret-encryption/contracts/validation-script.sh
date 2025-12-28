@@ -111,24 +111,29 @@ echo -n "[Test 8] Secrets encrypted in database... "
 if [ "$(id -u)" -eq 0 ]; then
     DB_PATH="/var/lib/rancher/k3s/server/db/state.db"
     if [ -f "$DB_PATH" ]; then
-        # Create a unique test secret
+        # Create a unique test secret with timestamp to avoid conflicts
+        DB_TEST_SECRET_NAME="encryption-db-test-$(date +%s)"
         TEST_VALUE="test-encryption-verification-$(date +%s)"
-        kubectl create secret generic encryption-db-test \
+        if kubectl create secret generic "$DB_TEST_SECRET_NAME" \
             --from-literal=dbtest="$TEST_VALUE" \
-            -n default 2>/dev/null || true
+            -n default 2>/dev/null; then
 
-        sleep 2  # Wait for write
+            sleep 2  # Wait for write
 
-        # Check if plaintext value appears in database
-        if sqlite3 "$DB_PATH" "SELECT value FROM kine WHERE name LIKE '%encryption-db-test%'" 2>/dev/null | strings | grep -q "$TEST_VALUE"; then
-            echo -e "${RED}FAIL${NC} - Plaintext found in database!"
-            FAILED=1
+            # Check if plaintext value appears in database
+            if sqlite3 "$DB_PATH" "SELECT value FROM kine WHERE name LIKE '%$DB_TEST_SECRET_NAME%'" 2>/dev/null | strings | grep -q "$TEST_VALUE"; then
+                echo -e "${RED}FAIL${NC} - Plaintext found in database!"
+                FAILED=1
+            else
+                echo -e "${GREEN}PASS${NC} - No plaintext in database"
+            fi
+
+            # Cleanup
+            kubectl delete secret "$DB_TEST_SECRET_NAME" -n default 2>/dev/null || true
         else
-            echo -e "${GREEN}PASS${NC} - No plaintext in database"
+            echo -e "${RED}FAIL${NC} - Could not create test secret for DB check"
+            FAILED=1
         fi
-
-        # Cleanup
-        kubectl delete secret encryption-db-test -n default 2>/dev/null || true
     else
         echo -e "${YELLOW}SKIP${NC} - Database not found at $DB_PATH"
     fi

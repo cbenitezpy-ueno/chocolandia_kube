@@ -136,7 +136,7 @@ As a cluster administrator, I need documented recovery procedures so that if the
 
 1. K3s is running with the embedded SQLite datastore (not external etcd)
 2. The administrator has root/sudo access to the master node (192.168.4.101)
-3. The current K3s version (v1.28+) supports secrets encryption configuration
+3. The current cluster is running K3s v1.33.6+k3s1, which supports secrets encryption configuration
 4. A brief K3s service restart is acceptable (pods continue running during API server restart)
 5. AES-CBC encryption provider will be used (standard K3s encryption method)
 6. The encryption key will be generated and stored securely on the master node filesystem

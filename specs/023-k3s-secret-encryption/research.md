@@ -6,13 +6,13 @@
 
 ## Executive Summary
 
-K3s v1.33.7 (current cluster version) fully supports secrets encryption at rest. The critical finding is that **encryption cannot be enabled on an existing cluster without reinstalling K3s with the `--secrets-encryption` flag**. This requires a cluster restart but running pods are not affected.
+K3s v1.33.6 (current cluster version) fully supports secrets encryption at rest. The critical finding is that **encryption cannot be enabled on an existing cluster without reinstalling K3s with the `--secrets-encryption` flag**. This requires a cluster restart but running pods are not affected.
 
 ## Current Cluster State
 
 | Metric | Value |
 |--------|-------|
-| K3s Version | v1.33.7+k3s1 |
+| K3s Version | v1.33.6+k3s1 |
 | Control Plane Nodes | 2 (master1: 192.168.4.101, nodo03: 192.168.4.103) |
 | Worker Nodes | 2 (nodo1: 192.168.4.102, nodo04: 192.168.4.104) |
 | Total Secrets | 112 (across all namespaces) |
@@ -53,14 +53,14 @@ K3s v1.33.7 (current cluster version) fully supports secrets encryption at rest.
 
 ### RQ-003: Re-encryption process for existing secrets
 
-**Decision**: Use `k3s secrets-encrypt reencrypt` after enabling encryption
+**Decision**: Use `k3s secrets-encrypt rotate-keys` after enabling encryption (v1.33+)
 
-**Rationale**: K3s includes built-in tooling for re-encryption. The process handles approximately 5 secrets/second, so 112 secrets will take ~22 seconds.
+**Rationale**: K3s includes built-in tooling for re-encryption. The process handles approximately 5 secrets/second, so 112 secrets will take ~22 seconds. Note: K3s v1.33+ uses `rotate-keys` instead of the legacy `reencrypt` command.
 
 **Process**:
 1. Enable encryption via server restart
 2. Run `k3s secrets-encrypt status` to verify encryption is active
-3. Run `k3s secrets-encrypt reencrypt` on one server node
+3. Run `k3s secrets-encrypt rotate-keys` on one server node
 4. Monitor with `k3s secrets-encrypt status` until stage shows `reencrypt_finished`
 
 ### RQ-004: HA cluster coordination
@@ -145,8 +145,8 @@ Location: `/var/lib/rancher/k3s/server/cred/encryption-config.json`
 | Command | Purpose |
 |---------|---------|
 | `k3s secrets-encrypt status` | Show encryption status and rotation stage |
-| `k3s secrets-encrypt reencrypt` | Re-encrypt all existing secrets |
-| `k3s secrets-encrypt rotate-keys` | Rotate encryption keys (automated) |
+| `k3s secrets-encrypt rotate-keys` | Re-encrypt all secrets with new key (v1.33+) |
+| `k3s secrets-encrypt reencrypt` | Legacy command (pre-v1.33) |
 
 ### Rotation Stages (for reference)
 
@@ -178,7 +178,7 @@ Location: `/var/lib/rancher/k3s/server/cred/encryption-config.json`
    - Restart nodo03 to sync configuration
 
 3. **Re-encrypt** (one-time operation)
-   - Run `k3s secrets-encrypt reencrypt`
+   - Run `k3s secrets-encrypt rotate-keys`
    - Monitor status until complete
 
 4. **Verify** (validation)
