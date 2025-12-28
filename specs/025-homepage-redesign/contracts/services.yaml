@@ -1,7 +1,8 @@
----
-# Homepage Services Configuration
-# Redesign v2.0.0 - Organized by operational priority
+# Homepage Services Contract
+# Target: terraform/modules/homepage/configs/services.yaml
+# Version: 2.0.0 (Redesign)
 
+---
 # ============================================================================
 # CLUSTER HEALTH - Immediate visibility of cluster state
 # ============================================================================

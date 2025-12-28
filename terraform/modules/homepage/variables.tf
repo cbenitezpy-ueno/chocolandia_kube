@@ -59,3 +59,24 @@ variable "domain_name" {
   type        = string
   default     = "chocolandiadc.com"
 }
+
+# Widget credentials for native integrations
+variable "pihole_api_key" {
+  description = "Pi-hole API key for Homepage widget"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "grafana_username" {
+  description = "Grafana username for Homepage widget"
+  type        = string
+  default     = "admin"
+}
+
+variable "grafana_password" {
+  description = "Grafana password for Homepage widget"
+  type        = string
+  sensitive   = true
+  default     = ""
+}

@@ -1,14 +1,15 @@
----
-# Homepage Settings Configuration
-# Redesign v2.0.0 - Professional dark theme with sky color palette
+# Homepage Settings Contract
+# Target: terraform/modules/homepage/configs/settings.yaml
+# Version: 2.0.0 (Redesign)
 
+---
 # Dashboard Identity
 title: Chocolandia K3s Cluster
 favicon: https://raw.githubusercontent.com/walkxcode/dashboard-icons/main/svg/kubernetes.svg
 
 # Theme Configuration
 theme: dark
-color: sky
+color: sky  # Professional blue palette
 
 # Card Styling - Frosted glass effect
 cardBlur: sm
