@@ -44,19 +44,6 @@
           app: traefik
           podSelector: app.kubernetes.io/name=traefik
 
-    - DNS Health:
-        icon: si-pihole
-        href: https://pihole.chocolandiadc.com
-        description: "Pi-hole DNS (LB: 192.168.4.200)"
-        namespace: default
-        app: pihole
-        widget:
-          type: kubernetes
-          cluster: default
-          namespace: default
-          app: pihole
-          podSelector: app=pihole
-
 # ============================================================================
 # CRITICAL INFRASTRUCTURE - Services that break others when down
 # ============================================================================
