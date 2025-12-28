@@ -1,0 +1,915 @@
+apiVersion: v1
+data:
+  longhorn-monitoring.json: |-
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "datasource",
+              "uid": "grafana"
+            },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "description": "Monitor Longhorn distributed block storage system performance and capacity",
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "description": "Total storage capacity vs available",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "max": 100,
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 60
+                  },
+                  {
+                    "color": "orange",
+                    "value": 80
+                  },
+                  {
+                    "color": "red",
+                    "value": 90
+                  }
+                ]
+              },
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 0
+          },
+          "id": 2,
+          "options": {
+            "orientation": "auto",
+            "reduceOptions": {
+              "values": false,
+              "calcs": ["lastNotNull"],
+              "fields": ""
+            },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true
+          },
+          "pluginVersion": "9.5.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "(longhorn_node_storage_capacity_bytes - longhorn_node_storage_available_bytes) / longhorn_node_storage_capacity_bytes * 100",
+              "refId": "A"
+            }
+          ],
+          "title": "Storage Usage %",
+          "type": "gauge"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "description": "Total and available storage capacity",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "bytes"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 8,
+            "y": 0
+          },
+          "id": 4,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "values": false,
+              "calcs": ["lastNotNull"],
+              "fields": ""
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "9.5.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(longhorn_node_storage_capacity_bytes)",
+              "legendFormat": "Total Capacity",
+              "refId": "A"
+            }
+          ],
+          "title": "Total Capacity",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "description": "Available storage space",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "bytes"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 16,
+            "y": 0
+          },
+          "id": 6,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "values": false,
+              "calcs": ["lastNotNull"],
+              "fields": ""
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "9.5.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(longhorn_node_storage_available_bytes)",
+              "legendFormat": "Available",
+              "refId": "A"
+            }
+          ],
+          "title": "Available Storage",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "description": "Number of volumes by state",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 8,
+            "y": 4
+          },
+          "id": 8,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "values": false,
+              "calcs": ["lastNotNull"],
+              "fields": ""
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "9.5.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "count(longhorn_volume_state)",
+              "legendFormat": "Total Volumes",
+              "refId": "A"
+            }
+          ],
+          "title": "Total Volumes",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "description": "Number of healthy nodes",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 16,
+            "y": 4
+          },
+          "id": 10,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "values": false,
+              "calcs": ["lastNotNull"],
+              "fields": ""
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "9.5.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "count(longhorn_node_status{condition=\"ready\"}==1)",
+              "legendFormat": "Ready Nodes",
+              "refId": "A"
+            }
+          ],
+          "title": "Ready Nodes",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "description": "Storage usage per node",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "tooltip": false,
+                  "viz": false,
+                  "legend": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "bytes"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 8
+          },
+          "id": 12,
+          "options": {
+            "legend": {
+              "calcs": ["mean", "max"],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "9.5.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "longhorn_node_storage_capacity_bytes - longhorn_node_storage_available_bytes",
+              "legendFormat": "{{node}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Storage Usage per Node",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "description": "Volume actual size over time",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "tooltip": false,
+                  "viz": false,
+                  "legend": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "bytes"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 8
+          },
+          "id": 14,
+          "options": {
+            "legend": {
+              "calcs": ["mean", "max"],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "9.5.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "longhorn_volume_actual_size_bytes",
+              "legendFormat": "{{volume}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Volume Actual Size",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "description": "Volume states distribution",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "hideFrom": {
+                  "tooltip": false,
+                  "viz": false,
+                  "legend": false
+                }
+              },
+              "mappings": [],
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 16
+          },
+          "id": 16,
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "pieType": "pie",
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "9.5.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "count(longhorn_volume_state) by (state)",
+              "legendFormat": "{{state}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Volume States",
+          "type": "piechart"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "description": "Volume robustness status",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "hideFrom": {
+                  "tooltip": false,
+                  "viz": false,
+                  "legend": false
+                }
+              },
+              "mappings": [],
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 16
+          },
+          "id": 18,
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "pieType": "pie",
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "9.5.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "count(longhorn_volume_robustness) by (robustness)",
+              "legendFormat": "{{robustness}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Volume Robustness",
+          "type": "piechart"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "description": "Number of replicas per volume",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "displayMode": "auto",
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 16
+          },
+          "id": 20,
+          "options": {
+            "footer": {
+              "fields": "",
+              "reducer": ["sum"],
+              "show": false
+            },
+            "showHeader": true
+          },
+          "pluginVersion": "9.5.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "longhorn_volume_number_of_replicas",
+              "format": "table",
+              "instant": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Volume Replicas",
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "instance": true,
+                  "job": true,
+                  "namespace": true
+                },
+                "indexByName": {},
+                "renameByName": {
+                  "Value": "Replicas",
+                  "volume": "Volume"
+                }
+              }
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "description": "Disk read throughput",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "tooltip": false,
+                  "viz": false,
+                  "legend": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "Bps"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 24
+          },
+          "id": 22,
+          "options": {
+            "legend": {
+              "calcs": ["mean", "max"],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "9.5.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "rate(longhorn_disk_read_throughput[5m])",
+              "legendFormat": "{{node}}/{{disk}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Disk Read Throughput",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "description": "Disk write throughput",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "tooltip": false,
+                  "viz": false,
+                  "legend": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "Bps"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 24
+          },
+          "id": 24,
+          "options": {
+            "legend": {
+              "calcs": ["mean", "max"],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "9.5.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "rate(longhorn_disk_write_throughput[5m])",
+              "legendFormat": "{{node}}/{{disk}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Disk Write Throughput",
+          "type": "timeseries"
+        }
+      ],
+      "refresh": "30s",
+      "schemaVersion": 38,
+      "style": "dark",
+      "tags": ["longhorn", "storage", "block-storage", "distributed"],
+      "templating": {
+        "list": []
+      },
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "Longhorn Distributed Storage",
+      "uid": "longhorn-monitoring",
+      "version": 0,
+      "weekStart": ""
+    }
+kind: ConfigMap
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","data":{"longhorn-monitoring.json":"{\n  \"annotations\": {\n    \"list\": [\n      {\n        \"builtIn\": 1,\n        \"datasource\": {\n          \"type\": \"datasource\",\n          \"uid\": \"grafana\"\n        },\n        \"enable\": true,\n        \"hide\": true,\n        \"iconColor\": \"rgba(0, 211, 255, 1)\",\n        \"name\": \"Annotations \u0026 Alerts\",\n        \"type\": \"dashboard\"\n      }\n    ]\n  },\n  \"description\": \"Monitor Longhorn distributed block storage system performance and capacity\",\n  \"editable\": true,\n  \"fiscalYearStartMonth\": 0,\n  \"graphTooltip\": 0,\n  \"id\": null,\n  \"links\": [],\n  \"liveNow\": false,\n  \"panels\": [\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"description\": \"Total storage capacity vs available\",\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"thresholds\"\n          },\n          \"mappings\": [],\n          \"max\": 100,\n          \"min\": 0,\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"green\",\n                \"value\": null\n              },\n              {\n                \"color\": \"yellow\",\n                \"value\": 60\n              },\n              {\n                \"color\": \"orange\",\n                \"value\": 80\n              },\n              {\n                \"color\": \"red\",\n                \"value\": 90\n              }\n            ]\n          },\n          \"unit\": \"percent\"\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 8,\n        \"w\": 8,\n        \"x\": 0,\n        \"y\": 0\n      },\n      \"id\": 2,\n      \"options\": {\n        \"orientation\": \"auto\",\n        \"reduceOptions\": {\n          \"values\": false,\n          \"calcs\": [\"lastNotNull\"],\n          \"fields\": \"\"\n        },\n        \"showThresholdLabels\": false,\n        \"showThresholdMarkers\": true\n      },\n      \"pluginVersion\": \"9.5.3\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"expr\": \"(longhorn_node_storage_capacity_bytes - longhorn_node_storage_available_bytes) / longhorn_node_storage_capacity_bytes * 100\",\n          \"refId\": \"A\"\n        }\n      ],\n      \"title\": \"Storage Usage %\",\n      \"type\": \"gauge\"\n    },\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"description\": \"Total and available storage capacity\",\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"thresholds\"\n          },\n          \"mappings\": [],\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"blue\",\n                \"value\": null\n              }\n            ]\n          },\n          \"unit\": \"bytes\"\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 4,\n        \"w\": 8,\n        \"x\": 8,\n        \"y\": 0\n      },\n      \"id\": 4,\n      \"options\": {\n        \"colorMode\": \"value\",\n        \"graphMode\": \"area\",\n        \"justifyMode\": \"auto\",\n        \"orientation\": \"auto\",\n        \"reduceOptions\": {\n          \"values\": false,\n          \"calcs\": [\"lastNotNull\"],\n          \"fields\": \"\"\n        },\n        \"textMode\": \"auto\"\n      },\n      \"pluginVersion\": \"9.5.3\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"expr\": \"sum(longhorn_node_storage_capacity_bytes)\",\n          \"legendFormat\": \"Total Capacity\",\n          \"refId\": \"A\"\n        }\n      ],\n      \"title\": \"Total Capacity\",\n      \"type\": \"stat\"\n    },\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"description\": \"Available storage space\",\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"thresholds\"\n          },\n          \"mappings\": [],\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"green\",\n                \"value\": null\n              }\n            ]\n          },\n          \"unit\": \"bytes\"\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 4,\n        \"w\": 8,\n        \"x\": 16,\n        \"y\": 0\n      },\n      \"id\": 6,\n      \"options\": {\n        \"colorMode\": \"value\",\n        \"graphMode\": \"area\",\n        \"justifyMode\": \"auto\",\n        \"orientation\": \"auto\",\n        \"reduceOptions\": {\n          \"values\": false,\n          \"calcs\": [\"lastNotNull\"],\n          \"fields\": \"\"\n        },\n        \"textMode\": \"auto\"\n      },\n      \"pluginVersion\": \"9.5.3\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"expr\": \"sum(longhorn_node_storage_available_bytes)\",\n          \"legendFormat\": \"Available\",\n          \"refId\": \"A\"\n        }\n      ],\n      \"title\": \"Available Storage\",\n      \"type\": \"stat\"\n    },\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"description\": \"Number of volumes by state\",\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"thresholds\"\n          },\n          \"mappings\": [],\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"blue\",\n                \"value\": null\n              }\n            ]\n          },\n          \"unit\": \"short\"\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 4,\n        \"w\": 8,\n        \"x\": 8,\n        \"y\": 4\n      },\n      \"id\": 8,\n      \"options\": {\n        \"colorMode\": \"value\",\n        \"graphMode\": \"area\",\n        \"justifyMode\": \"auto\",\n        \"orientation\": \"auto\",\n        \"reduceOptions\": {\n          \"values\": false,\n          \"calcs\": [\"lastNotNull\"],\n          \"fields\": \"\"\n        },\n        \"textMode\": \"auto\"\n      },\n      \"pluginVersion\": \"9.5.3\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"expr\": \"count(longhorn_volume_state)\",\n          \"legendFormat\": \"Total Volumes\",\n          \"refId\": \"A\"\n        }\n      ],\n      \"title\": \"Total Volumes\",\n      \"type\": \"stat\"\n    },\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"description\": \"Number of healthy nodes\",\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"thresholds\"\n          },\n          \"mappings\": [],\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"green\",\n                \"value\": null\n              }\n            ]\n          },\n          \"unit\": \"short\"\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 4,\n        \"w\": 8,\n        \"x\": 16,\n        \"y\": 4\n      },\n      \"id\": 10,\n      \"options\": {\n        \"colorMode\": \"value\",\n        \"graphMode\": \"none\",\n        \"justifyMode\": \"auto\",\n        \"orientation\": \"auto\",\n        \"reduceOptions\": {\n          \"values\": false,\n          \"calcs\": [\"lastNotNull\"],\n          \"fields\": \"\"\n        },\n        \"textMode\": \"auto\"\n      },\n      \"pluginVersion\": \"9.5.3\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"expr\": \"count(longhorn_node_status{condition=\\\"ready\\\"}==1)\",\n          \"legendFormat\": \"Ready Nodes\",\n          \"refId\": \"A\"\n        }\n      ],\n      \"title\": \"Ready Nodes\",\n      \"type\": \"stat\"\n    },\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"description\": \"Storage usage per node\",\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"palette-classic\"\n          },\n          \"custom\": {\n            \"axisCenteredZero\": false,\n            \"axisColorMode\": \"text\",\n            \"axisLabel\": \"\",\n            \"axisPlacement\": \"auto\",\n            \"barAlignment\": 0,\n            \"drawStyle\": \"line\",\n            \"fillOpacity\": 10,\n            \"gradientMode\": \"none\",\n            \"hideFrom\": {\n              \"tooltip\": false,\n              \"viz\": false,\n              \"legend\": false\n            },\n            \"lineInterpolation\": \"linear\",\n            \"lineWidth\": 2,\n            \"pointSize\": 5,\n            \"scaleDistribution\": {\n              \"type\": \"linear\"\n            },\n            \"showPoints\": \"never\",\n            \"spanNulls\": true,\n            \"stacking\": {\n              \"group\": \"A\",\n              \"mode\": \"none\"\n            },\n            \"thresholdsStyle\": {\n              \"mode\": \"off\"\n            }\n          },\n          \"mappings\": [],\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"green\",\n                \"value\": null\n              }\n            ]\n          },\n          \"unit\": \"bytes\"\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 8,\n        \"w\": 12,\n        \"x\": 0,\n        \"y\": 8\n      },\n      \"id\": 12,\n      \"options\": {\n        \"legend\": {\n          \"calcs\": [\"mean\", \"max\"],\n          \"displayMode\": \"table\",\n          \"placement\": \"bottom\",\n          \"showLegend\": true\n        },\n        \"tooltip\": {\n          \"mode\": \"multi\",\n          \"sort\": \"none\"\n        }\n      },\n      \"pluginVersion\": \"9.5.3\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"expr\": \"longhorn_node_storage_capacity_bytes - longhorn_node_storage_available_bytes\",\n          \"legendFormat\": \"{{node}}\",\n          \"refId\": \"A\"\n        }\n      ],\n      \"title\": \"Storage Usage per Node\",\n      \"type\": \"timeseries\"\n    },\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"description\": \"Volume actual size over time\",\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"palette-classic\"\n          },\n          \"custom\": {\n            \"axisCenteredZero\": false,\n            \"axisColorMode\": \"text\",\n            \"axisLabel\": \"\",\n            \"axisPlacement\": \"auto\",\n            \"barAlignment\": 0,\n            \"drawStyle\": \"line\",\n            \"fillOpacity\": 10,\n            \"gradientMode\": \"none\",\n            \"hideFrom\": {\n              \"tooltip\": false,\n              \"viz\": false,\n              \"legend\": false\n            },\n            \"lineInterpolation\": \"linear\",\n            \"lineWidth\": 2,\n            \"pointSize\": 5,\n            \"scaleDistribution\": {\n              \"type\": \"linear\"\n            },\n            \"showPoints\": \"never\",\n            \"spanNulls\": true,\n            \"stacking\": {\n              \"group\": \"A\",\n              \"mode\": \"none\"\n            },\n            \"thresholdsStyle\": {\n              \"mode\": \"off\"\n            }\n          },\n          \"mappings\": [],\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"green\",\n                \"value\": null\n              }\n            ]\n          },\n          \"unit\": \"bytes\"\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 8,\n        \"w\": 12,\n        \"x\": 12,\n        \"y\": 8\n      },\n      \"id\": 14,\n      \"options\": {\n        \"legend\": {\n          \"calcs\": [\"mean\", \"max\"],\n          \"displayMode\": \"table\",\n          \"placement\": \"bottom\",\n          \"showLegend\": true\n        },\n        \"tooltip\": {\n          \"mode\": \"multi\",\n          \"sort\": \"none\"\n        }\n      },\n      \"pluginVersion\": \"9.5.3\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"expr\": \"longhorn_volume_actual_size_bytes\",\n          \"legendFormat\": \"{{volume}}\",\n          \"refId\": \"A\"\n        }\n      ],\n      \"title\": \"Volume Actual Size\",\n      \"type\": \"timeseries\"\n    },\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"description\": \"Volume states distribution\",\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"palette-classic\"\n          },\n          \"custom\": {\n            \"hideFrom\": {\n              \"tooltip\": false,\n              \"viz\": false,\n              \"legend\": false\n            }\n          },\n          \"mappings\": [],\n          \"unit\": \"short\"\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 8,\n        \"w\": 8,\n        \"x\": 0,\n        \"y\": 16\n      },\n      \"id\": 16,\n      \"options\": {\n        \"legend\": {\n          \"displayMode\": \"list\",\n          \"placement\": \"bottom\",\n          \"showLegend\": true\n        },\n        \"pieType\": \"pie\",\n        \"tooltip\": {\n          \"mode\": \"single\",\n          \"sort\": \"none\"\n        }\n      },\n      \"pluginVersion\": \"9.5.3\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"expr\": \"count(longhorn_volume_state) by (state)\",\n          \"legendFormat\": \"{{state}}\",\n          \"refId\": \"A\"\n        }\n      ],\n      \"title\": \"Volume States\",\n      \"type\": \"piechart\"\n    },\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"description\": \"Volume robustness status\",\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"palette-classic\"\n          },\n          \"custom\": {\n            \"hideFrom\": {\n              \"tooltip\": false,\n              \"viz\": false,\n              \"legend\": false\n            }\n          },\n          \"mappings\": [],\n          \"unit\": \"short\"\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 8,\n        \"w\": 8,\n        \"x\": 8,\n        \"y\": 16\n      },\n      \"id\": 18,\n      \"options\": {\n        \"legend\": {\n          \"displayMode\": \"list\",\n          \"placement\": \"bottom\",\n          \"showLegend\": true\n        },\n        \"pieType\": \"pie\",\n        \"tooltip\": {\n          \"mode\": \"single\",\n          \"sort\": \"none\"\n        }\n      },\n      \"pluginVersion\": \"9.5.3\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"expr\": \"count(longhorn_volume_robustness) by (robustness)\",\n          \"legendFormat\": \"{{robustness}}\",\n          \"refId\": \"A\"\n        }\n      ],\n      \"title\": \"Volume Robustness\",\n      \"type\": \"piechart\"\n    },\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"description\": \"Number of replicas per volume\",\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"thresholds\"\n          },\n          \"custom\": {\n            \"align\": \"auto\",\n            \"displayMode\": \"auto\",\n            \"inspect\": false\n          },\n          \"mappings\": [],\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"green\",\n                \"value\": null\n              }\n            ]\n          },\n          \"unit\": \"short\"\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 8,\n        \"w\": 8,\n        \"x\": 16,\n        \"y\": 16\n      },\n      \"id\": 20,\n      \"options\": {\n        \"footer\": {\n          \"fields\": \"\",\n          \"reducer\": [\"sum\"],\n          \"show\": false\n        },\n        \"showHeader\": true\n      },\n      \"pluginVersion\": \"9.5.3\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"expr\": \"longhorn_volume_number_of_replicas\",\n          \"format\": \"table\",\n          \"instant\": true,\n          \"refId\": \"A\"\n        }\n      ],\n      \"title\": \"Volume Replicas\",\n      \"transformations\": [\n        {\n          \"id\": \"organize\",\n          \"options\": {\n            \"excludeByName\": {\n              \"Time\": true,\n              \"__name__\": true,\n              \"instance\": true,\n              \"job\": true,\n              \"namespace\": true\n            },\n            \"indexByName\": {},\n            \"renameByName\": {\n              \"Value\": \"Replicas\",\n              \"volume\": \"Volume\"\n            }\n          }\n        }\n      ],\n      \"type\": \"table\"\n    },\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"description\": \"Disk read throughput\",\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"palette-classic\"\n          },\n          \"custom\": {\n            \"axisCenteredZero\": false,\n            \"axisColorMode\": \"text\",\n            \"axisLabel\": \"\",\n            \"axisPlacement\": \"auto\",\n            \"barAlignment\": 0,\n            \"drawStyle\": \"line\",\n            \"fillOpacity\": 10,\n            \"gradientMode\": \"none\",\n            \"hideFrom\": {\n              \"tooltip\": false,\n              \"viz\": false,\n              \"legend\": false\n            },\n            \"lineInterpolation\": \"linear\",\n            \"lineWidth\": 2,\n            \"pointSize\": 5,\n            \"scaleDistribution\": {\n              \"type\": \"linear\"\n            },\n            \"showPoints\": \"never\",\n            \"spanNulls\": true,\n            \"stacking\": {\n              \"group\": \"A\",\n              \"mode\": \"none\"\n            },\n            \"thresholdsStyle\": {\n              \"mode\": \"off\"\n            }\n          },\n          \"mappings\": [],\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"green\",\n                \"value\": null\n              }\n            ]\n          },\n          \"unit\": \"Bps\"\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 8,\n        \"w\": 12,\n        \"x\": 0,\n        \"y\": 24\n      },\n      \"id\": 22,\n      \"options\": {\n        \"legend\": {\n          \"calcs\": [\"mean\", \"max\"],\n          \"displayMode\": \"table\",\n          \"placement\": \"bottom\",\n          \"showLegend\": true\n        },\n        \"tooltip\": {\n          \"mode\": \"multi\",\n          \"sort\": \"none\"\n        }\n      },\n      \"pluginVersion\": \"9.5.3\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"expr\": \"rate(longhorn_disk_read_throughput[5m])\",\n          \"legendFormat\": \"{{node}}/{{disk}}\",\n          \"refId\": \"A\"\n        }\n      ],\n      \"title\": \"Disk Read Throughput\",\n      \"type\": \"timeseries\"\n    },\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"description\": \"Disk write throughput\",\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"palette-classic\"\n          },\n          \"custom\": {\n            \"axisCenteredZero\": false,\n            \"axisColorMode\": \"text\",\n            \"axisLabel\": \"\",\n            \"axisPlacement\": \"auto\",\n            \"barAlignment\": 0,\n            \"drawStyle\": \"line\",\n            \"fillOpacity\": 10,\n            \"gradientMode\": \"none\",\n            \"hideFrom\": {\n              \"tooltip\": false,\n              \"viz\": false,\n              \"legend\": false\n            },\n            \"lineInterpolation\": \"linear\",\n            \"lineWidth\": 2,\n            \"pointSize\": 5,\n            \"scaleDistribution\": {\n              \"type\": \"linear\"\n            },\n            \"showPoints\": \"never\",\n            \"spanNulls\": true,\n            \"stacking\": {\n              \"group\": \"A\",\n              \"mode\": \"none\"\n            },\n            \"thresholdsStyle\": {\n              \"mode\": \"off\"\n            }\n          },\n          \"mappings\": [],\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"green\",\n                \"value\": null\n              }\n            ]\n          },\n          \"unit\": \"Bps\"\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 8,\n        \"w\": 12,\n        \"x\": 12,\n        \"y\": 24\n      },\n      \"id\": 24,\n      \"options\": {\n        \"legend\": {\n          \"calcs\": [\"mean\", \"max\"],\n          \"displayMode\": \"table\",\n          \"placement\": \"bottom\",\n          \"showLegend\": true\n        },\n        \"tooltip\": {\n          \"mode\": \"multi\",\n          \"sort\": \"none\"\n        }\n      },\n      \"pluginVersion\": \"9.5.3\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"expr\": \"rate(longhorn_disk_write_throughput[5m])\",\n          \"legendFormat\": \"{{node}}/{{disk}}\",\n          \"refId\": \"A\"\n        }\n      ],\n      \"title\": \"Disk Write Throughput\",\n      \"type\": \"timeseries\"\n    }\n  ],\n  \"refresh\": \"30s\",\n  \"schemaVersion\": 38,\n  \"style\": \"dark\",\n  \"tags\": [\"longhorn\", \"storage\", \"block-storage\", \"distributed\"],\n  \"templating\": {\n    \"list\": []\n  },\n  \"time\": {\n    \"from\": \"now-6h\",\n    \"to\": \"now\"\n  },\n  \"timepicker\": {},\n  \"timezone\": \"\",\n  \"title\": \"Longhorn Distributed Storage\",\n  \"uid\": \"longhorn-monitoring\",\n  \"version\": 0,\n  \"weekStart\": \"\"\n}"},"kind":"ConfigMap","metadata":{"annotations":{},"labels":{"grafana_dashboard":"1"},"name":"grafana-dashboard-longhorn","namespace":"monitoring"}}
+  creationTimestamp: "2025-11-18T12:24:06Z"
+  labels:
+    grafana_dashboard: "1"
+  name: grafana-dashboard-longhorn
+  namespace: monitoring
+  resourceVersion: "1451082"
+  uid: 7ae6bb35-dfae-4738-93e8-249438b732c1

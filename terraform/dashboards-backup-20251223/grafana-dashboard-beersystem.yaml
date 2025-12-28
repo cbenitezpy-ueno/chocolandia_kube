@@ -1,0 +1,949 @@
+apiVersion: v1
+data:
+  beersystem-dashboard.json: |-
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "grafana",
+              "uid": "-- Grafana --"
+            },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "tooltip": false,
+                  "viz": false,
+                  "legend": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "max": 100,
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 70
+                  },
+                  {
+                    "color": "red",
+                    "value": 90
+                  }
+                ]
+              },
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 0
+          },
+          "id": 1,
+          "options": {
+            "legend": {
+              "calcs": [
+                "mean",
+                "max"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "10.0.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"beersystem\", container!=\"\", container!=\"POD\"}[5m])) by (pod) * 100",
+              "legendFormat": "{{pod}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "CPU Usage by Pod",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "tooltip": false,
+                  "viz": false,
+                  "legend": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "bytes"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 0
+          },
+          "id": 2,
+          "options": {
+            "legend": {
+              "calcs": [
+                "mean",
+                "max"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "10.0.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"beersystem\", container!=\"\", container!=\"POD\"}) by (pod)",
+              "legendFormat": "{{pod}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Memory Usage by Pod",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [
+                {
+                  "options": {
+                    "0": {
+                      "color": "red",
+                      "index": 0,
+                      "text": "Down"
+                    },
+                    "1": {
+                      "color": "green",
+                      "index": 1,
+                      "text": "Running"
+                    }
+                  },
+                  "type": "value"
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 0,
+            "y": 8
+          },
+          "id": 3,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "10.0.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "sum(kube_pod_status_phase{namespace=\"beersystem\", pod=~\"beersystem-backend.*\", phase=\"Running\"})",
+              "legendFormat": "Backend Status",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Backend Pod Status",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [
+                {
+                  "options": {
+                    "0": {
+                      "color": "red",
+                      "index": 0,
+                      "text": "Down"
+                    },
+                    "1": {
+                      "color": "green",
+                      "index": 1,
+                      "text": "Running"
+                    }
+                  },
+                  "type": "value"
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 6,
+            "y": 8
+          },
+          "id": 4,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "10.0.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "sum(kube_pod_status_phase{namespace=\"beersystem\", pod=~\"beersystem-frontend.*\", phase=\"Running\"})",
+              "legendFormat": "Frontend Status",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Frontend Pod Status",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [
+                {
+                  "options": {
+                    "0": {
+                      "color": "red",
+                      "index": 0,
+                      "text": "Down"
+                    },
+                    "1": {
+                      "color": "green",
+                      "index": 1,
+                      "text": "Running"
+                    }
+                  },
+                  "type": "value"
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 12,
+            "y": 8
+          },
+          "id": 5,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "10.0.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "sum(kube_pod_status_phase{namespace=\"beersystem\", pod=~\"redis.*\", phase=\"Running\"})",
+              "legendFormat": "Redis Status",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Redis Pod Status",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 3
+                  },
+                  {
+                    "color": "red",
+                    "value": 5
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 18,
+            "y": 8
+          },
+          "id": 6,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "10.0.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "sum(kube_pod_container_status_restarts_total{namespace=\"beersystem\"})",
+              "legendFormat": "Total Restarts",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Container Restarts",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "tooltip": false,
+                  "viz": false,
+                  "legend": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "Bps"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 12
+          },
+          "id": 7,
+          "options": {
+            "legend": {
+              "calcs": [
+                "mean"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "10.0.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "sum(rate(container_network_receive_bytes_total{namespace=\"beersystem\", pod!=\"\"}[5m])) by (pod)",
+              "legendFormat": "{{pod}} (RX)",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "sum(rate(container_network_transmit_bytes_total{namespace=\"beersystem\", pod!=\"\"}[5m])) by (pod) * -1",
+              "hide": false,
+              "legendFormat": "{{pod}} (TX)",
+              "range": true,
+              "refId": "B"
+            }
+          ],
+          "title": "Network I/O by Pod",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "tooltip": false,
+                  "viz": false,
+                  "legend": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "Bps"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 12
+          },
+          "id": 8,
+          "options": {
+            "legend": {
+              "calcs": [
+                "mean"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "10.0.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "sum(rate(container_fs_reads_bytes_total{namespace=\"beersystem\", container!=\"\", container!=\"POD\"}[5m])) by (pod)",
+              "legendFormat": "{{pod}} (Read)",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "sum(rate(container_fs_writes_bytes_total{namespace=\"beersystem\", container!=\"\", container!=\"POD\"}[5m])) by (pod) * -1",
+              "hide": false,
+              "legendFormat": "{{pod}} (Write)",
+              "range": true,
+              "refId": "B"
+            }
+          ],
+          "title": "Disk I/O by Pod",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Ready"
+                },
+                "properties": [
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "false": {
+                            "color": "red",
+                            "index": 1,
+                            "text": "Not Ready"
+                          },
+                          "true": {
+                            "color": "green",
+                            "index": 0,
+                            "text": "Ready"
+                          }
+                        },
+                        "type": "value"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "mode": "basic",
+                      "type": "color-background"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 20
+          },
+          "id": 9,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
+            },
+            "showHeader": true
+          },
+          "pluginVersion": "10.0.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "kube_pod_info{namespace=\"beersystem\"}",
+              "format": "table",
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "kube_pod_status_ready{namespace=\"beersystem\"}",
+              "format": "table",
+              "hide": false,
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "B"
+            }
+          ],
+          "title": "Pod Information",
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "container": true,
+                  "endpoint": true,
+                  "instance": true,
+                  "job": true,
+                  "namespace": true,
+                  "pod_ip": true,
+                  "prometheus": true,
+                  "prometheus_replica": true,
+                  "service": true,
+                  "uid": true
+                },
+                "indexByName": {
+                  "Time": 0,
+                  "Value #A": 8,
+                  "Value #B": 9,
+                  "__name__": 1,
+                  "condition": 6,
+                  "container": 2,
+                  "created_by_kind": 7,
+                  "created_by_name": 8,
+                  "endpoint": 3,
+                  "host_ip": 9,
+                  "host_network": 10,
+                  "instance": 4,
+                  "job": 5,
+                  "namespace": 11,
+                  "node": 6,
+                  "pod": 7,
+                  "pod_ip": 12,
+                  "priority_class": 13,
+                  "prometheus": 14,
+                  "prometheus_replica": 15,
+                  "service": 16,
+                  "uid": 17
+                },
+                "renameByName": {
+                  "Value #B": "Ready",
+                  "created_by_kind": "",
+                  "created_by_name": "Owner",
+                  "host_ip": "Host IP",
+                  "node": "Node",
+                  "pod": "Pod",
+                  "priority_class": "Priority"
+                }
+              }
+            }
+          ],
+          "type": "table"
+        }
+      ],
+      "refresh": "30s",
+      "schemaVersion": 38,
+      "style": "dark",
+      "tags": ["beersystem", "application", "kubernetes"],
+      "templating": {
+        "list": []
+      },
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "BeerSystem Application Monitoring",
+      "uid": "beersystem-monitoring",
+      "version": 0,
+      "weekStart": ""
+    }
+kind: ConfigMap
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","data":{"beersystem-dashboard.json":"{\n  \"annotations\": {\n    \"list\": [\n      {\n        \"builtIn\": 1,\n        \"datasource\": {\n          \"type\": \"grafana\",\n          \"uid\": \"-- Grafana --\"\n        },\n        \"enable\": true,\n        \"hide\": true,\n        \"iconColor\": \"rgba(0, 211, 255, 1)\",\n        \"name\": \"Annotations \u0026 Alerts\",\n        \"type\": \"dashboard\"\n      }\n    ]\n  },\n  \"editable\": true,\n  \"fiscalYearStartMonth\": 0,\n  \"graphTooltip\": 0,\n  \"id\": null,\n  \"links\": [],\n  \"liveNow\": false,\n  \"panels\": [\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"palette-classic\"\n          },\n          \"custom\": {\n            \"axisCenteredZero\": false,\n            \"axisColorMode\": \"text\",\n            \"axisLabel\": \"\",\n            \"axisPlacement\": \"auto\",\n            \"barAlignment\": 0,\n            \"drawStyle\": \"line\",\n            \"fillOpacity\": 10,\n            \"gradientMode\": \"none\",\n            \"hideFrom\": {\n              \"tooltip\": false,\n              \"viz\": false,\n              \"legend\": false\n            },\n            \"lineInterpolation\": \"linear\",\n            \"lineWidth\": 1,\n            \"pointSize\": 5,\n            \"scaleDistribution\": {\n              \"type\": \"linear\"\n            },\n            \"showPoints\": \"never\",\n            \"spanNulls\": false,\n            \"stacking\": {\n              \"group\": \"A\",\n              \"mode\": \"none\"\n            },\n            \"thresholdsStyle\": {\n              \"mode\": \"off\"\n            }\n          },\n          \"mappings\": [],\n          \"max\": 100,\n          \"min\": 0,\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"green\",\n                \"value\": null\n              },\n              {\n                \"color\": \"yellow\",\n                \"value\": 70\n              },\n              {\n                \"color\": \"red\",\n                \"value\": 90\n              }\n            ]\n          },\n          \"unit\": \"percent\"\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 8,\n        \"w\": 12,\n        \"x\": 0,\n        \"y\": 0\n      },\n      \"id\": 1,\n      \"options\": {\n        \"legend\": {\n          \"calcs\": [\n            \"mean\",\n            \"max\"\n          ],\n          \"displayMode\": \"table\",\n          \"placement\": \"bottom\",\n          \"showLegend\": true\n        },\n        \"tooltip\": {\n          \"mode\": \"multi\",\n          \"sort\": \"none\"\n        }\n      },\n      \"pluginVersion\": \"10.0.0\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"editorMode\": \"code\",\n          \"expr\": \"sum(rate(container_cpu_usage_seconds_total{namespace=\\\"beersystem\\\", container!=\\\"\\\", container!=\\\"POD\\\"}[5m])) by (pod) * 100\",\n          \"legendFormat\": \"{{pod}}\",\n          \"range\": true,\n          \"refId\": \"A\"\n        }\n      ],\n      \"title\": \"CPU Usage by Pod\",\n      \"type\": \"timeseries\"\n    },\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"palette-classic\"\n          },\n          \"custom\": {\n            \"axisCenteredZero\": false,\n            \"axisColorMode\": \"text\",\n            \"axisLabel\": \"\",\n            \"axisPlacement\": \"auto\",\n            \"barAlignment\": 0,\n            \"drawStyle\": \"line\",\n            \"fillOpacity\": 10,\n            \"gradientMode\": \"none\",\n            \"hideFrom\": {\n              \"tooltip\": false,\n              \"viz\": false,\n              \"legend\": false\n            },\n            \"lineInterpolation\": \"linear\",\n            \"lineWidth\": 1,\n            \"pointSize\": 5,\n            \"scaleDistribution\": {\n              \"type\": \"linear\"\n            },\n            \"showPoints\": \"never\",\n            \"spanNulls\": false,\n            \"stacking\": {\n              \"group\": \"A\",\n              \"mode\": \"none\"\n            },\n            \"thresholdsStyle\": {\n              \"mode\": \"off\"\n            }\n          },\n          \"mappings\": [],\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"green\",\n                \"value\": null\n              }\n            ]\n          },\n          \"unit\": \"bytes\"\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 8,\n        \"w\": 12,\n        \"x\": 12,\n        \"y\": 0\n      },\n      \"id\": 2,\n      \"options\": {\n        \"legend\": {\n          \"calcs\": [\n            \"mean\",\n            \"max\"\n          ],\n          \"displayMode\": \"table\",\n          \"placement\": \"bottom\",\n          \"showLegend\": true\n        },\n        \"tooltip\": {\n          \"mode\": \"multi\",\n          \"sort\": \"none\"\n        }\n      },\n      \"pluginVersion\": \"10.0.0\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"editorMode\": \"code\",\n          \"expr\": \"sum(container_memory_working_set_bytes{namespace=\\\"beersystem\\\", container!=\\\"\\\", container!=\\\"POD\\\"}) by (pod)\",\n          \"legendFormat\": \"{{pod}}\",\n          \"range\": true,\n          \"refId\": \"A\"\n        }\n      ],\n      \"title\": \"Memory Usage by Pod\",\n      \"type\": \"timeseries\"\n    },\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"thresholds\"\n          },\n          \"mappings\": [\n            {\n              \"options\": {\n                \"0\": {\n                  \"color\": \"red\",\n                  \"index\": 0,\n                  \"text\": \"Down\"\n                },\n                \"1\": {\n                  \"color\": \"green\",\n                  \"index\": 1,\n                  \"text\": \"Running\"\n                }\n              },\n              \"type\": \"value\"\n            }\n          ],\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"red\",\n                \"value\": null\n              },\n              {\n                \"color\": \"green\",\n                \"value\": 1\n              }\n            ]\n          }\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 4,\n        \"w\": 6,\n        \"x\": 0,\n        \"y\": 8\n      },\n      \"id\": 3,\n      \"options\": {\n        \"colorMode\": \"background\",\n        \"graphMode\": \"none\",\n        \"justifyMode\": \"auto\",\n        \"orientation\": \"auto\",\n        \"reduceOptions\": {\n          \"values\": false,\n          \"calcs\": [\n            \"lastNotNull\"\n          ],\n          \"fields\": \"\"\n        },\n        \"textMode\": \"auto\"\n      },\n      \"pluginVersion\": \"10.0.0\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"editorMode\": \"code\",\n          \"expr\": \"sum(kube_pod_status_phase{namespace=\\\"beersystem\\\", pod=~\\\"beersystem-backend.*\\\", phase=\\\"Running\\\"})\",\n          \"legendFormat\": \"Backend Status\",\n          \"range\": true,\n          \"refId\": \"A\"\n        }\n      ],\n      \"title\": \"Backend Pod Status\",\n      \"type\": \"stat\"\n    },\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"thresholds\"\n          },\n          \"mappings\": [\n            {\n              \"options\": {\n                \"0\": {\n                  \"color\": \"red\",\n                  \"index\": 0,\n                  \"text\": \"Down\"\n                },\n                \"1\": {\n                  \"color\": \"green\",\n                  \"index\": 1,\n                  \"text\": \"Running\"\n                }\n              },\n              \"type\": \"value\"\n            }\n          ],\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"red\",\n                \"value\": null\n              },\n              {\n                \"color\": \"green\",\n                \"value\": 1\n              }\n            ]\n          }\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 4,\n        \"w\": 6,\n        \"x\": 6,\n        \"y\": 8\n      },\n      \"id\": 4,\n      \"options\": {\n        \"colorMode\": \"background\",\n        \"graphMode\": \"none\",\n        \"justifyMode\": \"auto\",\n        \"orientation\": \"auto\",\n        \"reduceOptions\": {\n          \"values\": false,\n          \"calcs\": [\n            \"lastNotNull\"\n          ],\n          \"fields\": \"\"\n        },\n        \"textMode\": \"auto\"\n      },\n      \"pluginVersion\": \"10.0.0\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"editorMode\": \"code\",\n          \"expr\": \"sum(kube_pod_status_phase{namespace=\\\"beersystem\\\", pod=~\\\"beersystem-frontend.*\\\", phase=\\\"Running\\\"})\",\n          \"legendFormat\": \"Frontend Status\",\n          \"range\": true,\n          \"refId\": \"A\"\n        }\n      ],\n      \"title\": \"Frontend Pod Status\",\n      \"type\": \"stat\"\n    },\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"thresholds\"\n          },\n          \"mappings\": [\n            {\n              \"options\": {\n                \"0\": {\n                  \"color\": \"red\",\n                  \"index\": 0,\n                  \"text\": \"Down\"\n                },\n                \"1\": {\n                  \"color\": \"green\",\n                  \"index\": 1,\n                  \"text\": \"Running\"\n                }\n              },\n              \"type\": \"value\"\n            }\n          ],\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"red\",\n                \"value\": null\n              },\n              {\n                \"color\": \"green\",\n                \"value\": 1\n              }\n            ]\n          }\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 4,\n        \"w\": 6,\n        \"x\": 12,\n        \"y\": 8\n      },\n      \"id\": 5,\n      \"options\": {\n        \"colorMode\": \"background\",\n        \"graphMode\": \"none\",\n        \"justifyMode\": \"auto\",\n        \"orientation\": \"auto\",\n        \"reduceOptions\": {\n          \"values\": false,\n          \"calcs\": [\n            \"lastNotNull\"\n          ],\n          \"fields\": \"\"\n        },\n        \"textMode\": \"auto\"\n      },\n      \"pluginVersion\": \"10.0.0\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"editorMode\": \"code\",\n          \"expr\": \"sum(kube_pod_status_phase{namespace=\\\"beersystem\\\", pod=~\\\"redis.*\\\", phase=\\\"Running\\\"})\",\n          \"legendFormat\": \"Redis Status\",\n          \"range\": true,\n          \"refId\": \"A\"\n        }\n      ],\n      \"title\": \"Redis Pod Status\",\n      \"type\": \"stat\"\n    },\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"thresholds\"\n          },\n          \"mappings\": [],\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"green\",\n                \"value\": null\n              },\n              {\n                \"color\": \"yellow\",\n                \"value\": 3\n              },\n              {\n                \"color\": \"red\",\n                \"value\": 5\n              }\n            ]\n          },\n          \"unit\": \"short\"\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 4,\n        \"w\": 6,\n        \"x\": 18,\n        \"y\": 8\n      },\n      \"id\": 6,\n      \"options\": {\n        \"colorMode\": \"background\",\n        \"graphMode\": \"area\",\n        \"justifyMode\": \"auto\",\n        \"orientation\": \"auto\",\n        \"reduceOptions\": {\n          \"values\": false,\n          \"calcs\": [\n            \"lastNotNull\"\n          ],\n          \"fields\": \"\"\n        },\n        \"textMode\": \"auto\"\n      },\n      \"pluginVersion\": \"10.0.0\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"editorMode\": \"code\",\n          \"expr\": \"sum(kube_pod_container_status_restarts_total{namespace=\\\"beersystem\\\"})\",\n          \"legendFormat\": \"Total Restarts\",\n          \"range\": true,\n          \"refId\": \"A\"\n        }\n      ],\n      \"title\": \"Container Restarts\",\n      \"type\": \"stat\"\n    },\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"palette-classic\"\n          },\n          \"custom\": {\n            \"axisCenteredZero\": false,\n            \"axisColorMode\": \"text\",\n            \"axisLabel\": \"\",\n            \"axisPlacement\": \"auto\",\n            \"barAlignment\": 0,\n            \"drawStyle\": \"line\",\n            \"fillOpacity\": 10,\n            \"gradientMode\": \"none\",\n            \"hideFrom\": {\n              \"tooltip\": false,\n              \"viz\": false,\n              \"legend\": false\n            },\n            \"lineInterpolation\": \"linear\",\n            \"lineWidth\": 1,\n            \"pointSize\": 5,\n            \"scaleDistribution\": {\n              \"type\": \"linear\"\n            },\n            \"showPoints\": \"never\",\n            \"spanNulls\": false,\n            \"stacking\": {\n              \"group\": \"A\",\n              \"mode\": \"none\"\n            },\n            \"thresholdsStyle\": {\n              \"mode\": \"off\"\n            }\n          },\n          \"mappings\": [],\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"green\",\n                \"value\": null\n              }\n            ]\n          },\n          \"unit\": \"Bps\"\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 8,\n        \"w\": 12,\n        \"x\": 0,\n        \"y\": 12\n      },\n      \"id\": 7,\n      \"options\": {\n        \"legend\": {\n          \"calcs\": [\n            \"mean\"\n          ],\n          \"displayMode\": \"table\",\n          \"placement\": \"bottom\",\n          \"showLegend\": true\n        },\n        \"tooltip\": {\n          \"mode\": \"multi\",\n          \"sort\": \"none\"\n        }\n      },\n      \"pluginVersion\": \"10.0.0\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"editorMode\": \"code\",\n          \"expr\": \"sum(rate(container_network_receive_bytes_total{namespace=\\\"beersystem\\\", pod!=\\\"\\\"}[5m])) by (pod)\",\n          \"legendFormat\": \"{{pod}} (RX)\",\n          \"range\": true,\n          \"refId\": \"A\"\n        },\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"editorMode\": \"code\",\n          \"expr\": \"sum(rate(container_network_transmit_bytes_total{namespace=\\\"beersystem\\\", pod!=\\\"\\\"}[5m])) by (pod) * -1\",\n          \"hide\": false,\n          \"legendFormat\": \"{{pod}} (TX)\",\n          \"range\": true,\n          \"refId\": \"B\"\n        }\n      ],\n      \"title\": \"Network I/O by Pod\",\n      \"type\": \"timeseries\"\n    },\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"palette-classic\"\n          },\n          \"custom\": {\n            \"axisCenteredZero\": false,\n            \"axisColorMode\": \"text\",\n            \"axisLabel\": \"\",\n            \"axisPlacement\": \"auto\",\n            \"barAlignment\": 0,\n            \"drawStyle\": \"line\",\n            \"fillOpacity\": 10,\n            \"gradientMode\": \"none\",\n            \"hideFrom\": {\n              \"tooltip\": false,\n              \"viz\": false,\n              \"legend\": false\n            },\n            \"lineInterpolation\": \"linear\",\n            \"lineWidth\": 1,\n            \"pointSize\": 5,\n            \"scaleDistribution\": {\n              \"type\": \"linear\"\n            },\n            \"showPoints\": \"never\",\n            \"spanNulls\": false,\n            \"stacking\": {\n              \"group\": \"A\",\n              \"mode\": \"none\"\n            },\n            \"thresholdsStyle\": {\n              \"mode\": \"off\"\n            }\n          },\n          \"mappings\": [],\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"green\",\n                \"value\": null\n              }\n            ]\n          },\n          \"unit\": \"Bps\"\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 8,\n        \"w\": 12,\n        \"x\": 12,\n        \"y\": 12\n      },\n      \"id\": 8,\n      \"options\": {\n        \"legend\": {\n          \"calcs\": [\n            \"mean\"\n          ],\n          \"displayMode\": \"table\",\n          \"placement\": \"bottom\",\n          \"showLegend\": true\n        },\n        \"tooltip\": {\n          \"mode\": \"multi\",\n          \"sort\": \"none\"\n        }\n      },\n      \"pluginVersion\": \"10.0.0\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"editorMode\": \"code\",\n          \"expr\": \"sum(rate(container_fs_reads_bytes_total{namespace=\\\"beersystem\\\", container!=\\\"\\\", container!=\\\"POD\\\"}[5m])) by (pod)\",\n          \"legendFormat\": \"{{pod}} (Read)\",\n          \"range\": true,\n          \"refId\": \"A\"\n        },\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"editorMode\": \"code\",\n          \"expr\": \"sum(rate(container_fs_writes_bytes_total{namespace=\\\"beersystem\\\", container!=\\\"\\\", container!=\\\"POD\\\"}[5m])) by (pod) * -1\",\n          \"hide\": false,\n          \"legendFormat\": \"{{pod}} (Write)\",\n          \"range\": true,\n          \"refId\": \"B\"\n        }\n      ],\n      \"title\": \"Disk I/O by Pod\",\n      \"type\": \"timeseries\"\n    },\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"thresholds\"\n          },\n          \"custom\": {\n            \"align\": \"auto\",\n            \"cellOptions\": {\n              \"type\": \"auto\"\n            },\n            \"inspect\": false\n          },\n          \"mappings\": [],\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"green\",\n                \"value\": null\n              }\n            ]\n          }\n        },\n        \"overrides\": [\n          {\n            \"matcher\": {\n              \"id\": \"byName\",\n              \"options\": \"Ready\"\n            },\n            \"properties\": [\n              {\n                \"id\": \"mappings\",\n                \"value\": [\n                  {\n                    \"options\": {\n                      \"false\": {\n                        \"color\": \"red\",\n                        \"index\": 1,\n                        \"text\": \"Not Ready\"\n                      },\n                      \"true\": {\n                        \"color\": \"green\",\n                        \"index\": 0,\n                        \"text\": \"Ready\"\n                      }\n                    },\n                    \"type\": \"value\"\n                  }\n                ]\n              },\n              {\n                \"id\": \"custom.cellOptions\",\n                \"value\": {\n                  \"mode\": \"basic\",\n                  \"type\": \"color-background\"\n                }\n              }\n            ]\n          }\n        ]\n      },\n      \"gridPos\": {\n        \"h\": 8,\n        \"w\": 24,\n        \"x\": 0,\n        \"y\": 20\n      },\n      \"id\": 9,\n      \"options\": {\n        \"cellHeight\": \"sm\",\n        \"footer\": {\n          \"countRows\": false,\n          \"fields\": \"\",\n          \"reducer\": [\n            \"sum\"\n          ],\n          \"show\": false\n        },\n        \"showHeader\": true\n      },\n      \"pluginVersion\": \"10.0.0\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"editorMode\": \"code\",\n          \"expr\": \"kube_pod_info{namespace=\\\"beersystem\\\"}\",\n          \"format\": \"table\",\n          \"legendFormat\": \"__auto\",\n          \"range\": true,\n          \"refId\": \"A\"\n        },\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"editorMode\": \"code\",\n          \"expr\": \"kube_pod_status_ready{namespace=\\\"beersystem\\\"}\",\n          \"format\": \"table\",\n          \"hide\": false,\n          \"legendFormat\": \"__auto\",\n          \"range\": true,\n          \"refId\": \"B\"\n        }\n      ],\n      \"title\": \"Pod Information\",\n      \"transformations\": [\n        {\n          \"id\": \"merge\",\n          \"options\": {}\n        },\n        {\n          \"id\": \"organize\",\n          \"options\": {\n            \"excludeByName\": {\n              \"Time\": true,\n              \"__name__\": true,\n              \"container\": true,\n              \"endpoint\": true,\n              \"instance\": true,\n              \"job\": true,\n              \"namespace\": true,\n              \"pod_ip\": true,\n              \"prometheus\": true,\n              \"prometheus_replica\": true,\n              \"service\": true,\n              \"uid\": true\n            },\n            \"indexByName\": {\n              \"Time\": 0,\n              \"Value #A\": 8,\n              \"Value #B\": 9,\n              \"__name__\": 1,\n              \"condition\": 6,\n              \"container\": 2,\n              \"created_by_kind\": 7,\n              \"created_by_name\": 8,\n              \"endpoint\": 3,\n              \"host_ip\": 9,\n              \"host_network\": 10,\n              \"instance\": 4,\n              \"job\": 5,\n              \"namespace\": 11,\n              \"node\": 6,\n              \"pod\": 7,\n              \"pod_ip\": 12,\n              \"priority_class\": 13,\n              \"prometheus\": 14,\n              \"prometheus_replica\": 15,\n              \"service\": 16,\n              \"uid\": 17\n            },\n            \"renameByName\": {\n              \"Value #B\": \"Ready\",\n              \"created_by_kind\": \"\",\n              \"created_by_name\": \"Owner\",\n              \"host_ip\": \"Host IP\",\n              \"node\": \"Node\",\n              \"pod\": \"Pod\",\n              \"priority_class\": \"Priority\"\n            }\n          }\n        }\n      ],\n      \"type\": \"table\"\n    }\n  ],\n  \"refresh\": \"30s\",\n  \"schemaVersion\": 38,\n  \"style\": \"dark\",\n  \"tags\": [\"beersystem\", \"application\", \"kubernetes\"],\n  \"templating\": {\n    \"list\": []\n  },\n  \"time\": {\n    \"from\": \"now-6h\",\n    \"to\": \"now\"\n  },\n  \"timepicker\": {},\n  \"timezone\": \"\",\n  \"title\": \"BeerSystem Application Monitoring\",\n  \"uid\": \"beersystem-monitoring\",\n  \"version\": 0,\n  \"weekStart\": \"\"\n}"},"kind":"ConfigMap","metadata":{"annotations":{},"labels":{"grafana_dashboard":"1"},"name":"grafana-dashboard-beersystem","namespace":"monitoring"}}
+  creationTimestamp: "2025-11-18T12:32:57Z"
+  labels:
+    grafana_dashboard: "1"
+  name: grafana-dashboard-beersystem
+  namespace: monitoring
+  resourceVersion: "1453332"
+  uid: a51f2bb0-1cfe-4c49-8abb-4cb1c9bbf29d
