@@ -46,6 +46,8 @@ Auto-generated from all feature plans. Last updated: 2025-11-08
 - PersistentVolume 10Gi (Prometheus), 5Gi (Grafana) via local-path-provisioner (021-monitoring-stack-upgrade)
 - HCL (OpenTofu 1.6+) + hashicorp/kubernetes ~> 2.23, hashicorp/helm ~> 2.11, hashicorp/time ~> 0.11 (022-metallb-refactor)
 - Kubernetes CRDs (metallb.io/v1beta1), Terraform state file (local) (022-metallb-refactor)
+- Bash scripting (wiki sync scripts), Markdown (documentation) + Git, gh CLI, kubectl, existing wiki scripts in scripts/wiki/ (024-docs-wiki-sync)
+- N/A (documentation only) (024-docs-wiki-sync)
 
 - HCL (OpenTofu) 1.6+, Bash scripting for validation (001-k3s-cluster-setup)
 
@@ -65,9 +67,9 @@ tests/
 HCL (Terraform) 1.6+, Bash scripting for validation: Follow standard conventions
 
 ## Recent Changes
+- 024-docs-wiki-sync: Documentation audit and GitHub Wiki synchronization
 - 023-k3s-secret-encryption: Added Bash scripting for validation, K3s encryption configuration
 - 022-metallb-refactor: Added HCL (OpenTofu 1.6+) + hashicorp/kubernetes ~> 2.23, hashicorp/helm ~> 2.11, hashicorp/time ~> 0.11
-- 021-monitoring-stack-upgrade: Added HCL (OpenTofu 1.6+), YAML (Helm values)
 
 
 <!-- MANUAL ADDITIONS START -->
