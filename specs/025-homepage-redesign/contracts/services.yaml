@@ -1,40 +1,48 @@
----
-# Homepage Services Configuration
-# Redesign v2.0.0 - Organized by operational priority
+# Homepage Services Contract
+# Target: terraform/modules/homepage/configs/services.yaml
+# Version: 2.0.0 (Redesign)
 
+---
 # ============================================================================
 # CLUSTER HEALTH - Immediate visibility of cluster state
 # ============================================================================
 - Cluster Health:
-    - CoreDNS:
+    - Kubernetes API:
         icon: mdi-kubernetes
         href: https://headlamp.chocolandiadc.com
-        description: "K3s cluster DNS"
+        description: "K3s API server status"
         widget:
           type: kubernetes
           cluster: default
           namespace: kube-system
-          podSelector: k8s-app=kube-dns
+          app: kube-apiserver
+          podSelector: component=kube-apiserver
 
-    - Metrics Server:
+    - Node Status:
         icon: mdi-server-network
-        description: "Cluster metrics (CPU/MEM)"
+        description: "4 nodes: master1, nodo1, nodo03, nodo04"
         widget:
           type: kubernetes
           cluster: default
           namespace: kube-system
-          podSelector: k8s-app=metrics-server
+          app: node-exporter
+          podSelector: ""
 
     - Ingress Health:
         icon: traefik.svg
-        href: https://traefik.chocolandiadc.com
         description: "Traefik ingress (LB: 192.168.4.202)"
         widget:
-          type: kubernetes
-          cluster: default
-          namespace: traefik
-          app: traefik
-          podSelector: app.kubernetes.io/name=traefik
+          type: traefik
+          url: http://traefik.traefik.svc.cluster.local:9100
+
+    - DNS Health:
+        icon: si-pihole
+        href: https://pihole.chocolandiadc.com
+        description: "Pi-hole DNS (LB: 192.168.4.200)"
+        widget:
+          type: pihole
+          url: http://pihole.default.svc.cluster.local
+          key: "{{HOMEPAGE_VAR_PIHOLE_API_KEY}}"
 
 # ============================================================================
 # CRITICAL INFRASTRUCTURE - Services that break others when down
@@ -42,38 +50,41 @@
 - Critical Infrastructure:
     - Traefik:
         icon: traefik.svg
-        href: https://traefik.chocolandiadc.com
         description: "Reverse proxy | LB: 192.168.4.202"
+        namespace: traefik
+        app: traefik
         widget:
-          type: kubernetes
-          cluster: default
-          namespace: traefik
-          app: traefik
-          podSelector: app.kubernetes.io/name=traefik
+          type: traefik
+          url: http://traefik.traefik.svc.cluster.local:9100
 
     - Pi-hole:
         icon: si-pihole
         href: https://pihole.chocolandiadc.com
         description: "Network DNS | LB: 192.168.4.200:53"
+        namespace: default
+        app: pihole
         widget:
-          type: kubernetes
-          cluster: default
-          namespace: default
-          podSelector: app=pihole
+          type: pihole
+          url: http://pihole.default.svc.cluster.local
+          key: "{{HOMEPAGE_VAR_PIHOLE_API_KEY}}"
 
     - PostgreSQL:
         icon: si-postgresql
         description: "Database | LB: 192.168.4.204:5432"
+        namespace: postgresql
+        app: postgres
         widget:
           type: kubernetes
           cluster: default
           namespace: postgresql
           app: postgres
-          podSelector: app.kubernetes.io/name=postgres
+          podSelector: app.kubernetes.io/name=postgresql
 
     - Redis:
         icon: si-redis
         description: "Cache | LB: 192.168.4.203:6379"
+        namespace: redis
+        app: redis
         widget:
           type: kubernetes
           cluster: default
@@ -89,28 +100,31 @@
         icon: argocd.svg
         href: https://argocd.chocolandiadc.com
         description: "GitOps CD | NodePort: 30080"
+        namespace: argocd
+        app: argocd-server
         widget:
-          type: kubernetes
-          cluster: default
-          namespace: argocd
-          app: argocd-server
-          podSelector: app.kubernetes.io/name=argocd-server
+          type: argocd
+          url: https://argocd.chocolandiadc.com
+          key: "{{HOMEPAGE_VAR_ARGOCD_TOKEN}}"
 
     - Grafana:
         icon: grafana.svg
         href: https://grafana.chocolandiadc.com
         description: "Dashboards | NodePort: 30000"
+        namespace: monitoring
+        app: grafana
         widget:
-          type: kubernetes
-          cluster: default
-          namespace: monitoring
-          app: grafana
-          podSelector: app.kubernetes.io/name=grafana
+          type: grafana
+          url: https://grafana.chocolandiadc.com
+          username: "{{HOMEPAGE_VAR_GRAFANA_USER}}"
+          password: "{{HOMEPAGE_VAR_GRAFANA_PASSWORD}}"
 
     - Headlamp:
         icon: kubernetes-dashboard.svg
         href: https://headlamp.chocolandiadc.com
         description: "K8s Web UI"
+        namespace: headlamp
+        app: headlamp
         widget:
           type: kubernetes
           cluster: default
@@ -121,6 +135,8 @@
     - cert-manager:
         icon: cert-manager.svg
         description: "TLS certificates"
+        namespace: cert-manager
+        app: cert-manager
         widget:
           type: kubernetes
           cluster: default
@@ -136,26 +152,34 @@
         icon: si-beer
         href: https://beer.chocolandiadc.com
         description: "Beer inventory | Private: 192.168.4.101:3001"
+        namespace: beersystem
+        app: beersystem-backend
         siteMonitor: https://beer.chocolandiadc.com
         widget:
           type: kubernetes
           cluster: default
           namespace: beersystem
-          podSelector: app=beersystem,component=backend
+          app: beersystem-backend
+          podSelector: app=beersystem-backend
 
     - Homepage:
         icon: homepage.svg
         href: https://homepage.chocolandiadc.com
         description: "This dashboard"
+        namespace: homepage
+        app: homepage
         widget:
           type: kubernetes
           cluster: default
           namespace: homepage
+          app: homepage
           podSelector: app=homepage
 
     - Prometheus:
         icon: si-prometheus
-        description: "Metrics DB | kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090:9090"
+        description: "Metrics DB | kubectl port-forward -n monitoring svc/prometheus 9090"
+        namespace: monitoring
+        app: prometheus
         widget:
           type: prometheus
           url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
@@ -168,17 +192,21 @@
         icon: si-cncf
         href: https://longhorn.chocolandiadc.com
         description: "Distributed block storage"
+        namespace: longhorn-system
+        app: longhorn-ui
         widget:
           type: kubernetes
           cluster: default
           namespace: longhorn-system
-          app: longhorn
+          app: longhorn-ui
           podSelector: app=longhorn-ui
 
     - MinIO Console:
         icon: si-minio
         href: https://minio.chocolandiadc.com
         description: "S3 object storage | Private: 192.168.4.101:9001"
+        namespace: minio
+        app: minio
         widget:
           type: kubernetes
           cluster: default
@@ -190,6 +218,8 @@
         icon: mdi-api
         href: http://s3.chocolandiadc.com
         description: "S3 API endpoint (Pi-hole DNS)"
+        namespace: minio
+        app: minio
 
 # ============================================================================
 # QUICK REFERENCE - Commands, IPs, and access patterns
@@ -198,16 +228,15 @@
     - SSH Access:
         icon: mdi-console
         description: |
-          master1: ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.101
-          nodo1: ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.102
-          nodo03: ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.103
-          nodo04: ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.104
+          Master1: ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.101
+          Nodo03: ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.102
+          Nodo04: ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.104
 
     - Port Forwards:
         icon: mdi-transit-connection-variant
         description: |
-          Prometheus: kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090:9090
-          Alertmanager: kubectl port-forward -n monitoring svc/kube-prometheus-stack-alertmanager 9093:9093
+          Prometheus: kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090
+          Alertmanager: kubectl port-forward -n monitoring svc/kube-prometheus-stack-alertmanager 9093
 
     - MetalLB IPs:
         icon: mdi-ip-network

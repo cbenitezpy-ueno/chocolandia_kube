@@ -1,7 +1,8 @@
----
-# Homepage Widgets Configuration
-# Redesign v2.0.0 - Cluster health and operational context widgets
+# Homepage Widgets Contract
+# Target: terraform/modules/homepage/configs/widgets.yaml
+# Version: 2.0.0 (Redesign)
 
+---
 # Cluster Resources - Shows CPU/Memory at a glance
 - resources:
     backend: kubernetes

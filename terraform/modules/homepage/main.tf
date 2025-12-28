@@ -20,7 +20,10 @@ resource "kubernetes_secret" "homepage_widgets" {
   }
 
   data = {
-    HOMEPAGE_VAR_ARGOCD_TOKEN = var.argocd_token
+    HOMEPAGE_VAR_ARGOCD_TOKEN     = var.argocd_token
+    HOMEPAGE_VAR_PIHOLE_API_KEY   = var.pihole_api_key
+    HOMEPAGE_VAR_GRAFANA_USER     = var.grafana_username
+    HOMEPAGE_VAR_GRAFANA_PASSWORD = var.grafana_password
   }
 
   type = "Opaque"

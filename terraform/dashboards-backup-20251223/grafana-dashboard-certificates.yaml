@@ -1,0 +1,647 @@
+apiVersion: v1
+data:
+  certificates-monitoring.json: |-
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "datasource",
+              "uid": "grafana"
+            },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "target": {
+              "limit": 100,
+              "matchAny": false,
+              "tags": [],
+              "type": "dashboard"
+            },
+            "type": "dashboard"
+          }
+        ]
+      },
+      "description": "Monitor TLS certificate expiration dates and status across the K3s cluster",
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "description": "Shows all certificates and their expiration status",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "displayMode": "auto",
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Days Until Expiration"
+                },
+                "properties": [
+                  {
+                    "id": "custom.displayMode",
+                    "value": "color-background"
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "red",
+                          "value": null
+                        },
+                        {
+                          "color": "orange",
+                          "value": 7
+                        },
+                        {
+                          "color": "yellow",
+                          "value": 14
+                        },
+                        {
+                          "color": "green",
+                          "value": 30
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 2,
+          "options": {
+            "footer": {
+              "fields": "",
+              "reducer": ["sum"],
+              "show": false
+            },
+            "showHeader": true,
+            "sortBy": [
+              {
+                "desc": false,
+                "displayName": "Days Until Expiration"
+              }
+            ]
+          },
+          "pluginVersion": "9.5.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "(certmanager_certificate_expiration_timestamp_seconds - time()) / 86400",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "__auto",
+              "range": false,
+              "refId": "A"
+            }
+          ],
+          "title": "Certificate Expiration Overview",
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "container": true,
+                  "endpoint": true,
+                  "instance": true,
+                  "job": true,
+                  "pod": true,
+                  "service": true
+                },
+                "indexByName": {
+                  "Time": 0,
+                  "Value": 5,
+                  "name": 1,
+                  "namespace": 2
+                },
+                "renameByName": {
+                  "Value": "Days Until Expiration",
+                  "name": "Certificate Name",
+                  "namespace": "Namespace"
+                }
+              }
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "description": "Number of days until certificate expiration",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "Days",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "tooltip": false,
+                  "viz": false,
+                  "legend": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "area"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 7
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 14
+                  },
+                  {
+                    "color": "green",
+                    "value": 30
+                  }
+                ]
+              },
+              "unit": "d"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 0,
+            "y": 8
+          },
+          "id": 4,
+          "options": {
+            "legend": {
+              "calcs": ["min", "max", "mean"],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "9.5.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "(certmanager_certificate_expiration_timestamp_seconds - time()) / 86400",
+              "legendFormat": "{{namespace}}/{{name}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Certificate Expiration Timeline",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "description": "Certificate readiness status (1=ready, 0=not ready)",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [
+                {
+                  "options": {
+                    "0": {
+                      "color": "red",
+                      "index": 1,
+                      "text": "Not Ready"
+                    },
+                    "1": {
+                      "color": "green",
+                      "index": 0,
+                      "text": "Ready"
+                    }
+                  },
+                  "type": "value"
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 1
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 12,
+            "y": 8
+          },
+          "id": 6,
+          "options": {
+            "orientation": "auto",
+            "reduceOptions": {
+              "values": false,
+              "calcs": ["lastNotNull"],
+              "fields": ""
+            },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true,
+            "text": {}
+          },
+          "pluginVersion": "9.5.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "certmanager_certificate_ready_status",
+              "legendFormat": "{{namespace}}/{{name}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Certificate Ready Status",
+          "type": "gauge"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "description": "Certificates expiring in less than 30 days",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 1
+                  },
+                  {
+                    "color": "orange",
+                    "value": 3
+                  },
+                  {
+                    "color": "red",
+                    "value": 5
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 6,
+            "x": 0,
+            "y": 17
+          },
+          "id": 8,
+          "options": {
+            "orientation": "auto",
+            "reduceOptions": {
+              "values": false,
+              "calcs": ["lastNotNull"],
+              "fields": ""
+            },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true,
+            "text": {}
+          },
+          "pluginVersion": "9.5.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "count((certmanager_certificate_expiration_timestamp_seconds - time()) / 86400 < 30)",
+              "legendFormat": "Expiring Soon",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Certificates Expiring in < 30 Days",
+          "type": "gauge"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "description": "Certificates expiring in less than 7 days (CRITICAL)",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 6,
+            "x": 6,
+            "y": 17
+          },
+          "id": 10,
+          "options": {
+            "orientation": "auto",
+            "reduceOptions": {
+              "values": false,
+              "calcs": ["lastNotNull"],
+              "fields": ""
+            },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true,
+            "text": {}
+          },
+          "pluginVersion": "9.5.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "count((certmanager_certificate_expiration_timestamp_seconds - time()) / 86400 < 7)",
+              "legendFormat": "Critical",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Certificates Expiring in < 7 Days (CRITICAL)",
+          "type": "gauge"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "description": "Total number of certificates being monitored",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 6,
+            "x": 12,
+            "y": 17
+          },
+          "id": 12,
+          "options": {
+            "orientation": "auto",
+            "reduceOptions": {
+              "values": false,
+              "calcs": ["lastNotNull"],
+              "fields": ""
+            },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true,
+            "text": {}
+          },
+          "pluginVersion": "9.5.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "count(certmanager_certificate_expiration_timestamp_seconds)",
+              "legendFormat": "Total",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Total Certificates",
+          "type": "gauge"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "description": "Certificates that are not in ready state",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 6,
+            "x": 18,
+            "y": 17
+          },
+          "id": 14,
+          "options": {
+            "orientation": "auto",
+            "reduceOptions": {
+              "values": false,
+              "calcs": ["lastNotNull"],
+              "fields": ""
+            },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true,
+            "text": {}
+          },
+          "pluginVersion": "9.5.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "count(certmanager_certificate_ready_status == 0)",
+              "legendFormat": "Not Ready",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Not Ready Certificates",
+          "type": "gauge"
+        }
+      ],
+      "refresh": "30s",
+      "schemaVersion": 38,
+      "style": "dark",
+      "tags": ["certificates", "tls", "cert-manager", "security"],
+      "templating": {
+        "list": []
+      },
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "TLS Certificates Monitoring",
+      "uid": "certificates-monitoring",
+      "version": 0,
+      "weekStart": ""
+    }
+kind: ConfigMap
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","data":{"certificates-monitoring.json":"{\n  \"annotations\": {\n    \"list\": [\n      {\n        \"builtIn\": 1,\n        \"datasource\": {\n          \"type\": \"datasource\",\n          \"uid\": \"grafana\"\n        },\n        \"enable\": true,\n        \"hide\": true,\n        \"iconColor\": \"rgba(0, 211, 255, 1)\",\n        \"name\": \"Annotations \u0026 Alerts\",\n        \"target\": {\n          \"limit\": 100,\n          \"matchAny\": false,\n          \"tags\": [],\n          \"type\": \"dashboard\"\n        },\n        \"type\": \"dashboard\"\n      }\n    ]\n  },\n  \"description\": \"Monitor TLS certificate expiration dates and status across the K3s cluster\",\n  \"editable\": true,\n  \"fiscalYearStartMonth\": 0,\n  \"graphTooltip\": 0,\n  \"id\": null,\n  \"links\": [],\n  \"liveNow\": false,\n  \"panels\": [\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"description\": \"Shows all certificates and their expiration status\",\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"thresholds\"\n          },\n          \"custom\": {\n            \"align\": \"auto\",\n            \"displayMode\": \"auto\",\n            \"inspect\": false\n          },\n          \"mappings\": [],\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"green\",\n                \"value\": null\n              },\n              {\n                \"color\": \"red\",\n                \"value\": 80\n              }\n            ]\n          },\n          \"unit\": \"short\"\n        },\n        \"overrides\": [\n          {\n            \"matcher\": {\n              \"id\": \"byName\",\n              \"options\": \"Days Until Expiration\"\n            },\n            \"properties\": [\n              {\n                \"id\": \"custom.displayMode\",\n                \"value\": \"color-background\"\n              },\n              {\n                \"id\": \"thresholds\",\n                \"value\": {\n                  \"mode\": \"absolute\",\n                  \"steps\": [\n                    {\n                      \"color\": \"red\",\n                      \"value\": null\n                    },\n                    {\n                      \"color\": \"orange\",\n                      \"value\": 7\n                    },\n                    {\n                      \"color\": \"yellow\",\n                      \"value\": 14\n                    },\n                    {\n                      \"color\": \"green\",\n                      \"value\": 30\n                    }\n                  ]\n                }\n              }\n            ]\n          }\n        ]\n      },\n      \"gridPos\": {\n        \"h\": 8,\n        \"w\": 24,\n        \"x\": 0,\n        \"y\": 0\n      },\n      \"id\": 2,\n      \"options\": {\n        \"footer\": {\n          \"fields\": \"\",\n          \"reducer\": [\"sum\"],\n          \"show\": false\n        },\n        \"showHeader\": true,\n        \"sortBy\": [\n          {\n            \"desc\": false,\n            \"displayName\": \"Days Until Expiration\"\n          }\n        ]\n      },\n      \"pluginVersion\": \"9.5.3\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"editorMode\": \"code\",\n          \"expr\": \"(certmanager_certificate_expiration_timestamp_seconds - time()) / 86400\",\n          \"format\": \"table\",\n          \"instant\": true,\n          \"legendFormat\": \"__auto\",\n          \"range\": false,\n          \"refId\": \"A\"\n        }\n      ],\n      \"title\": \"Certificate Expiration Overview\",\n      \"transformations\": [\n        {\n          \"id\": \"organize\",\n          \"options\": {\n            \"excludeByName\": {\n              \"Time\": true,\n              \"__name__\": true,\n              \"container\": true,\n              \"endpoint\": true,\n              \"instance\": true,\n              \"job\": true,\n              \"pod\": true,\n              \"service\": true\n            },\n            \"indexByName\": {\n              \"Time\": 0,\n              \"Value\": 5,\n              \"name\": 1,\n              \"namespace\": 2\n            },\n            \"renameByName\": {\n              \"Value\": \"Days Until Expiration\",\n              \"name\": \"Certificate Name\",\n              \"namespace\": \"Namespace\"\n            }\n          }\n        }\n      ],\n      \"type\": \"table\"\n    },\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"description\": \"Number of days until certificate expiration\",\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"palette-classic\"\n          },\n          \"custom\": {\n            \"axisCenteredZero\": false,\n            \"axisColorMode\": \"text\",\n            \"axisLabel\": \"Days\",\n            \"axisPlacement\": \"auto\",\n            \"barAlignment\": 0,\n            \"drawStyle\": \"line\",\n            \"fillOpacity\": 10,\n            \"gradientMode\": \"none\",\n            \"hideFrom\": {\n              \"tooltip\": false,\n              \"viz\": false,\n              \"legend\": false\n            },\n            \"lineInterpolation\": \"linear\",\n            \"lineWidth\": 2,\n            \"pointSize\": 5,\n            \"scaleDistribution\": {\n              \"type\": \"linear\"\n            },\n            \"showPoints\": \"never\",\n            \"spanNulls\": true,\n            \"stacking\": {\n              \"group\": \"A\",\n              \"mode\": \"none\"\n            },\n            \"thresholdsStyle\": {\n              \"mode\": \"area\"\n            }\n          },\n          \"mappings\": [],\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"red\",\n                \"value\": null\n              },\n              {\n                \"color\": \"orange\",\n                \"value\": 7\n              },\n              {\n                \"color\": \"yellow\",\n                \"value\": 14\n              },\n              {\n                \"color\": \"green\",\n                \"value\": 30\n              }\n            ]\n          },\n          \"unit\": \"d\"\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 9,\n        \"w\": 12,\n        \"x\": 0,\n        \"y\": 8\n      },\n      \"id\": 4,\n      \"options\": {\n        \"legend\": {\n          \"calcs\": [\"min\", \"max\", \"mean\"],\n          \"displayMode\": \"table\",\n          \"placement\": \"bottom\",\n          \"showLegend\": true\n        },\n        \"tooltip\": {\n          \"mode\": \"multi\",\n          \"sort\": \"none\"\n        }\n      },\n      \"pluginVersion\": \"9.5.3\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"editorMode\": \"code\",\n          \"expr\": \"(certmanager_certificate_expiration_timestamp_seconds - time()) / 86400\",\n          \"legendFormat\": \"{{namespace}}/{{name}}\",\n          \"range\": true,\n          \"refId\": \"A\"\n        }\n      ],\n      \"title\": \"Certificate Expiration Timeline\",\n      \"type\": \"timeseries\"\n    },\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"description\": \"Certificate readiness status (1=ready, 0=not ready)\",\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"thresholds\"\n          },\n          \"mappings\": [\n            {\n              \"options\": {\n                \"0\": {\n                  \"color\": \"red\",\n                  \"index\": 1,\n                  \"text\": \"Not Ready\"\n                },\n                \"1\": {\n                  \"color\": \"green\",\n                  \"index\": 0,\n                  \"text\": \"Ready\"\n                }\n              },\n              \"type\": \"value\"\n            }\n          ],\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"red\",\n                \"value\": null\n              },\n              {\n                \"color\": \"green\",\n                \"value\": 1\n              }\n            ]\n          },\n          \"unit\": \"short\"\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 9,\n        \"w\": 12,\n        \"x\": 12,\n        \"y\": 8\n      },\n      \"id\": 6,\n      \"options\": {\n        \"orientation\": \"auto\",\n        \"reduceOptions\": {\n          \"values\": false,\n          \"calcs\": [\"lastNotNull\"],\n          \"fields\": \"\"\n        },\n        \"showThresholdLabels\": false,\n        \"showThresholdMarkers\": true,\n        \"text\": {}\n      },\n      \"pluginVersion\": \"9.5.3\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"editorMode\": \"code\",\n          \"expr\": \"certmanager_certificate_ready_status\",\n          \"legendFormat\": \"{{namespace}}/{{name}}\",\n          \"range\": true,\n          \"refId\": \"A\"\n        }\n      ],\n      \"title\": \"Certificate Ready Status\",\n      \"type\": \"gauge\"\n    },\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"description\": \"Certificates expiring in less than 30 days\",\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"thresholds\"\n          },\n          \"mappings\": [],\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"green\",\n                \"value\": null\n              },\n              {\n                \"color\": \"yellow\",\n                \"value\": 1\n              },\n              {\n                \"color\": \"orange\",\n                \"value\": 3\n              },\n              {\n                \"color\": \"red\",\n                \"value\": 5\n              }\n            ]\n          },\n          \"unit\": \"short\"\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 5,\n        \"w\": 6,\n        \"x\": 0,\n        \"y\": 17\n      },\n      \"id\": 8,\n      \"options\": {\n        \"orientation\": \"auto\",\n        \"reduceOptions\": {\n          \"values\": false,\n          \"calcs\": [\"lastNotNull\"],\n          \"fields\": \"\"\n        },\n        \"showThresholdLabels\": false,\n        \"showThresholdMarkers\": true,\n        \"text\": {}\n      },\n      \"pluginVersion\": \"9.5.3\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"editorMode\": \"code\",\n          \"expr\": \"count((certmanager_certificate_expiration_timestamp_seconds - time()) / 86400 \u003c 30)\",\n          \"legendFormat\": \"Expiring Soon\",\n          \"range\": true,\n          \"refId\": \"A\"\n        }\n      ],\n      \"title\": \"Certificates Expiring in \u003c 30 Days\",\n      \"type\": \"gauge\"\n    },\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"description\": \"Certificates expiring in less than 7 days (CRITICAL)\",\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"thresholds\"\n          },\n          \"mappings\": [],\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"green\",\n                \"value\": null\n              },\n              {\n                \"color\": \"red\",\n                \"value\": 1\n              }\n            ]\n          },\n          \"unit\": \"short\"\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 5,\n        \"w\": 6,\n        \"x\": 6,\n        \"y\": 17\n      },\n      \"id\": 10,\n      \"options\": {\n        \"orientation\": \"auto\",\n        \"reduceOptions\": {\n          \"values\": false,\n          \"calcs\": [\"lastNotNull\"],\n          \"fields\": \"\"\n        },\n        \"showThresholdLabels\": false,\n        \"showThresholdMarkers\": true,\n        \"text\": {}\n      },\n      \"pluginVersion\": \"9.5.3\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"editorMode\": \"code\",\n          \"expr\": \"count((certmanager_certificate_expiration_timestamp_seconds - time()) / 86400 \u003c 7)\",\n          \"legendFormat\": \"Critical\",\n          \"range\": true,\n          \"refId\": \"A\"\n        }\n      ],\n      \"title\": \"Certificates Expiring in \u003c 7 Days (CRITICAL)\",\n      \"type\": \"gauge\"\n    },\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"description\": \"Total number of certificates being monitored\",\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"thresholds\"\n          },\n          \"mappings\": [],\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"blue\",\n                \"value\": null\n              }\n            ]\n          },\n          \"unit\": \"short\"\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 5,\n        \"w\": 6,\n        \"x\": 12,\n        \"y\": 17\n      },\n      \"id\": 12,\n      \"options\": {\n        \"orientation\": \"auto\",\n        \"reduceOptions\": {\n          \"values\": false,\n          \"calcs\": [\"lastNotNull\"],\n          \"fields\": \"\"\n        },\n        \"showThresholdLabels\": false,\n        \"showThresholdMarkers\": true,\n        \"text\": {}\n      },\n      \"pluginVersion\": \"9.5.3\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"editorMode\": \"code\",\n          \"expr\": \"count(certmanager_certificate_expiration_timestamp_seconds)\",\n          \"legendFormat\": \"Total\",\n          \"range\": true,\n          \"refId\": \"A\"\n        }\n      ],\n      \"title\": \"Total Certificates\",\n      \"type\": \"gauge\"\n    },\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n      \"description\": \"Certificates that are not in ready state\",\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"thresholds\"\n          },\n          \"mappings\": [],\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"green\",\n                \"value\": null\n              },\n              {\n                \"color\": \"red\",\n                \"value\": 1\n              }\n            ]\n          },\n          \"unit\": \"short\"\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 5,\n        \"w\": 6,\n        \"x\": 18,\n        \"y\": 17\n      },\n      \"id\": 14,\n      \"options\": {\n        \"orientation\": \"auto\",\n        \"reduceOptions\": {\n          \"values\": false,\n          \"calcs\": [\"lastNotNull\"],\n          \"fields\": \"\"\n        },\n        \"showThresholdLabels\": false,\n        \"showThresholdMarkers\": true,\n        \"text\": {}\n      },\n      \"pluginVersion\": \"9.5.3\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"prometheus\"\n          },\n          \"editorMode\": \"code\",\n          \"expr\": \"count(certmanager_certificate_ready_status == 0)\",\n          \"legendFormat\": \"Not Ready\",\n          \"range\": true,\n          \"refId\": \"A\"\n        }\n      ],\n      \"title\": \"Not Ready Certificates\",\n      \"type\": \"gauge\"\n    }\n  ],\n  \"refresh\": \"30s\",\n  \"schemaVersion\": 38,\n  \"style\": \"dark\",\n  \"tags\": [\"certificates\", \"tls\", \"cert-manager\", \"security\"],\n  \"templating\": {\n    \"list\": []\n  },\n  \"time\": {\n    \"from\": \"now-6h\",\n    \"to\": \"now\"\n  },\n  \"timepicker\": {},\n  \"timezone\": \"\",\n  \"title\": \"TLS Certificates Monitoring\",\n  \"uid\": \"certificates-monitoring\",\n  \"version\": 0,\n  \"weekStart\": \"\"\n}"},"kind":"ConfigMap","metadata":{"annotations":{},"labels":{"grafana_dashboard":"1"},"name":"grafana-dashboard-certificates","namespace":"monitoring"}}
+  creationTimestamp: "2025-11-18T12:20:24Z"
+  labels:
+    grafana_dashboard: "1"
+  name: grafana-dashboard-certificates
+  namespace: monitoring
+  resourceVersion: "1450079"
+  uid: 3db1ed63-f4fe-4e1b-8106-ad481ee07ffd
