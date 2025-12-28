@@ -6,26 +6,30 @@
 # CLUSTER HEALTH - Immediate visibility of cluster state
 # ============================================================================
 - Cluster Health:
-    - Kubernetes API:
+    - CoreDNS:
         icon: mdi-kubernetes
         href: https://headlamp.chocolandiadc.com
-        description: "K3s API server status"
+        description: "K3s cluster DNS"
+        namespace: kube-system
+        app: coredns
         widget:
           type: kubernetes
           cluster: default
           namespace: kube-system
-          app: kube-apiserver
-          podSelector: component=kube-apiserver
+          app: coredns
+          podSelector: k8s-app=kube-dns
 
-    - Node Status:
+    - Metrics Server:
         icon: mdi-server-network
-        description: "4 nodes: master1, nodo1, nodo03, nodo04"
+        description: "Cluster metrics (CPU/MEM)"
+        namespace: kube-system
+        app: metrics-server
         widget:
           type: kubernetes
           cluster: default
           namespace: kube-system
-          app: node-exporter
-          podSelector: ""
+          app: metrics-server
+          podSelector: k8s-app=metrics-server
 
     - Ingress Health:
         icon: traefik.svg
@@ -40,7 +44,7 @@
         description: "Pi-hole DNS (LB: 192.168.4.200)"
         widget:
           type: pihole
-          url: http://pihole.default.svc.cluster.local
+          url: http://pihole-web.default.svc.cluster.local
           key: "{{HOMEPAGE_VAR_PIHOLE_API_KEY}}"
 
 # ============================================================================
@@ -64,7 +68,7 @@
         app: pihole
         widget:
           type: pihole
-          url: http://pihole.default.svc.cluster.local
+          url: http://pihole-web.default.svc.cluster.local
           key: "{{HOMEPAGE_VAR_PIHOLE_API_KEY}}"
 
     - PostgreSQL:
@@ -77,7 +81,7 @@
           cluster: default
           namespace: postgresql
           app: postgres
-          podSelector: app.kubernetes.io/name=postgresql
+          podSelector: app.kubernetes.io/name=postgres
 
     - Redis:
         icon: si-redis
@@ -103,7 +107,7 @@
         app: argocd-server
         widget:
           type: argocd
-          url: https://argocd.chocolandiadc.com
+          url: http://argocd-server.argocd.svc.cluster.local
           key: "{{HOMEPAGE_VAR_ARGOCD_TOKEN}}"
 
     - Grafana:
@@ -114,7 +118,7 @@
         app: grafana
         widget:
           type: grafana
-          url: https://grafana.chocolandiadc.com
+          url: http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local
           username: "{{HOMEPAGE_VAR_GRAFANA_USER}}"
           password: "{{HOMEPAGE_VAR_GRAFANA_PASSWORD}}"
 
@@ -152,14 +156,14 @@
         href: https://beer.chocolandiadc.com
         description: "Beer inventory | Private: 192.168.4.101:3001"
         namespace: beersystem
-        app: beersystem-backend
+        app: beersystem
         siteMonitor: https://beer.chocolandiadc.com
         widget:
           type: kubernetes
           cluster: default
           namespace: beersystem
-          app: beersystem-backend
-          podSelector: app=beersystem-backend
+          app: beersystem
+          podSelector: app=beersystem,component=backend
 
     - Homepage:
         icon: homepage.svg
