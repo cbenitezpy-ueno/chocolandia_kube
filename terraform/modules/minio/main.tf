@@ -257,3 +257,33 @@ resource "kubernetes_service" "minio_console" {
     }
   }
 }
+
+# MinIO Service - S3 API NodePort (for OpenTofu remote backend)
+resource "kubernetes_service" "minio_api_nodeport" {
+  count = var.enable_api_nodeport ? 1 : 0
+
+  metadata {
+    name      = "minio-api-nodeport"
+    namespace = kubernetes_namespace.minio.metadata[0].name
+    labels = {
+      "app"     = "minio"
+      "purpose" = "opentofu-backend"
+    }
+  }
+
+  spec {
+    type = "NodePort"
+
+    selector = {
+      "app" = "minio"
+    }
+
+    port {
+      name        = "api"
+      port        = 9000
+      target_port = 9000
+      node_port   = var.api_nodeport
+      protocol    = "TCP"
+    }
+  }
+}

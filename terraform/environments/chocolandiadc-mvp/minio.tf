@@ -37,6 +37,10 @@ module "minio" {
   # Cloudflare Access Authentication
   google_oauth_idp_id  = module.cloudflare_tunnel.access_identity_provider_id
   access_auto_redirect = true
+
+  # Enable NodePort for OpenTofu remote backend access
+  enable_api_nodeport = true
+  api_nodeport        = 30090
 }
 
 # ============================================================================

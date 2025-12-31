@@ -271,3 +271,241 @@ resource "kubernetes_manifest" "service_alerts" {
     }
   }
 }
+
+# ============================================================================
+# Infrastructure Critical Alerts (Certificate, Longhorn, etcd, DB)
+# ============================================================================
+
+resource "kubernetes_manifest" "infrastructure_alerts" {
+  manifest = {
+    apiVersion = "monitoring.coreos.com/v1"
+    kind       = "PrometheusRule"
+    metadata = {
+      name      = "homelab-infrastructure-alerts"
+      namespace = var.namespace
+      labels = {
+        "app.kubernetes.io/name"       = "alerting-rules"
+        "app.kubernetes.io/managed-by" = "opentofu"
+        "prometheus"                   = "kube-prometheus-stack"
+        "release"                      = "kube-prometheus-stack"
+      }
+    }
+    spec = {
+      groups = [
+        {
+          name = "homelab-infrastructure-alerts"
+          rules = [
+            # Certificate Expiring Soon (< 7 days)
+            {
+              alert = "CertificateExpiringSoon"
+              expr  = "certmanager_certificate_expiration_timestamp_seconds - time() < 604800"
+              for   = "1h"
+              labels = {
+                severity = "warning"
+              }
+              annotations = {
+                summary     = "Certificate {{ $labels.name }} expires in less than 7 days"
+                description = "Certificate {{ $labels.name }} in namespace {{ $labels.namespace }} will expire in {{ $value | humanizeDuration }}."
+              }
+            },
+            # Certificate Expiring Critical (< 24 hours)
+            {
+              alert = "CertificateExpiringCritical"
+              expr  = "certmanager_certificate_expiration_timestamp_seconds - time() < 86400"
+              for   = "15m"
+              labels = {
+                severity = "critical"
+              }
+              annotations = {
+                summary     = "Certificate {{ $labels.name }} expires in less than 24 hours"
+                description = "Certificate {{ $labels.name }} in namespace {{ $labels.namespace }} will expire in {{ $value | humanizeDuration }}. Immediate action required!"
+              }
+            },
+            # Certificate Ready Status False
+            {
+              alert = "CertificateNotReady"
+              expr  = "certmanager_certificate_ready_status{condition=\"False\"} == 1"
+              for   = "15m"
+              labels = {
+                severity = "warning"
+              }
+              annotations = {
+                summary     = "Certificate {{ $labels.name }} is not ready"
+                description = "Certificate {{ $labels.name }} in namespace {{ $labels.namespace }} has been in NotReady state for more than 15 minutes."
+              }
+            },
+            # Longhorn Volume Space Low (< 20%)
+            {
+              alert = "LonghornVolumeSpaceLow"
+              expr  = "(longhorn_volume_actual_size_bytes / longhorn_volume_capacity_bytes) * 100 > 80"
+              for   = "15m"
+              labels = {
+                severity = "warning"
+              }
+              annotations = {
+                summary     = "Longhorn volume {{ $labels.volume }} is running low on space"
+                description = "Longhorn volume {{ $labels.volume }} is {{ printf \"%.1f\" $value }}% full. Consider expanding the volume."
+              }
+            },
+            # Longhorn Volume Degraded
+            {
+              alert = "LonghornVolumeDegraded"
+              expr  = "longhorn_volume_robustness == 2"
+              for   = "5m"
+              labels = {
+                severity = "warning"
+              }
+              annotations = {
+                summary     = "Longhorn volume {{ $labels.volume }} is degraded"
+                description = "Longhorn volume {{ $labels.volume }} has degraded redundancy. Check replica status."
+              }
+            },
+            # Longhorn Volume Faulted
+            {
+              alert = "LonghornVolumeFaulted"
+              expr  = "longhorn_volume_robustness == 3"
+              for   = "1m"
+              labels = {
+                severity = "critical"
+              }
+              annotations = {
+                summary     = "Longhorn volume {{ $labels.volume }} is faulted"
+                description = "Longhorn volume {{ $labels.volume }} is in faulted state. Data may be at risk!"
+              }
+            },
+            # Longhorn Node Storage Low
+            {
+              alert = "LonghornNodeStorageLow"
+              expr  = "(longhorn_node_storage_usage_bytes / longhorn_node_storage_capacity_bytes) * 100 > 80"
+              for   = "15m"
+              labels = {
+                severity = "warning"
+              }
+              annotations = {
+                summary     = "Longhorn node {{ $labels.node }} storage is low"
+                description = "Longhorn node {{ $labels.node }} storage is {{ printf \"%.1f\" $value }}% used."
+              }
+            },
+            # etcd High Commit Duration
+            {
+              alert = "EtcdHighCommitDuration"
+              expr  = "histogram_quantile(0.99, rate(etcd_disk_backend_commit_duration_seconds_bucket[5m])) > 0.1"
+              for   = "10m"
+              labels = {
+                severity = "warning"
+              }
+              annotations = {
+                summary     = "etcd high commit duration"
+                description = "etcd commit duration p99 is {{ printf \"%.3f\" $value }}s (threshold 100ms). Check disk I/O."
+              }
+            },
+            # etcd High fsync Duration
+            {
+              alert = "EtcdHighFsyncDuration"
+              expr  = "histogram_quantile(0.99, rate(etcd_disk_wal_fsync_duration_seconds_bucket[5m])) > 0.1"
+              for   = "10m"
+              labels = {
+                severity = "warning"
+              }
+              annotations = {
+                summary     = "etcd high WAL fsync duration"
+                description = "etcd WAL fsync duration p99 is {{ printf \"%.3f\" $value }}s. Disk performance may be degraded."
+              }
+            },
+            # PostgreSQL Connections High
+            {
+              alert = "PostgreSQLConnectionsHigh"
+              expr  = "pg_stat_activity_count / pg_settings_max_connections * 100 > 80"
+              for   = "10m"
+              labels = {
+                severity = "warning"
+              }
+              annotations = {
+                summary     = "PostgreSQL connections above 80%"
+                description = "PostgreSQL instance {{ $labels.instance }} has {{ printf \"%.0f\" $value }}% connections used."
+              }
+            },
+            # PostgreSQL Down
+            {
+              alert = "PostgreSQLDown"
+              expr  = "pg_up == 0"
+              for   = "2m"
+              labels = {
+                severity = "critical"
+              }
+              annotations = {
+                summary     = "PostgreSQL instance down"
+                description = "PostgreSQL instance {{ $labels.instance }} is not responding."
+              }
+            },
+            # Redis Memory Usage High
+            {
+              alert = "RedisMemoryUsageHigh"
+              expr  = "redis_memory_used_bytes / redis_memory_max_bytes * 100 > 80"
+              for   = "10m"
+              labels = {
+                severity = "warning"
+              }
+              annotations = {
+                summary     = "Redis memory usage above 80%"
+                description = "Redis instance {{ $labels.instance }} memory is {{ printf \"%.1f\" $value }}% used."
+              }
+            },
+            # Redis Down
+            {
+              alert = "RedisDown"
+              expr  = "redis_up == 0"
+              for   = "2m"
+              labels = {
+                severity = "critical"
+              }
+              annotations = {
+                summary     = "Redis instance down"
+                description = "Redis instance {{ $labels.instance }} is not responding."
+              }
+            },
+            # Redis Rejected Connections
+            {
+              alert = "RedisRejectedConnections"
+              expr  = "increase(redis_rejected_connections_total[5m]) > 0"
+              for   = "5m"
+              labels = {
+                severity = "warning"
+              }
+              annotations = {
+                summary     = "Redis rejecting connections"
+                description = "Redis instance {{ $labels.instance }} rejected {{ printf \"%.0f\" $value }} connections in the last 5 minutes."
+              }
+            },
+            # Velero Backup Failed
+            {
+              alert = "VeleroBackupFailed"
+              expr  = "velero_backup_failure_total > 0"
+              for   = "1m"
+              labels = {
+                severity = "critical"
+              }
+              annotations = {
+                summary     = "Velero backup failed"
+                description = "Velero backup {{ $labels.schedule }} has failed. Check velero logs for details."
+              }
+            },
+            # Velero Backup Not Run Recently
+            {
+              alert = "VeleroBackupStale"
+              expr  = "time() - velero_backup_last_successful_timestamp > 90000"
+              for   = "1h"
+              labels = {
+                severity = "warning"
+              }
+              annotations = {
+                summary     = "Velero backup is stale"
+                description = "No successful Velero backup in the last 25 hours. Last backup was {{ $value | humanizeDuration }} ago."
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
