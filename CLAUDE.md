@@ -49,6 +49,8 @@ Auto-generated from all feature plans. Last updated: 2025-11-08
 - Bash scripting (wiki sync scripts), Markdown (documentation) + Git, gh CLI, kubectl, existing wiki scripts in scripts/wiki/ (024-docs-wiki-sync)
 - N/A (documentation only) (024-docs-wiki-sync)
 - YAML (Homepage configuration format), HCL (OpenTofu 1.6+) + Homepage v1.4.6 (ghcr.io/gethomepage/homepage:v1.4.6), Kubernetes provider ~> 2.23 (025-homepage-redesign)
+- HCL (OpenTofu 1.6+), YAML (Kubernetes manifests) + kube-prometheus-stack Helm chart, ntfy, Homepage (026-ntfy-homepage-alerts)
+- Kubernetes Secrets (ntfy credentials), ConfigMaps (Homepage config) (026-ntfy-homepage-alerts)
 
 - HCL (OpenTofu) 1.6+, Bash scripting for validation (001-k3s-cluster-setup)
 
@@ -68,9 +70,9 @@ tests/
 HCL (Terraform) 1.6+, Bash scripting for validation: Follow standard conventions
 
 ## Recent Changes
+- 026-ntfy-homepage-alerts: Added HCL (OpenTofu 1.6+), YAML (Kubernetes manifests) + kube-prometheus-stack Helm chart, ntfy, Homepage
 - 025-homepage-redesign: Added YAML (Homepage configuration format), HCL (OpenTofu 1.6+) + Homepage v1.4.6 (ghcr.io/gethomepage/homepage:v1.4.6), Kubernetes provider ~> 2.23
 - 024-docs-wiki-sync: Documentation audit and GitHub Wiki synchronization
-- 023-k3s-secret-encryption: Added Bash scripting for validation, K3s encryption configuration
 
 
 <!-- MANUAL ADDITIONS START -->
@@ -237,9 +239,38 @@ registry=https://nexus.chocolandiadc.local/repository/npm-proxy/
 ### Alert Receivers
 | Receiver | Destination | Use Case |
 |----------|-------------|----------|
-| ntfy-homelab | http://ntfy.ntfy.svc.cluster.local/homelab-alerts | Default alerts |
-| ntfy-critical | http://ntfy.ntfy.svc.cluster.local/homelab-alerts | Critical severity |
+| ntfy-homelab | http://ntfy.ntfy.svc.cluster.local/homelab-alerts?template=alertmanager | Default alerts |
+| ntfy-critical | http://ntfy.ntfy.svc.cluster.local/homelab-alerts?template=alertmanager | Critical severity |
 | null | (discarded) | Watchdog alerts |
+
+### Ntfy Authentication (026-ntfy-homepage-alerts)
+
+**Status**: Configured (2025-12-31)
+**Root Cause Fixed**: ntfy's `auth-default-access: "read-only"` requires authentication for publishing
+
+| Component | Configuration |
+|-----------|--------------|
+| ntfy User | `alertmanager` (dedicated user with write-only access to homelab-alerts) |
+| Password Secret | `ntfy-alertmanager-password` in `monitoring` namespace |
+| Auth Method | HTTP Basic Auth via `password_file` |
+| Secret Mount | `/etc/alertmanager/secrets/ntfy-alertmanager-password/password` |
+
+**Testing Notifications**:
+```bash
+# Get password from secret
+PASSWORD=$(kubectl get secret ntfy-alertmanager-password -n monitoring -o jsonpath='{.data.password}' | base64 -d)
+
+# Test from cluster (requires temp curl pod)
+kubectl run curl-test --image=curlimages/curl --rm -it --restart=Never -- \
+  curl -u "alertmanager:${PASSWORD}" -d "Test notification" \
+  http://ntfy.ntfy.svc.cluster.local/homelab-alerts
+```
+
+**Verify notifications working**:
+```bash
+# Check ntfy message count increasing
+kubectl logs -n ntfy deployment/ntfy --tail=5 | grep messages_published
+```
 
 ## K3s Secret Encryption at Rest
 
