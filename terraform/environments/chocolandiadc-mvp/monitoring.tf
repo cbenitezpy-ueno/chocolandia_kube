@@ -156,6 +156,26 @@ resource "helm_release" "kube_prometheus_stack" {
   # Additional scrape configs for node metrics
   values = [
     yamlencode({
+      # Disable K3s components that don't expose metrics (false positives)
+      # K3s embeds controller-manager, scheduler, and kube-proxy in the k3s binary
+      kubeControllerManager = {
+        enabled = false
+      }
+      kubeScheduler = {
+        enabled = false
+      }
+      kubeProxy = {
+        enabled = false
+      }
+      defaultRules = {
+        rules = {
+          kubeControllerManager = false
+          kubeSchedulerAlerting = false
+          kubeSchedulerRecording = false
+          kubeProxy             = false
+        }
+      }
+
       prometheus = {
         prometheusSpec = {
           # Service monitor selector to discover services
