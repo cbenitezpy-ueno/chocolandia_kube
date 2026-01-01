@@ -41,9 +41,11 @@ resource "kubernetes_job" "create_velero_bucket" {
           command = ["/bin/sh", "-c"]
           args = [
             <<-EOF
+            # Configure MinIO client alias
             mc alias set minio ${var.minio_url} ${var.minio_access_key} ${var.minio_secret_key} --insecure
+            # Create bucket (--insecure needed for HTTP endpoint in homelab)
             mc mb minio/${var.velero_bucket_name} --ignore-existing --insecure
-            mc anonymous set download minio/${var.velero_bucket_name} --insecure || true
+            # NOTE: Bucket remains private - Velero uses authenticated access via credentials
             echo "Bucket ${var.velero_bucket_name} created successfully"
             EOF
           ]
@@ -96,6 +98,8 @@ resource "helm_release" "velero" {
               region           = "us-east-1"
               s3ForcePathStyle = "true"
               s3Url            = var.minio_url
+              # NOTE: insecureSkipTLSVerify required for MinIO HTTP endpoint in homelab.
+              # Consider enabling TLS on MinIO for production environments.
               insecureSkipTLSVerify = "true"
             }
           }

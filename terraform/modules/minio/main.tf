@@ -259,6 +259,11 @@ resource "kubernetes_service" "minio_console" {
 }
 
 # MinIO Service - S3 API NodePort (for OpenTofu remote backend)
+# SECURITY NOTE: This NodePort exposes MinIO S3 API on all cluster nodes.
+# - Only enable in trusted networks (homelab LAN, not public internet)
+# - Access is protected by MinIO credentials (root user/password)
+# - Traffic is unencrypted (HTTP). Consider TLS for sensitive environments.
+# - For additional security, use NetworkPolicy to restrict source IPs.
 resource "kubernetes_service" "minio_api_nodeport" {
   count = var.enable_api_nodeport ? 1 : 0
 

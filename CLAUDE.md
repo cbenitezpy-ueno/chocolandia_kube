@@ -298,14 +298,26 @@ ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.101 "sudo k3s secrets-encrypt st
 **Key**: `chocolandiadc-mvp/terraform.tfstate`
 
 ### Configuration
-The OpenTofu state is stored in MinIO with versioning enabled for state history.
+The OpenTofu state is stored in MinIO.
 
 | Setting | Value |
 |---------|-------|
 | Endpoint | http://192.168.4.101:30090 |
 | Bucket | opentofu-state |
 | Region | us-east-1 (dummy, required by S3 provider) |
-| Versioning | Enabled |
+| Versioning | Manual (use `mc version enable` to enable) |
+
+### Security Considerations
+**HTTP without TLS**: The MinIO endpoint uses HTTP (not HTTPS). This is acceptable for homelab
+environments where traffic stays within trusted LAN. Trade-offs:
+- Credentials and state are transmitted unencrypted
+- Only run `tofu` commands from trusted networks
+- Consider enabling TLS on MinIO for sensitive environments
+
+**NodePort Exposure**: MinIO S3 API is exposed on port 30090 on all cluster nodes.
+- Protected by MinIO credentials (not anonymous)
+- Ensure NodePort is not exposed to public internet
+- Use firewall rules to restrict access if needed
 
 ### Usage
 Before running any `tofu` command, source the environment file:
@@ -341,7 +353,10 @@ tofu init
 **If state is corrupted:**
 ```bash
 # Download previous version from MinIO (versioning enabled)
-mc alias set minio http://192.168.4.101:30090 ACCESS_KEY SECRET_KEY
+# First, get credentials from K8s secret:
+ACCESS_KEY=$(kubectl get secret -n minio minio-credentials -o jsonpath='{.data.rootUser}' | base64 -d)
+SECRET_KEY=$(kubectl get secret -n minio minio-credentials -o jsonpath='{.data.rootPassword}' | base64 -d)
+mc alias set minio http://192.168.4.101:30090 "$ACCESS_KEY" "$SECRET_KEY"
 mc ls --versions minio/opentofu-state/chocolandiadc-mvp/
 mc cp --version-id VERSION_ID minio/opentofu-state/chocolandiadc-mvp/terraform.tfstate ./restored.tfstate
 ```

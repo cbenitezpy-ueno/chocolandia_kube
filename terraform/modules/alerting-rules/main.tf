@@ -439,9 +439,11 @@ resource "kubernetes_manifest" "infrastructure_alerts" {
               }
             },
             # Redis Memory Usage High
+            # NOTE: Condition redis_memory_max_bytes > 0 prevents division by zero
+            # when Redis maxmemory is not configured (common in homelab setups)
             {
               alert = "RedisMemoryUsageHigh"
-              expr  = "redis_memory_used_bytes / redis_memory_max_bytes * 100 > 80"
+              expr  = "redis_memory_used_bytes / redis_memory_max_bytes * 100 > 80 and redis_memory_max_bytes > 0"
               for   = "10m"
               labels = {
                 severity = "warning"
@@ -478,10 +480,12 @@ resource "kubernetes_manifest" "infrastructure_alerts" {
               }
             },
             # Velero Backup Failed
+            # NOTE: Using increase() to detect new failures, not cumulative counter
+            # This prevents continuous alerting after a single failure
             {
               alert = "VeleroBackupFailed"
-              expr  = "velero_backup_failure_total > 0"
-              for   = "1m"
+              expr  = "increase(velero_backup_failure_total[15m]) > 0"
+              for   = "0m"
               labels = {
                 severity = "critical"
               }

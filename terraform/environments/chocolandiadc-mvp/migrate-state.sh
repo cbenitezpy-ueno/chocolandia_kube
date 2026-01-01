@@ -38,9 +38,16 @@ echo ""
 
 # Backup current state
 echo "3. Creating backup of local state..."
-BACKUP_FILE="$HOME/terraform-state-backup-$(date +%Y%m%d-%H%M%S).tfstate"
-cp terraform.tfstate "$BACKUP_FILE"
-echo "   Backup saved to: $BACKUP_FILE"
+if [ -f terraform.tfstate ]; then
+    BACKUP_FILE="$HOME/terraform-state-backup-$(date +%Y%m%d-%H%M%S).tfstate"
+    cp terraform.tfstate "$BACKUP_FILE"
+    echo "   Backup saved to: $BACKUP_FILE"
+else
+    echo "   ERROR: terraform.tfstate not found in current directory."
+    echo "   Please ensure you have an existing local state before running migration."
+    echo "   If state is already remote, this script is not needed."
+    exit 1
+fi
 echo ""
 
 # Migrate state
