@@ -14,10 +14,16 @@ variable "grafana_namespace" {
   default     = "monitoring"
 }
 
-variable "loki_stack_version" {
-  description = "Loki Stack Helm chart version"
+variable "loki_chart_version" {
+  description = "Loki Helm chart version (grafana/loki chart for Loki 3.x)"
   type        = string
-  default     = "2.10.2"
+  default     = "6.23.0"  # Loki 3.3.2
+}
+
+variable "promtail_chart_version" {
+  description = "Promtail Helm chart version"
+  type        = string
+  default     = "6.16.6"
 }
 
 # Storage Configuration
