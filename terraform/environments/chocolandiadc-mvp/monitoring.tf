@@ -198,6 +198,8 @@ resource "helm_release" "kube_prometheus_stack" {
           alertmanagerConfigMatcherStrategy = {
             type = "None"
           }
+          # Mount ntfy password secret for authenticated webhooks
+          secrets = ["ntfy-alertmanager-password"]
         }
         config = {
           global = {
@@ -230,8 +232,14 @@ resource "helm_release" "kube_prometheus_stack" {
               name = "ntfy-homelab"
               webhook_configs = [
                 {
-                  url           = "http://ntfy.ntfy.svc.cluster.local/homelab-alerts"
+                  url           = "http://ntfy.ntfy.svc.cluster.local/homelab-alerts?template=alertmanager"
                   send_resolved = true
+                  http_config = {
+                    basic_auth = {
+                      username      = "admin"
+                      password_file = "/etc/alertmanager/secrets/ntfy-alertmanager-password/password"
+                    }
+                  }
                 }
               ]
             },
@@ -239,8 +247,14 @@ resource "helm_release" "kube_prometheus_stack" {
               name = "ntfy-critical"
               webhook_configs = [
                 {
-                  url           = "http://ntfy.ntfy.svc.cluster.local/homelab-alerts"
+                  url           = "http://ntfy.ntfy.svc.cluster.local/homelab-alerts?template=alertmanager"
                   send_resolved = true
+                  http_config = {
+                    basic_auth = {
+                      username      = "admin"
+                      password_file = "/etc/alertmanager/secrets/ntfy-alertmanager-password/password"
+                    }
+                  }
                 }
               ]
             }
