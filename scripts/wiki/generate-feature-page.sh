@@ -182,6 +182,7 @@ main() {
 
     # Generate sections in order (only if files exist)
     output_section "Quick Start" "${FEATURE_DIR}/quickstart.md" 2
+    output_section "Usage Guide" "${FEATURE_DIR}/usage-guide.md" 2
     output_section "Specification" "${FEATURE_DIR}/spec.md" 2
     output_section "Implementation Plan" "${FEATURE_DIR}/plan.md" 2
     output_section "Data Model" "${FEATURE_DIR}/data-model.md" 2
