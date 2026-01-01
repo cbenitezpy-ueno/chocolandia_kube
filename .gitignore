@@ -50,3 +50,10 @@ Thumbs.db
 secrets/
 **/k8s/secret.yaml
 .backups/
+
+# Cluster and database backups
+cluster-backup-*.yaml
+postgres-backup-*.sql
+
+# Claude Code local settings
+.claude/settings.local.json
