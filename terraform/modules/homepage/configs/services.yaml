@@ -8,7 +8,7 @@
 - Cluster Health:
     - Cluster Alerts:
         icon: mdi-alert-circle
-        href: https://grafana.chocolandiadc.com/alerting/list
+        href: https://grafana.chocolandiadc.com/alerting/groups
         description: "Active Prometheus alerts"
         widget:
           type: prometheusmetric
