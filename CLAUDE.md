@@ -70,9 +70,9 @@ tests/
 HCL (Terraform) 1.6+, Bash scripting for validation: Follow standard conventions
 
 ## Recent Changes
+- 027-paperless-ngx: Added HCL (OpenTofu 1.6+), YAML (Kubernetes manifests)
 - 026-ntfy-homepage-alerts: Added HCL (OpenTofu 1.6+), YAML (Kubernetes manifests) + kube-prometheus-stack Helm chart, ntfy, Homepage
 - 025-homepage-redesign: Added YAML (Homepage configuration format), HCL (OpenTofu 1.6+) + Homepage v1.4.6 (ghcr.io/gethomepage/homepage:v1.4.6), Kubernetes provider ~> 2.23
-- 024-docs-wiki-sync: Documentation audit and GitHub Wiki synchronization
 
 
 <!-- MANUAL ADDITIONS START -->
@@ -92,12 +92,13 @@ MetalLB Pool Configuration:
 | Service | Namespace | External IP | Ports | Description |
 |---------|-----------|-------------|-------|-------------|
 | pihole-dns | default | 192.168.4.200 | 53/TCP, 53/UDP | Pi-hole DNS - Network-wide ad blocking and DNS |
+| samba-smb | paperless | 192.168.4.201 | 445/TCP | Paperless-ngx Samba - Scanner document intake |
 | traefik | traefik | 192.168.4.202 | 80/TCP, 443/TCP, 9100/TCP | Traefik Ingress Controller - Entry point for all HTTPS traffic + Prometheus metrics |
 | redis-shared-external | redis | 192.168.4.203 | 6379/TCP | Redis Shared - Cluster-wide caching service (groundhog2k/redis with official images) |
 | postgres-ha-external | postgresql | 192.168.4.204 | 5432/TCP | PostgreSQL - Main database endpoint (groundhog2k/postgres with official images) |
 
 ### Available IPs
-- 192.168.4.201, 192.168.4.205 - 192.168.4.210 (7 IPs available)
+- 192.168.4.205 - 192.168.4.210 (6 IPs available)
 
 ### Important Notes
 1. **Always use LoadBalancer type** for services that need to be accessible on standard ports (53, 80, 443, 5432, etc.)
@@ -147,6 +148,52 @@ cp chocolandia-local-ca.crt ~/.docker/certs.d/docker.nexus.chocolandiadc.local/c
 ```bash
 kubectl get secret -n cert-manager local-ca-secret -o jsonpath='{.data.ca\.crt}' | base64 -d > chocolandia-local-ca.crt
 ```
+
+## Paperless-ngx Document Management
+
+**Feature**: 027-paperless-ngx
+**Status**: Deployed (2026-01-01)
+
+Document management system with OCR processing and scanner integration.
+
+### URLs
+| Service | URL | Description |
+|---------|-----|-------------|
+| Web UI (Public) | https://paperless.chocolandiadc.com | Cloudflare Zero Trust |
+| Web UI (LAN) | https://paperless.chocolandiadc.local | Direct LAN access |
+| SMB Share | smb://192.168.4.201/consume | Scanner document intake |
+
+### Configuration
+| Setting | Value |
+|---------|-------|
+| Namespace | paperless |
+| OCR Languages | Spanish + English (spa+eng) |
+| Database | PostgreSQL (192.168.4.204) |
+| Cache | Redis (192.168.4.203) |
+| Storage | 5Gi data, 40Gi media, 5Gi consume |
+
+### Scanner Setup
+Configure your scanner to save to SMB:
+```
+Server: 192.168.4.201
+Share: consume
+User: scanner
+Password: (run: tofu output -raw paperless_samba_password)
+```
+
+### Credentials
+```bash
+# Get admin password
+tofu output -raw paperless_admin_password
+
+# Get Samba password for scanner
+tofu output -raw paperless_samba_password
+```
+
+### Monitoring
+- ServiceMonitor: `paperless-ngx` in `paperless` namespace
+- PrometheusRule: `paperless-ngx-alerts` (PaperlessDown, PaperlessHighMemory)
+- Metrics endpoint: `/metrics` on port 8000
 
 ## Nexus Repository Manager
 

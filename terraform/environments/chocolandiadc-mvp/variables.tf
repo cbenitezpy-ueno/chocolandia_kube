@@ -506,3 +506,25 @@ variable "metallb_ip_range" {
     error_message = "MetalLB IP range must be in format: start_ip-end_ip (e.g., 192.168.4.200-192.168.4.210)"
   }
 }
+
+# ============================================================================
+# PostgreSQL Configuration (Feature 027)
+# ============================================================================
+
+variable "postgresql_admin_password" {
+  description = "PostgreSQL admin user password for database provisioning"
+  type        = string
+  sensitive   = true
+}
+
+variable "redis_password" {
+  description = "Redis password for Paperless-ngx connection"
+  type        = string
+  sensitive   = true
+}
+
+variable "paperless_admin_email" {
+  description = "Admin email for Paperless-ngx notifications"
+  type        = string
+  default     = "admin@chocolandiadc.local"
+}

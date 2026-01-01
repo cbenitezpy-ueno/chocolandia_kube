@@ -33,6 +33,10 @@ terraform {
       source  = "hashicorp/random"
       version = "~> 3.6"
     }
+    postgresql = {
+      source  = "cyrilgdn/postgresql"
+      version = "~> 1.21"
+    }
   }
 }
 
@@ -70,3 +74,17 @@ provider "cloudflare" {
 # ============================================================================
 
 provider "random" {}
+
+# ============================================================================
+# PostgreSQL Provider Configuration (Feature 027)
+# ============================================================================
+
+provider "postgresql" {
+  host            = "192.168.4.204"
+  port            = 5432
+  username        = "postgres"
+  password        = var.postgresql_admin_password
+  sslmode         = "disable"
+  connect_timeout = 15
+  superuser       = true
+}
