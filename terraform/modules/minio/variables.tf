@@ -123,3 +123,19 @@ variable "minio_image" {
   type        = string
   default     = "quay.io/minio/minio:RELEASE.2025-01-20T14-49-07Z"  # Upgraded from RELEASE.2024-01-01
 }
+
+# ============================================================================
+# NodePort for External Access (OpenTofu Backend)
+# ============================================================================
+
+variable "enable_api_nodeport" {
+  description = "Enable NodePort service for S3 API access (for OpenTofu remote backend)"
+  type        = bool
+  default     = false
+}
+
+variable "api_nodeport" {
+  description = "NodePort number for S3 API service (only used if enable_api_nodeport is true)"
+  type        = number
+  default     = 30090
+}

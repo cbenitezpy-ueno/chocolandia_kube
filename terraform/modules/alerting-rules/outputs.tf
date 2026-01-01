@@ -11,6 +11,11 @@ output "service_alerts_name" {
   value       = "homelab-service-alerts"
 }
 
+output "infrastructure_alerts_name" {
+  description = "Name of the infrastructure alerts PrometheusRule"
+  value       = "homelab-infrastructure-alerts"
+}
+
 output "alert_rules_summary" {
   description = "Summary of configured alert rules"
   value = {
@@ -32,6 +37,24 @@ output "alert_rules_summary" {
       "ContainerOOMKilled",
       "PVCAlmostFull",
       "ServiceEndpointDown"
+    ]
+    infrastructure_alerts = [
+      "CertificateExpiringSoon",
+      "CertificateExpiringCritical",
+      "CertificateNotReady",
+      "LonghornVolumeSpaceLow",
+      "LonghornVolumeDegraded",
+      "LonghornVolumeFaulted",
+      "LonghornNodeStorageLow",
+      "EtcdHighCommitDuration",
+      "EtcdHighFsyncDuration",
+      "PostgreSQLConnectionsHigh",
+      "PostgreSQLDown",
+      "RedisMemoryUsageHigh",
+      "RedisDown",
+      "RedisRejectedConnections",
+      "VeleroBackupFailed",
+      "VeleroBackupStale"
     ]
   }
 }

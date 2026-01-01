@@ -48,6 +48,7 @@ Auto-generated from all feature plans. Last updated: 2025-11-08
 - Kubernetes CRDs (metallb.io/v1beta1), Terraform state file (local) (022-metallb-refactor)
 - Bash scripting (wiki sync scripts), Markdown (documentation) + Git, gh CLI, kubectl, existing wiki scripts in scripts/wiki/ (024-docs-wiki-sync)
 - N/A (documentation only) (024-docs-wiki-sync)
+- YAML (Homepage configuration format), HCL (OpenTofu 1.6+) + Homepage v1.4.6 (ghcr.io/gethomepage/homepage:v1.4.6), Kubernetes provider ~> 2.23 (025-homepage-redesign)
 
 - HCL (OpenTofu) 1.6+, Bash scripting for validation (001-k3s-cluster-setup)
 
@@ -67,9 +68,9 @@ tests/
 HCL (Terraform) 1.6+, Bash scripting for validation: Follow standard conventions
 
 ## Recent Changes
+- 025-homepage-redesign: Added YAML (Homepage configuration format), HCL (OpenTofu 1.6+) + Homepage v1.4.6 (ghcr.io/gethomepage/homepage:v1.4.6), Kubernetes provider ~> 2.23
 - 024-docs-wiki-sync: Documentation audit and GitHub Wiki synchronization
 - 023-k3s-secret-encryption: Added Bash scripting for validation, K3s encryption configuration
-- 022-metallb-refactor: Added HCL (OpenTofu 1.6+) + hashicorp/kubernetes ~> 2.23, hashicorp/helm ~> 2.11, hashicorp/time ~> 0.11
 
 
 <!-- MANUAL ADDITIONS START -->
@@ -287,6 +288,77 @@ sudo systemctl restart k3s
 ```bash
 ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.101 "sudo k3s secrets-encrypt status"
 # Expected: Encryption Status: Enabled, Current Rotation Stage: reencrypt_finished
+```
+
+## OpenTofu Remote Backend (MinIO)
+
+**Status**: Enabled (2025-12-31)
+**Backend**: S3-compatible (MinIO)
+**Bucket**: `opentofu-state`
+**Key**: `chocolandiadc-mvp/terraform.tfstate`
+
+### Configuration
+The OpenTofu state is stored in MinIO.
+
+| Setting | Value |
+|---------|-------|
+| Endpoint | http://192.168.4.101:30090 |
+| Bucket | opentofu-state |
+| Region | us-east-1 (dummy, required by S3 provider) |
+| Versioning | Manual (use `mc version enable` to enable) |
+
+### Security Considerations
+**HTTP without TLS**: The MinIO endpoint uses HTTP (not HTTPS). This is acceptable for homelab
+environments where traffic stays within trusted LAN. Trade-offs:
+- Credentials and state are transmitted unencrypted
+- Only run `tofu` commands from trusted networks
+- Consider enabling TLS on MinIO for sensitive environments
+
+**NodePort Exposure**: MinIO S3 API is exposed on port 30090 on all cluster nodes.
+- Protected by MinIO credentials (not anonymous)
+- Ensure NodePort is not exposed to public internet
+- Use firewall rules to restrict access if needed
+
+### Usage
+Before running any `tofu` command, source the environment file:
+```bash
+cd terraform/environments/chocolandiadc-mvp
+source ./backend-env.sh
+tofu plan
+```
+
+Or manually set the environment variables:
+```bash
+export AWS_ACCESS_KEY_ID="$(tofu output -raw minio_root_user)"
+export AWS_SECRET_ACCESS_KEY="$(tofu output -raw minio_root_password)"
+export AWS_ENDPOINT_URL_S3="http://192.168.4.101:30090"
+```
+
+### State Backup Location
+- **Remote (Primary)**: MinIO bucket `opentofu-state` with versioning
+- **Local Backup**: `~/terraform-state-backup-YYYYMMDD-HHMMSS.tfstate`
+
+### Recovery Procedures
+
+**If MinIO is unavailable:**
+```bash
+# Restore from local backup
+cp ~/terraform-state-backup-YYYYMMDD-HHMMSS.tfstate terraform/environments/chocolandiadc-mvp/terraform.tfstate
+# Temporarily rename backend.tf to use local state
+mv backend.tf backend.tf.bak
+tofu init
+# After fixing MinIO, restore backend.tf and migrate state back
+```
+
+**If state is corrupted:**
+```bash
+# Download previous version from MinIO (versioning enabled)
+# First, get credentials from K8s secret:
+ACCESS_KEY=$(kubectl get secret -n minio minio-credentials -o jsonpath='{.data.rootUser}' | base64 -d)
+SECRET_KEY=$(kubectl get secret -n minio minio-credentials -o jsonpath='{.data.rootPassword}' | base64 -d)
+mc alias set minio http://192.168.4.101:30090 "$ACCESS_KEY" "$SECRET_KEY"
+mc ls --versions minio/opentofu-state/chocolandiadc-mvp/
+mc cp --version-id VERSION_ID minio/opentofu-state/chocolandiadc-mvp/terraform.tfstate ./restored.tfstate
 ```
 
 <!-- MANUAL ADDITIONS END -->
