@@ -236,7 +236,7 @@ resource "helm_release" "kube_prometheus_stack" {
                   send_resolved = true
                   http_config = {
                     basic_auth = {
-                      username      = "admin"
+                      username      = "alertmanager"
                       password_file = "/etc/alertmanager/secrets/ntfy-alertmanager-password/password"
                     }
                   }
@@ -251,7 +251,7 @@ resource "helm_release" "kube_prometheus_stack" {
                   send_resolved = true
                   http_config = {
                     basic_auth = {
-                      username      = "admin"
+                      username      = "alertmanager"
                       password_file = "/etc/alertmanager/secrets/ntfy-alertmanager-password/password"
                     }
                   }

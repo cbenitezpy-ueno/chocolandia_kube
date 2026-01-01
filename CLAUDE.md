@@ -250,7 +250,7 @@ registry=https://nexus.chocolandiadc.local/repository/npm-proxy/
 
 | Component | Configuration |
 |-----------|--------------|
-| ntfy User | `admin` (existing user with read-write access) |
+| ntfy User | `alertmanager` (dedicated user with write-only access to homelab-alerts) |
 | Password Secret | `ntfy-alertmanager-password` in `monitoring` namespace |
 | Auth Method | HTTP Basic Auth via `password_file` |
 | Secret Mount | `/etc/alertmanager/secrets/ntfy-alertmanager-password/password` |
@@ -262,7 +262,7 @@ PASSWORD=$(kubectl get secret ntfy-alertmanager-password -n monitoring -o jsonpa
 
 # Test from cluster (requires temp curl pod)
 kubectl run curl-test --image=curlimages/curl --rm -it --restart=Never -- \
-  curl -u "admin:${PASSWORD}" -d "Test notification" \
+  curl -u "alertmanager:${PASSWORD}" -d "Test notification" \
   http://ntfy.ntfy.svc.cluster.local/homelab-alerts
 ```
 
