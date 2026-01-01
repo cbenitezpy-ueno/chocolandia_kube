@@ -171,6 +171,28 @@
           namespace: homepage
           podSelector: app=homepage
 
+    - Paperless-ngx:
+        icon: paperless.svg
+        href: https://paperless.chocolandiadc.com
+        description: "Document management | SMB: 192.168.4.201"
+        siteMonitor: https://paperless.chocolandiadc.com
+        widget:
+          type: kubernetes
+          cluster: default
+          namespace: paperless
+          podSelector: app.kubernetes.io/name=paperless-ngx
+
+    - Home Assistant:
+        icon: home-assistant.svg
+        href: https://homeassistant.chocolandiadc.com
+        description: "Smart home automation"
+        siteMonitor: https://homeassistant.chocolandiadc.com
+        widget:
+          type: kubernetes
+          cluster: default
+          namespace: home-assistant
+          podSelector: app.kubernetes.io/name=home-assistant
+
     - Prometheus:
         icon: si-prometheus
         description: "Metrics DB | kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090:9090"
