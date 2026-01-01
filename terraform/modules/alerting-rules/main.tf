@@ -513,3 +513,188 @@ resource "kubernetes_manifest" "infrastructure_alerts" {
     }
   }
 }
+
+# ============================================================================
+# Application Alerts (Traefik, MinIO)
+# ============================================================================
+
+resource "kubernetes_manifest" "application_alerts" {
+  manifest = {
+    apiVersion = "monitoring.coreos.com/v1"
+    kind       = "PrometheusRule"
+    metadata = {
+      name      = "homelab-application-alerts"
+      namespace = var.namespace
+      labels = {
+        "app.kubernetes.io/name"       = "alerting-rules"
+        "app.kubernetes.io/managed-by" = "opentofu"
+        "prometheus"                   = "kube-prometheus-stack"
+        "release"                      = "kube-prometheus-stack"
+      }
+    }
+    spec = {
+      groups = [
+        # Traefik Alerts
+        {
+          name = "traefik-alerts"
+          rules = [
+            # Traefik Down
+            {
+              alert = "TraefikDown"
+              expr  = "up{job=\"traefik\"} == 0"
+              for   = "2m"
+              labels = {
+                severity = "critical"
+              }
+              annotations = {
+                summary     = "Traefik ingress controller is down"
+                description = "Traefik ingress controller has been unreachable for more than 2 minutes. All external traffic is affected."
+                dashboard   = "${var.grafana_url}/d/traefik"
+              }
+            },
+            # Traefik Config Reload Failed
+            {
+              alert = "TraefikConfigReloadFailed"
+              expr  = "traefik_config_last_reload_success == 0"
+              for   = "5m"
+              labels = {
+                severity = "warning"
+              }
+              annotations = {
+                summary     = "Traefik configuration reload failed"
+                description = "Traefik failed to reload its configuration. New routes may not be applied."
+                dashboard   = "${var.grafana_url}/d/traefik"
+              }
+            },
+            # Traefik High 5xx Error Rate
+            {
+              alert = "TraefikHigh5xxRate"
+              expr  = "sum(rate(traefik_service_requests_total{code=~\"5..\"}[5m])) / sum(rate(traefik_service_requests_total[5m])) * 100 > 5"
+              for   = "5m"
+              labels = {
+                severity = "warning"
+              }
+              annotations = {
+                summary     = "High 5xx error rate in Traefik"
+                description = "Traefik is returning {{ printf \"%.1f\" $value }}% 5xx errors. Check backend service health."
+                dashboard   = "${var.grafana_url}/d/traefik"
+              }
+            },
+            # Traefik TLS Certificate Expiring
+            {
+              alert = "TraefikTLSCertExpiring"
+              expr  = "(traefik_tls_certs_not_after - time()) / 86400 < 7"
+              for   = "1h"
+              labels = {
+                severity = "warning"
+              }
+              annotations = {
+                summary     = "Traefik TLS certificate expiring soon"
+                description = "TLS certificate for {{ $labels.cn }} expires in {{ printf \"%.0f\" $value }} days."
+                dashboard   = "${var.grafana_url}/d/traefik"
+              }
+            },
+            # Traefik No Active Connections (potential issue)
+            {
+              alert = "TraefikNoConnections"
+              expr  = "sum(traefik_open_connections) == 0"
+              for   = "30m"
+              labels = {
+                severity = "warning"
+              }
+              annotations = {
+                summary     = "Traefik has no active connections"
+                description = "Traefik has had no active connections for 30 minutes. This may indicate network or DNS issues."
+                dashboard   = "${var.grafana_url}/d/traefik"
+              }
+            }
+          ]
+        },
+        # MinIO Alerts
+        {
+          name = "minio-alerts"
+          rules = [
+            # MinIO Down
+            {
+              alert = "MinIODown"
+              expr  = "up{job=~\"minio.*\"} == 0"
+              for   = "2m"
+              labels = {
+                severity = "critical"
+              }
+              annotations = {
+                summary     = "MinIO is down"
+                description = "MinIO S3 storage service has been unreachable for more than 2 minutes."
+              }
+            },
+            # MinIO Drive Offline
+            {
+              alert = "MinIODriveOffline"
+              expr  = "minio_cluster_drive_offline_total > 0"
+              for   = "5m"
+              labels = {
+                severity = "critical"
+              }
+              annotations = {
+                summary     = "MinIO has offline drives"
+                description = "MinIO cluster has {{ $value }} offline drives. Data redundancy may be compromised."
+              }
+            },
+            # MinIO Node Offline
+            {
+              alert = "MinIONodeOffline"
+              expr  = "minio_cluster_nodes_offline_total > 0"
+              for   = "5m"
+              labels = {
+                severity = "critical"
+              }
+              annotations = {
+                summary     = "MinIO node is offline"
+                description = "MinIO cluster has {{ $value }} offline nodes. Check cluster health."
+              }
+            },
+            # MinIO Storage Low (< 20% free)
+            {
+              alert = "MinIOStorageLow"
+              expr  = "(minio_cluster_capacity_usable_free_bytes / minio_cluster_capacity_usable_total_bytes) * 100 < 20"
+              for   = "15m"
+              labels = {
+                severity = "warning"
+              }
+              annotations = {
+                summary     = "MinIO storage running low"
+                description = "MinIO cluster has only {{ printf \"%.1f\" $value }}% free usable storage."
+              }
+            },
+            # MinIO Storage Critical (< 10% free)
+            {
+              alert = "MinIOStorageCritical"
+              expr  = "(minio_cluster_capacity_usable_free_bytes / minio_cluster_capacity_usable_total_bytes) * 100 < 10"
+              for   = "5m"
+              labels = {
+                severity = "critical"
+              }
+              annotations = {
+                summary     = "MinIO storage critically low"
+                description = "MinIO cluster has only {{ printf \"%.1f\" $value }}% free usable storage. Immediate action required!"
+              }
+            },
+            # MinIO High S3 Error Rate
+            {
+              alert = "MinIOHighErrorRate"
+              expr  = "rate(minio_s3_requests_errors_total[5m]) / rate(minio_s3_requests_total[5m]) * 100 > 5"
+              for   = "10m"
+              labels = {
+                severity = "warning"
+              }
+              annotations = {
+                summary     = "MinIO high S3 error rate"
+                description = "MinIO is returning {{ printf \"%.1f\" $value }}% S3 errors. Check application logs."
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

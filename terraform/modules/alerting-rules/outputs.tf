@@ -16,6 +16,11 @@ output "infrastructure_alerts_name" {
   value       = "homelab-infrastructure-alerts"
 }
 
+output "application_alerts_name" {
+  description = "Name of the application alerts PrometheusRule"
+  value       = "homelab-application-alerts"
+}
+
 output "alert_rules_summary" {
   description = "Summary of configured alert rules"
   value = {
@@ -55,6 +60,19 @@ output "alert_rules_summary" {
       "RedisRejectedConnections",
       "VeleroBackupFailed",
       "VeleroBackupStale"
+    ]
+    application_alerts = [
+      "TraefikDown",
+      "TraefikConfigReloadFailed",
+      "TraefikHigh5xxRate",
+      "TraefikTLSCertExpiring",
+      "TraefikNoConnections",
+      "MinIODown",
+      "MinIODriveOffline",
+      "MinIONodeOffline",
+      "MinIOStorageLow",
+      "MinIOStorageCritical",
+      "MinIOHighErrorRate"
     ]
   }
 }
