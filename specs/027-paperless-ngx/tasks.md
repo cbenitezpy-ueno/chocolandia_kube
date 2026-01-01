@@ -126,8 +126,8 @@ Infrastructure deployment using OpenTofu modules:
 - [x] T038 [P] Update CLAUDE.md with Paperless-ngx service documentation
 - [x] T039 Run full tofu plan to verify complete configuration
 - [x] T040 Run quickstart.md validation steps to verify deployment
-- [ ] T041 Commit all changes with feature branch 027-paperless-ngx
-- [ ] T042 Create PR for review
+- [x] T041 Commit all changes with feature branch 027-paperless-ngx
+- [x] T042 Create PR for review
 
 ---
 

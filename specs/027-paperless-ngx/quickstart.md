@@ -153,17 +153,17 @@ kubectl logs -n paperless -l app.kubernetes.io/name=paperless-ngx -c samba
 ### Database connection issues
 
 ```bash
-# Test PostgreSQL connectivity from pod
+# Test PostgreSQL connectivity from pod (uses env var from secret)
 kubectl exec -it -n paperless deployment/paperless-ngx -c paperless-ngx -- \
-  python -c "import psycopg2; psycopg2.connect(host='192.168.4.204', dbname='paperless', user='paperless')"
+  python3 -c "from django.db import connection; connection.ensure_connection(); print('PostgreSQL OK')"
 ```
 
 ### Redis connection issues
 
 ```bash
-# Test Redis connectivity
+# Test Redis connectivity (uses PAPERLESS_REDIS env var from container)
 kubectl exec -it -n paperless deployment/paperless-ngx -c paperless-ngx -- \
-  python -c "import redis; r=redis.from_url('redis://192.168.4.203:6379'); print(r.ping())"
+  python3 -c "import os, redis; r=redis.from_url(os.environ['PAPERLESS_REDIS']); print('Redis OK:', r.ping())"
 ```
 
 ### Samba share not accessible
@@ -172,9 +172,9 @@ kubectl exec -it -n paperless deployment/paperless-ngx -c paperless-ngx -- \
 # Check Samba logs
 kubectl logs -n paperless -l app.kubernetes.io/name=paperless-ngx -c samba
 
-# Test SMB from another pod
+# Test SMB from another pod (use LoadBalancer IP 192.168.4.201)
 kubectl run smbclient --image=dperson/samba --rm -it --restart=Never -- \
-  smbclient //192.168.4.205/consume -U scanner
+  smbclient //192.168.4.201/consume -U scanner
 ```
 
 ### OCR not working

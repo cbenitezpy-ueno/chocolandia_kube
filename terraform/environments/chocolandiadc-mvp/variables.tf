@@ -522,3 +522,9 @@ variable "redis_password" {
   type        = string
   sensitive   = true
 }
+
+variable "paperless_admin_email" {
+  description = "Admin email for Paperless-ngx notifications"
+  type        = string
+  default     = "admin@chocolandiadc.local"
+}

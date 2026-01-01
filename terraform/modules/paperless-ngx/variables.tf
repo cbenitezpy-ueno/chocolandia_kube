@@ -24,9 +24,9 @@ variable "image" {
 }
 
 variable "samba_image" {
-  description = "Samba sidecar container image"
+  description = "Samba sidecar container image (pinned to known working version)"
   type        = string
-  default     = "dperson/samba:latest"
+  default     = "dperson/samba@sha256:66088b78a19810dd1457a8f39340e95e663c728083efa5fe7dc0d40b2478e869"
 }
 
 # ============================================================================

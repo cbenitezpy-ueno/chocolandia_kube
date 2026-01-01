@@ -42,6 +42,6 @@ output "consume_pvc_name" {
 }
 
 output "samba_endpoint" {
-  description = "Samba SMB endpoint for scanner configuration (smb://IP/consume)"
-  value       = "smb://${kubernetes_service.samba.status[0].load_balancer[0].ingress[0].ip}/${var.samba_share_name}"
+  description = "Samba SMB endpoint for scanner configuration (smb://IP/consume). Returns null if LoadBalancer IP not yet assigned."
+  value       = try("smb://${kubernetes_service.samba.status[0].load_balancer[0].ingress[0].ip}/${var.samba_share_name}", null)
 }

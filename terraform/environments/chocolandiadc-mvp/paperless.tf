@@ -57,14 +57,14 @@ module "paperless_ngx" {
   db_user     = module.paperless_database.db_user
   db_password = random_password.paperless_db.result
 
-  # Redis (with authentication)
-  redis_url = "redis://:${var.redis_password}@192.168.4.203:6379"
+  # Redis (with authentication, using DB 1 to isolate from other services)
+  redis_url = "redis://:${var.redis_password}@192.168.4.203:6379/1"
 
   # Application
   secret_key     = random_password.paperless_secret_key.result
   admin_user     = "admin"
   admin_password = random_password.paperless_admin.result
-  admin_email    = "cbenitez@gmail.com"
+  admin_email    = var.paperless_admin_email
   ocr_language   = "spa+eng"
   timezone       = "America/Asuncion"
 
