@@ -444,7 +444,7 @@
       "gridPos": { "h": 3, "w": 4, "x": 0, "y": 21 },
       "id": 240,
       "options": { "colorMode": "background_solid", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value_and_name" },
-      "targets": [{ "expr": "count(ALERTS{alertstate=\"firing\", severity=\"critical\"}) or vector(0)", "legendFormat": "Critical", "refId": "A" }],
+      "targets": [{ "expr": "count(ALERTS{alertstate=\"firing\", severity=\"critical\"}) or vector(0)", "legendFormat": "Alerts - Critical", "refId": "A" }],
       "title": "",
       "transparent": true,
       "type": "stat"
@@ -463,7 +463,7 @@
       "gridPos": { "h": 3, "w": 4, "x": 4, "y": 21 },
       "id": 241,
       "options": { "colorMode": "background_solid", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value_and_name" },
-      "targets": [{ "expr": "count(ALERTS{alertstate=\"firing\", severity=\"warning\"}) or vector(0)", "legendFormat": "Warning", "refId": "A" }],
+      "targets": [{ "expr": "count(ALERTS{alertstate=\"firing\", severity=\"warning\"}) or vector(0)", "legendFormat": "Alerts - Warning", "refId": "A" }],
       "title": "",
       "transparent": true,
       "type": "stat"
@@ -482,7 +482,7 @@
       "gridPos": { "h": 3, "w": 4, "x": 8, "y": 21 },
       "id": 242,
       "options": { "colorMode": "background_solid", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value_and_name" },
-      "targets": [{ "expr": "count(ALERTS{alertstate=\"firing\", severity=\"info\"}) or vector(0)", "legendFormat": "Info", "refId": "A" }],
+      "targets": [{ "expr": "count(ALERTS{alertstate=\"firing\", severity=\"info\"}) or vector(0)", "legendFormat": "Alerts - Info", "refId": "A" }],
       "title": "",
       "transparent": true,
       "type": "stat"
@@ -620,7 +620,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 3, "w": 2, "x": 12, "y": 25 },
+      "gridPos": { "h": 3, "w": 2, "x": 12, "y": 28 },
       "id": 207,
       "options": { "colorMode": "background_solid", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value_and_name" },
       "targets": [{ "expr": "pg_exporter_last_scrape_error", "legendFormat": "PostgreSQL", "refId": "A" }],
@@ -639,7 +639,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 3, "w": 2, "x": 14, "y": 25 },
+      "gridPos": { "h": 3, "w": 2, "x": 14, "y": 28 },
       "id": 208,
       "options": { "colorMode": "background_solid", "graphMode": "area", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value_and_name" },
       "targets": [{ "expr": "sum(pg_database_size_bytes)", "legendFormat": "DB Size", "refId": "A" }],
@@ -658,7 +658,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 3, "w": 2, "x": 16, "y": 25 },
+      "gridPos": { "h": 3, "w": 2, "x": 16, "y": 28 },
       "id": 209,
       "options": { "colorMode": "background_solid", "graphMode": "area", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value_and_name" },
       "targets": [{ "expr": "sum(pg_locks_count)", "legendFormat": "Locks", "refId": "A" }],
@@ -677,7 +677,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 3, "w": 2, "x": 18, "y": 25 },
+      "gridPos": { "h": 3, "w": 2, "x": 18, "y": 28 },
       "id": 210,
       "options": { "colorMode": "background_solid", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value_and_name" },
       "targets": [{ "expr": "sum(argocd_cluster_connection_status)", "legendFormat": "ArgoCD", "refId": "A" }],
@@ -696,7 +696,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 3, "w": 2, "x": 20, "y": 25 },
+      "gridPos": { "h": 3, "w": 2, "x": 20, "y": 28 },
       "id": 211,
       "options": { "colorMode": "background_solid", "graphMode": "area", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value_and_name" },
       "targets": [{ "expr": "count(argocd_app_info)", "legendFormat": "Apps", "refId": "A" }],
@@ -715,7 +715,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 3, "w": 2, "x": 22, "y": 25 },
+      "gridPos": { "h": 3, "w": 2, "x": 22, "y": 28 },
       "id": 212,
       "options": { "colorMode": "background_solid", "graphMode": "area", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value_and_name" },
       "targets": [{ "expr": "sum(increase(argocd_app_sync_total[24h]))", "legendFormat": "Syncs/24h", "refId": "A" }],
@@ -848,7 +848,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 3, "w": 2, "x": 12, "y": 25 },
+      "gridPos": { "h": 3, "w": 2, "x": 12, "y": 28 },
       "id": 226,
       "options": { "colorMode": "background_solid", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value_and_name" },
       "targets": [{ "expr": "sum(kube_pod_status_phase{namespace=\"home-assistant\", pod=~\"home-assistant.*\", phase=\"Running\"})", "legendFormat": "Home Asst", "refId": "A" }],
@@ -867,7 +867,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 3, "w": 2, "x": 14, "y": 25 },
+      "gridPos": { "h": 3, "w": 2, "x": 14, "y": 28 },
       "id": 227,
       "options": { "colorMode": "background_solid", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value_and_name" },
       "targets": [{ "expr": "sum(kube_pod_status_phase{namespace=\"paperless\", pod=~\"paperless-ngx.*\", phase=\"Running\"})", "legendFormat": "Paperless", "refId": "A" }],
@@ -886,7 +886,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 3, "w": 2, "x": 16, "y": 25 },
+      "gridPos": { "h": 3, "w": 2, "x": 16, "y": 28 },
       "id": 228,
       "options": { "colorMode": "background_solid", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value_and_name" },
       "targets": [{ "expr": "sum(kube_pod_status_phase{namespace=\"ntfy\", phase=\"Running\"})", "legendFormat": "Ntfy", "refId": "A" }],
@@ -905,7 +905,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 3, "w": 2, "x": 18, "y": 25 },
+      "gridPos": { "h": 3, "w": 2, "x": 18, "y": 28 },
       "id": 229,
       "options": { "colorMode": "background_solid", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value_and_name" },
       "targets": [{ "expr": "sum(kube_pod_status_phase{namespace=\"loki\", pod=~\"loki.*\", phase=\"Running\"})", "legendFormat": "Loki", "refId": "A" }],
@@ -924,7 +924,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 3, "w": 2, "x": 20, "y": 25 },
+      "gridPos": { "h": 3, "w": 2, "x": 20, "y": 28 },
       "id": 230,
       "options": { "colorMode": "background_solid", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value_and_name" },
       "targets": [{ "expr": "sum(kube_pod_status_phase{namespace=\"minio\", pod=~\"minio.*\", phase=\"Running\"})", "legendFormat": "MinIO", "refId": "A" }],
@@ -943,7 +943,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 3, "w": 2, "x": 22, "y": 25 },
+      "gridPos": { "h": 3, "w": 2, "x": 22, "y": 28 },
       "id": 231,
       "options": { "colorMode": "background_solid", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value_and_name" },
       "targets": [{ "expr": "sum(kube_pod_status_phase{namespace=\"beersystem\", phase=\"Running\"})", "legendFormat": "Beersystem", "refId": "A" }],
