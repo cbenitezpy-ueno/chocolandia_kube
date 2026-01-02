@@ -57,3 +57,4 @@ postgres-backup-*.sql
 
 # Claude Code local settings
 .claude/settings.local.json
+terraform/dashboards/*.backup.*
