@@ -398,8 +398,51 @@ resource "kubernetes_config_map" "homelab_overview_dashboard" {
 }
 
 # ============================================================================
+# Custom Dashboard - Drobo Storage
+# ============================================================================
+
+resource "kubernetes_config_map" "drobo_dashboard" {
+  depends_on = [null_resource.monitoring_namespace]
+
+  metadata {
+    name      = "drobo-storage-dashboard"
+    namespace = "monitoring"
+    labels = {
+      grafana_dashboard = "1"
+    }
+  }
+
+  data = {
+    "drobo-storage.json" = file("${path.module}/../../dashboards/drobo-storage.json")
+  }
+}
+
+# ============================================================================
+# Drobo Exporter
+# ============================================================================
+
+module "drobo_exporter" {
+  source = "../../modules/drobo-exporter"
+
+  namespace  = "monitoring"
+  drobo_node = "nodo05"
+
+  depends_on = [helm_release.kube_prometheus_stack]
+}
+
+# ============================================================================
 # Outputs
 # ============================================================================
+
+output "drobo_exporter_service" {
+  description = "Drobo exporter service endpoint"
+  value       = module.drobo_exporter.exporter_service
+}
+
+output "drobo_alerts" {
+  description = "Configured Drobo alerts"
+  value       = module.drobo_exporter.alerts_configured
+}
 
 output "grafana_url" {
   description = "Grafana access URL via NodePort"
