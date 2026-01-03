@@ -155,7 +155,7 @@ def printslots(d):
         print('query slotinfo result:  number of slots:', d.slot_count)
         print("%4s %4s %20s %20s" % ("slot", "GB", "Model", "Status"))
     for i in slotinfo:
-        print("  %2d %4d %20s %20s" % (i[0], togig(i[1]), i[4], i[3]))
+        print("  %2d %4d %20s %20s" % (i[0], int(togig(i[1])), i[4], i[3]))
 
 
 def printfirmware(d):

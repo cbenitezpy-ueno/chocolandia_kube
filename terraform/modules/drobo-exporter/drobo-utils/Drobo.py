@@ -739,7 +739,7 @@ class Drobo:
                     print(f, ' ? ')
                     print('firmware for hw rev ', f[-5], ' this drobo is rev ',
                           hwlevel[0])
-                if f[-5] == hwlevel[0]:
+                if ord(f[-5]) == hwlevel[0]:
                     self.fwdata = z.read(f)
         else:  # old file...
             f = open(name, 'r')
@@ -922,7 +922,7 @@ class Drobo:
             print('header+body lengths validated.  Good.')
         #print self.fwhdr
 
-        if self.fwhdr[2] != 'TDIH':
+        if self.fwhdr[2] != b'TDIH':
             print('bad Magic, not a valid firmware')
             return 0
 

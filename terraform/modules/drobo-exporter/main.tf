@@ -41,6 +41,7 @@ import http.server
 import socketserver
 import time
 import os
+import sys
 
 PORT = int(os.environ.get('EXPORTER_PORT', 9417))
 DROBO_DEVICE = os.environ.get('DROBO_DEVICE', '/dev/sdb')
@@ -52,9 +53,16 @@ def get_drobo_info():
             ['python3', '/opt/drobo-utils/drobom', 'info'],
             capture_output=True, text=True, timeout=30
         )
+        if result.returncode != 0:
+            sys.stderr.write(f"[drobo_exporter] drobom exited with code {result.returncode}: {result.stderr}\n")
+            return ""
         return result.stdout
+    except subprocess.TimeoutExpired:
+        sys.stderr.write("[drobo_exporter] drobom timed out after 30 seconds\n")
+        return ""
     except Exception as e:
-        return None
+        sys.stderr.write(f"[drobo_exporter] failed to run drobom: {e}\n")
+        return ""
 
 def parse_drobo_info(output):
     """Parse drobom info output into metrics"""
@@ -94,7 +102,7 @@ def parse_drobo_info(output):
     # slot   GB                Model               Status
     #    0    0                                       red
     #    1 4000 WDC WD4000FYYZ-0SATA                green
-    slot_pattern = re.compile(r'^\s*(\d+)\s+(\d+)\s+(.{35})\s*(red|green|yellow|gray)', re.MULTILINE)
+    slot_pattern = re.compile(r'^\s*(\d+)\s+(\d+)\s+(.+?)\s+(red|green|yellow|gray)\s*$', re.MULTILINE)
     for match in slot_pattern.finditer(output):
         slot_num = int(match.group(1))
         size_gb = int(match.group(2))

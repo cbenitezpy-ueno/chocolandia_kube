@@ -291,7 +291,7 @@ Las alertas configuradas en PrometheusRules:
 
 ```
 +------------------------+----------+--------------------------------+
-| Alerta                 | Severid. | Condición                      |
+| Alerta                 | Severidad | Condición                      |
 +------------------------+----------+--------------------------------+
 | DroboDown              | Critical | drobo_up == 0 por 5m           |
 | DroboNoRedundancy      | Warning  | drobo_redundancy == 0 por 1h   |
