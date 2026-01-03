@@ -170,11 +170,11 @@
         { "expr": "drobo_slot_size_bytes", "format": "table", "instant": true, "refId": "B" }
       ],
       "transformations": [
-        { "id": "merge", "options": {} },
+        { "id": "seriesToColumns", "options": { "byField": "slot" } },
         { "id": "organize", "options": {
-          "excludeByName": { "Time": true, "__name__": true, "device": true, "instance": true, "job": true, "status_label": true },
-          "indexByName": { "slot": 0, "model": 1, "Value #B": 2, "Value #A": 3 },
-          "renameByName": { "Value #A": "Status", "Value #B": "Size", "model": "Model", "slot": "Slot" }
+          "excludeByName": { "Time": true, "Time 1": true, "Time 2": true, "__name__": true, "__name__ 1": true, "__name__ 2": true, "device": true, "device 1": true, "device 2": true, "instance": true, "instance 1": true, "instance 2": true, "job": true, "job 1": true, "job 2": true, "status_label": true, "container": true, "container 1": true, "container 2": true, "endpoint": true, "endpoint 1": true, "endpoint 2": true, "namespace": true, "namespace 1": true, "namespace 2": true, "pod": true, "pod 1": true, "pod 2": true, "service": true, "service 1": true, "service 2": true, "model 2": true },
+          "indexByName": { "slot": 0, "model 1": 1, "Value #B": 2, "Value #A": 3 },
+          "renameByName": { "Value #A": "Status", "Value #B": "Size", "model 1": "Model", "slot": "Slot" }
         }}
       ]
     },
