@@ -1,0 +1,29 @@
+flowchart TB
+    subgraph nodo05["nodo05 (192.168.4.105)"]
+        drobo[("Drobo Gen3\n4TB WD")]
+        exporter["drobo-exporter\n:9417"]
+        longhorn["Longhorn\n/mnt/drobo/longhorn"]
+
+        drobo -->|USB| exporter
+        drobo -->|mount /mnt/drobo| longhorn
+    end
+
+    subgraph monitoring["Namespace: monitoring"]
+        prometheus["Prometheus"]
+        grafana["Grafana"]
+        alertmanager["Alertmanager"]
+    end
+
+    subgraph notifications["Notificaciones"]
+        ntfy["Ntfy"]
+    end
+
+    exporter -->|scrape :9417/metrics| prometheus
+    prometheus -->|datasource| grafana
+    prometheus -->|alerts| alertmanager
+    alertmanager -->|push| ntfy
+
+    style drobo fill:#f9f,stroke:#333
+    style exporter fill:#9f9,stroke:#333
+    style prometheus fill:#ff9,stroke:#333
+    style grafana fill:#9ff,stroke:#333

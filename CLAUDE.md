@@ -439,5 +439,75 @@ mc ls --versions minio/opentofu-state/chocolandiadc-mvp/
 mc cp --version-id VERSION_ID minio/opentofu-state/chocolandiadc-mvp/terraform.tfstate ./restored.tfstate
 ```
 
+## NVIDIA GPU (nodo05)
+
+**Status**: Configured (2026-01-03)
+**Node**: nodo05 (192.168.4.105)
+
+### Hardware
+| Spec | Value |
+|------|-------|
+| GPU | NVIDIA GeForce GTX 760 |
+| VRAM | 2GB |
+| Architecture | Kepler (GK104) |
+| Driver | 470.256.02 |
+| CUDA | 11.4 |
+
+### Kubernetes Integration
+| Component | Version/Status |
+|-----------|----------------|
+| NVIDIA Driver | 470.256.02 |
+| NVIDIA Container Toolkit | 1.18.1 |
+| NVIDIA Device Plugin | v0.14.5 (DaemonSet) |
+| RuntimeClass | `nvidia` |
+| Resource | `nvidia.com/gpu: 1` |
+
+### Using the GPU in Pods
+
+Pods that need GPU access must:
+1. Use `runtimeClassName: nvidia`
+2. Request the GPU resource
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: gpu-pod
+spec:
+  runtimeClassName: nvidia
+  containers:
+  - name: gpu-container
+    image: nvidia/cuda:11.4-base
+    resources:
+      limits:
+        nvidia.com/gpu: 1
+    command: ["nvidia-smi"]
+```
+
+### Verification Commands
+```bash
+# Check GPU on node
+ssh -i ~/.ssh/id_ed25519_k3s chocolim@192.168.4.105 "nvidia-smi"
+
+# Check GPU available in Kubernetes
+kubectl describe node nodo05 | grep nvidia.com/gpu
+
+# Check device plugin logs
+kubectl logs -n kube-system -l name=nvidia-device-plugin-ds --field-selector spec.nodeName=nodo05
+```
+
+### Recommended Use Cases
+| Use Case | Viability | Notes |
+|----------|-----------|-------|
+| Jellyfin/Plex transcoding | Good | NVDEC for hardware decode |
+| Frigate NVR | Good | Hardware decode for camera streams |
+| Ollama/LLMs | Limited | Only small models (~2GB VRAM) |
+| Stable Diffusion | Not viable | Needs minimum 4GB VRAM |
+
+### Important Notes
+1. Only nodo05 has a GPU - use nodeSelector or nodeAffinity for GPU workloads
+2. The NVIDIA device plugin runs on all nodes but only detects GPUs on nodo05
+3. RuntimeClass `nvidia` is required for GPU access in containers
+
 <!-- MANUAL ADDITIONS END -->
 - ~/.ssh/id_ed25519_k3s  es el key para entrar a los nodos (usuario: chocolim)
