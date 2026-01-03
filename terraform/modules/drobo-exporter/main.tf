@@ -305,18 +305,6 @@ resource "kubernetes_daemon_set_v1" "drobo_exporter" {
           config_map {
             name         = kubernetes_config_map.drobo_exporter_script.metadata[0].name
             default_mode = "0755"
-            items {
-              key  = "Drobo.py"
-              path = "Drobo.py"
-            }
-            items {
-              key  = "DroboIOctl.py"
-              path = "DroboIOctl.py"
-            }
-            items {
-              key  = "drobom"
-              path = "drobom"
-            }
           }
         }
 
