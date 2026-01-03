@@ -14,13 +14,52 @@ Después de investigar, encontré [drobo-utils](https://drobo-utils.sourceforge.
 
 ### Los Forks Disponibles
 
-| Repositorio | Estado | Python |
-|-------------|--------|--------|
-| [Original (SourceForge)](https://drobo-utils.sourceforge.net/) | Abandonado | 2.5/2.6 |
-| [n3gwg/drobo-utils](https://github.com/n3gwg/drobo-utils) | Fork Python 3 (incompleto) | 3.x |
-| [petersilva/drobo-utils](https://github.com/petersilva/drobo-utils) | **Funcional** | 3.x |
+Encontré varios forks en GitHub:
+
+- **Original (SourceForge)**: Abandonado, Python 2.5/2.6
+- **n3gwg/drobo-utils**: Fork Python 3, pero incompleto
+- **petersilva/drobo-utils**: Funcional con Python 3.x
 
 El fork de **petersilva** resultó ser el único que funcionaba correctamente con Python 3 y el Drobo Gen3.
+
+### Instalación de drobo-utils
+
+La instalación requiere algunos pasos manuales ya que no está disponible en PyPI:
+
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/petersilva/drobo-utils.git
+cd drobo-utils
+
+# 2. Instalar dependencias del sistema (Ubuntu/Debian)
+sudo apt-get install python3-parted
+
+# 3. Copiar los archivos necesarios
+sudo mkdir -p /opt/drobo-utils
+sudo cp Drobo.py DroboIOctl.py drobom /opt/drobo-utils/
+sudo chmod +x /opt/drobo-utils/drobom
+
+# 4. Verificar que funciona (requiere Drobo conectado por USB)
+sudo python3 /opt/drobo-utils/drobom info
+```
+
+La salida de `drobom info` muestra información detallada del dispositivo:
+
+```
+Drobo: /dev/sdb
+  Firmware: 3.5.0
+  Serial: DRBA12345678
+  Capacity (in GB): used: 3, free: 1969, total: 1972
+  DualDiskRedundancy	False
+
+  Slot 0: WDC WD40EFRX-68N (4000 GB) status: Green
+  Slot 1: empty
+  Slot 2: empty
+  Slot 3: empty
+  Slot 4: empty
+```
+
+**Nota importante**: drobo-utils necesita acceso directo al dispositivo USB (`/dev/sdb`), por lo que debe ejecutarse con permisos de root o configurar reglas udev apropiadas.
 
 ## Arquitectura de la Solución
 
@@ -88,6 +127,7 @@ echo "UUID=$UUID /mnt/drobo ext4 defaults,nofail 0 2" | sudo tee -a /etc/fstab
 ### 2. El Exporter de Prometheus
 
 Creé un exporter en Python que:
+
 1. Ejecuta `drobom info` para obtener el estado del Drobo
 2. Parsea la salida con expresiones regulares
 3. Expone métricas en formato Prometheus
@@ -131,15 +171,27 @@ def parse_drobo_info(output):
 
 ### 3. Métricas Exportadas
 
-| Métrica | Tipo | Descripción |
-|---------|------|-------------|
-| `drobo_up` | Gauge | 1 si el Drobo está accesible |
-| `drobo_capacity_total_bytes` | Gauge | Capacidad total en bytes |
-| `drobo_capacity_used_bytes` | Gauge | Espacio usado en bytes |
-| `drobo_capacity_free_bytes` | Gauge | Espacio libre en bytes |
-| `drobo_redundancy` | Gauge | 1 si hay redundancia de datos |
-| `drobo_slot_status` | Gauge | Estado por slot (0=vacío, 1=ok, 2=warning, 3=failed) |
-| `drobo_slot_size_bytes` | Gauge | Tamaño del disco por slot |
+El exporter expone las siguientes métricas:
+
+```
++------------------------------+-------+----------------------------------+
+| Métrica                      | Tipo  | Descripción                      |
++------------------------------+-------+----------------------------------+
+| drobo_up                     | Gauge | 1 si el Drobo está accesible     |
+| drobo_capacity_total_bytes   | Gauge | Capacidad total en bytes         |
+| drobo_capacity_used_bytes    | Gauge | Espacio usado en bytes           |
+| drobo_capacity_free_bytes    | Gauge | Espacio libre en bytes           |
+| drobo_redundancy             | Gauge | 1 si hay redundancia de datos    |
+| drobo_slot_status            | Gauge | Estado por slot (0-3)            |
+| drobo_slot_size_bytes        | Gauge | Tamaño del disco por slot        |
++------------------------------+-------+----------------------------------+
+
+Valores de drobo_slot_status:
+  0 = vacío
+  1 = ok (verde)
+  2 = warning (amarillo)
+  3 = failed (rojo)
+```
 
 ### 4. Despliegue en Kubernetes
 
@@ -175,6 +227,8 @@ resource "kubernetes_daemon_set_v1" "drobo_exporter" {
 }
 ```
 
+El contenedor incluye los archivos de drobo-utils montados via ConfigMap y ejecuta el script del exporter al iniciar.
+
 ### 5. Integración con Longhorn
 
 Además del monitoreo, configuré el Drobo como almacenamiento adicional para Longhorn:
@@ -194,6 +248,8 @@ kubectl -n longhorn-system patch nodes.longhorn.io nodo05 --type=merge -p '{
   }
 }'
 ```
+
+Los tags `drobo` y `bulk-storage` permiten crear StorageClasses específicas para workloads que necesiten este almacenamiento.
 
 ## Alertas Configuradas
 
@@ -231,14 +287,20 @@ flowchart LR
 ```
 </details>
 
-| Alerta | Severidad | Condición |
-|--------|-----------|-----------|
-| DroboDown | Critical | `drobo_up == 0` por 5m |
-| DroboNoRedundancy | Warning | `drobo_redundancy == 0` por 1h |
-| DroboSlotRed | Critical | `drobo_slot_status == 3` |
-| DroboSlotYellow | Warning | `drobo_slot_status == 2` por 5m |
-| DroboCapacityLow | Warning | < 15% libre por 30m |
-| DroboCapacityCritical | Critical | < 5% libre por 5m |
+Las alertas configuradas en PrometheusRules:
+
+```
++------------------------+----------+--------------------------------+
+| Alerta                 | Severid. | Condición                      |
++------------------------+----------+--------------------------------+
+| DroboDown              | Critical | drobo_up == 0 por 5m           |
+| DroboNoRedundancy      | Warning  | drobo_redundancy == 0 por 1h   |
+| DroboSlotRed           | Critical | drobo_slot_status == 3         |
+| DroboSlotYellow        | Warning  | drobo_slot_status == 2 por 5m  |
+| DroboCapacityLow       | Warning  | < 15% libre por 30m            |
+| DroboCapacityCritical  | Critical | < 5% libre por 5m              |
++------------------------+----------+--------------------------------+
+```
 
 ## Dashboard de Grafana
 
@@ -297,6 +359,15 @@ Para combinar datos de múltiples queries en una tabla, necesitas un campo comú
 { "id": "seriesToColumns", "options": { "byField": "slot" } }
 ```
 
+### 4. Privileged containers son necesarios para hardware
+
+Acceder a dispositivos USB desde Kubernetes requiere:
+
+- `hostNetwork: true` para el DaemonSet
+- `privileged: true` en el security context
+- Montar `/dev` como volumen
+- Node selector para asegurar que corre en el nodo correcto
+
 ## Resultado Final
 
 El Drobo Gen3 ahora está completamente integrado en el homelab:
@@ -307,6 +378,7 @@ El Drobo Gen3 ahora está completamente integrado en el homelab:
 - **Alertas**: Notificaciones push via Ntfy para cualquier problema
 
 Todo el código está disponible en el repositorio del proyecto:
+
 - Módulo Terraform: `terraform/modules/drobo-exporter/`
 - Dashboard: `terraform/dashboards/drobo-storage.json`
 
