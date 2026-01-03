@@ -689,7 +689,7 @@ class Drobo:
         n = time.gmtime()
 
         dfname = "/tmp/DroboDiag_%d_%02d%02d_%02d%02d%02d.log" % (n[0:6])
-        df = open(dfname, "w")
+        df = open(dfname, "wb")
         d = self.GetDiagRecord(4)
         df.write(d)
         d = self.GetDiagRecord(7)
@@ -700,7 +700,7 @@ class Drobo:
 
     def decodeDiagnostics(self, diagfilename):
         try:
-            f = open(diagfilename)
+            f = open(diagfilename, 'rb')
             data = f.read()
             f.close()
         except:
@@ -742,7 +742,7 @@ class Drobo:
                 if ord(f[-5]) == hwlevel[0]:
                     self.fwdata = z.read(f)
         else:  # old file...
-            f = open(name, 'r')
+            f = open(name, 'rb')
             self.fwdata = f.read()
             f.close()
 
@@ -876,7 +876,7 @@ class Drobo:
         self.fwdata = None
         firmware_url = urllib.request.urlopen(Drobo.fwsite + fwname)
         filedata = firmware_url.read()
-        f = open(localfw, 'w+')
+        f = open(localfw, 'wb+')
         f.write(filedata)
         f.close()
         if (DEBUG & DBG_Chatty):
@@ -1427,15 +1427,14 @@ class Drobo:
         if DEBUG & DBG_Simulation:
             return ["/drmnt0", "/drmnt2"]
 
-        mounts = open("/etc/mtab")
         dlen = len(self.char_dev_file)
         filesystems = []
-        for l in mounts.readlines():
-            fields = l.split()
-            for i in self.char_devs:
-                if fields[0][0:dlen] == i:
-                    filesystems.append(fields[1])
-        mounts.close()
+        with open("/etc/mtab") as mounts:
+            for l in mounts.readlines():
+                fields = l.split()
+                for i in self.char_devs:
+                    if fields[0][0:dlen] == i:
+                        filesystems.append(fields[1])
         return filesystems
 
 
