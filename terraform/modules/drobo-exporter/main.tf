@@ -80,10 +80,15 @@ def parse_drobo_info(output):
         metrics['drobo_capacity_total_bytes'] = int(cap_match.group(3)) * 1024 * 1024 * 1024
 
     # Parse redundancy from status line
-    if 'No redundancy' in output:
+    # Check for DualDiskRedundancy setting (with flexible whitespace)
+    dual_match = re.search(r'DualDiskRedundancy\s+(True|False)', output)
+    if dual_match:
+        metrics['drobo_redundancy'] = 1 if dual_match.group(1) == 'True' else 0
+    elif 'No redundancy' in output:
         metrics['drobo_redundancy'] = 0
     else:
-        metrics['drobo_redundancy'] = 1
+        # Default to 0 (no redundancy) if we can't determine
+        metrics['drobo_redundancy'] = 0
 
     # Parse slot info
     # slot   GB                Model               Status
