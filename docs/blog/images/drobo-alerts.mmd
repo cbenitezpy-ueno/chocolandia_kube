@@ -1,0 +1,25 @@
+flowchart LR
+    subgraph alerts["PrometheusRules"]
+        A1["DroboDown\n(critical)"]
+        A2["DroboNoRedundancy\n(warning)"]
+        A3["DroboSlotRed\n(critical)"]
+        A4["DroboSlotYellow\n(warning)"]
+        A5["DroboCapacityLow\n(warning)"]
+        A6["DroboCapacityCritical\n(critical)"]
+    end
+
+    A1 --> ntfy["Ntfy\nhomelab-alerts"]
+    A2 --> ntfy
+    A3 --> ntfy
+    A4 --> ntfy
+    A5 --> ntfy
+    A6 --> ntfy
+
+    ntfy --> phone["Notificacion\nmovil"]
+
+    style A1 fill:#f66
+    style A3 fill:#f66
+    style A6 fill:#f66
+    style A2 fill:#fa0
+    style A4 fill:#fa0
+    style A5 fill:#fa0
