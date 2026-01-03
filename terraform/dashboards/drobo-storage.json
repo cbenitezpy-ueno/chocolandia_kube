@@ -31,7 +31,7 @@
       "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value" },
       "title": "Drobo Status",
       "type": "stat",
-      "targets": [{ "expr": "drobo_up", "refId": "A" }]
+      "targets": [{ "expr": "drobo_up", "refId": "A", "instant": true }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -50,7 +50,7 @@
       "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value" },
       "title": "Data Redundancy",
       "type": "stat",
-      "targets": [{ "expr": "drobo_redundancy", "refId": "A" }]
+      "targets": [{ "expr": "drobo_redundancy", "refId": "A", "instant": true }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -67,7 +67,7 @@
       "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
       "title": "Total Capacity",
       "type": "stat",
-      "targets": [{ "expr": "drobo_capacity_total_bytes", "refId": "A" }]
+      "targets": [{ "expr": "drobo_capacity_total_bytes", "refId": "A", "instant": true }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -84,7 +84,7 @@
       "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
       "title": "Used",
       "type": "stat",
-      "targets": [{ "expr": "drobo_capacity_used_bytes", "refId": "A" }]
+      "targets": [{ "expr": "drobo_capacity_used_bytes", "refId": "A", "instant": true }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -101,7 +101,7 @@
       "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
       "title": "Free",
       "type": "stat",
-      "targets": [{ "expr": "drobo_capacity_free_bytes", "refId": "A" }]
+      "targets": [{ "expr": "drobo_capacity_free_bytes", "refId": "A", "instant": true }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -120,7 +120,7 @@
       "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
       "title": "Usage %",
       "type": "stat",
-      "targets": [{ "expr": "drobo_capacity_used_bytes / drobo_capacity_total_bytes", "refId": "A" }]
+      "targets": [{ "expr": "drobo_capacity_used_bytes / drobo_capacity_total_bytes", "refId": "A", "instant": true }]
     },
     {
       "collapsed": false,
@@ -201,8 +201,8 @@
       "title": "Capacity Distribution",
       "type": "piechart",
       "targets": [
-        { "expr": "drobo_capacity_used_bytes", "legendFormat": "Used", "refId": "A" },
-        { "expr": "drobo_capacity_free_bytes", "legendFormat": "Free", "refId": "B" }
+        { "expr": "drobo_capacity_used_bytes", "legendFormat": "Used", "refId": "A", "instant": true },
+        { "expr": "drobo_capacity_free_bytes", "legendFormat": "Free", "refId": "B", "instant": true }
       ]
     },
     {
@@ -228,7 +228,7 @@
       "title": "Drives by Size",
       "type": "piechart",
       "targets": [
-        { "expr": "drobo_slot_size_bytes > 0", "legendFormat": "Slot {{slot}}: {{model}}", "refId": "A" }
+        { "expr": "drobo_slot_size_bytes > 0", "legendFormat": "Slot {{slot}}: {{model}}", "refId": "A", "instant": true }
       ]
     },
     {
