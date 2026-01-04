@@ -42,6 +42,12 @@ module "pihole" {
     # Dev Tools - Nexus Repository Manager
     "192.168.4.202 nexus.chocolandiadc.local",
     "192.168.4.202 docker.nexus.chocolandiadc.local",
+
+    # Home Automation
+    "192.168.4.202 homeassistant.chocolandiadc.local",
+
+    # Document Management
+    "192.168.4.202 paperless.chocolandiadc.local",
   ]
 
   # Kubernetes Configuration
