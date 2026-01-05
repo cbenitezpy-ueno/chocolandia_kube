@@ -51,6 +51,8 @@ Auto-generated from all feature plans. Last updated: 2025-11-08
 - YAML (Homepage configuration format), HCL (OpenTofu 1.6+) + Homepage v1.4.6 (ghcr.io/gethomepage/homepage:v1.4.6), Kubernetes provider ~> 2.23 (025-homepage-redesign)
 - HCL (OpenTofu 1.6+), YAML (Kubernetes manifests) + kube-prometheus-stack Helm chart, ntfy, Homepage (026-ntfy-homepage-alerts)
 - Kubernetes Secrets (ntfy credentials), ConfigMaps (Homepage config) (026-ntfy-homepage-alerts)
+- HCL (OpenTofu 1.6+), Bash scripting para scripts de backup + rclone/rclone:latest, curl (para ntfy), kubectl (028-paperless-gdrive-backup)
+- PVCs existentes (paperless-ngx-data 5Gi, paperless-ngx-media 40Gi), Google Drive como destino (028-paperless-gdrive-backup)
 
 - HCL (OpenTofu) 1.6+, Bash scripting for validation (001-k3s-cluster-setup)
 
@@ -70,9 +72,9 @@ tests/
 HCL (Terraform) 1.6+, Bash scripting for validation: Follow standard conventions
 
 ## Recent Changes
+- 028-paperless-gdrive-backup: Added HCL (OpenTofu 1.6+), Bash scripting para scripts de backup + rclone/rclone:latest, curl (para ntfy), kubectl
 - 027-paperless-ngx: Added HCL (OpenTofu 1.6+), YAML (Kubernetes manifests)
 - 026-ntfy-homepage-alerts: Added HCL (OpenTofu 1.6+), YAML (Kubernetes manifests) + kube-prometheus-stack Helm chart, ntfy, Homepage
-- 025-homepage-redesign: Added YAML (Homepage configuration format), HCL (OpenTofu 1.6+) + Homepage v1.4.6 (ghcr.io/gethomepage/homepage:v1.4.6), Kubernetes provider ~> 2.23
 
 
 <!-- MANUAL ADDITIONS START -->
@@ -194,6 +196,48 @@ tofu output -raw paperless_samba_password
 - ServiceMonitor: `paperless-ngx` in `paperless` namespace
 - PrometheusRule: `paperless-ngx-alerts` (PaperlessDown, PaperlessHighMemory)
 - Metrics endpoint: `/metrics` on port 8000
+
+### Google Drive Backup (028-paperless-gdrive-backup)
+
+**Status**: Deployed (2026-01-04)
+
+Automated daily backup of Paperless documents to Google Drive using rclone.
+
+| Setting | Value |
+|---------|-------|
+| Schedule | 3:00 AM daily |
+| Remote | `gdrive:/Paperless-Backup/` |
+| Retention | Deleted files moved to `.deleted/` folder |
+| Timeout | 2 hours |
+| Notifications | ntfy (homelab-alerts topic) |
+
+**Resources in `paperless` namespace:**
+- `cronjob/paperless-backup` - Daily backup job
+- `configmap/paperless-backup-script` - Backup script
+- `secret/rclone-gdrive-config` - Google Drive OAuth credentials
+- `prometheusrule/paperless-backup-alerts` - Missing/failed backup alerts
+
+**Manual backup:**
+```bash
+kubectl create job --from=cronjob/paperless-backup manual-backup -n paperless
+kubectl logs -f job/manual-backup -n paperless
+```
+
+**Restore from backup:**
+```bash
+# Full restore (stops Paperless during restore)
+scripts/paperless-backup/restore.sh
+
+# Partial restore (single file)
+kubectl run restore --rm -it --image=rclone/rclone \
+  --overrides='{"spec":{"containers":[{"name":"restore","image":"rclone/rclone","command":["sh","-c","sleep 3600"],"volumeMounts":[{"name":"cfg","mountPath":"/config/rclone"}]}],"volumes":[{"name":"cfg","secret":{"secretName":"rclone-gdrive-config"}}]}}' \
+  -n paperless -- rclone copy gdrive:/Paperless-Backup/media/documents/originals/0000001.pdf /tmp/
+```
+
+**Verify backup in Google Drive:**
+```bash
+rclone tree gdrive:/Paperless-Backup --max-depth 2
+```
 
 ## Nexus Repository Manager
 
