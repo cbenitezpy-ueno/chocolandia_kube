@@ -26,9 +26,9 @@ variable "backup_retry_limit" {
 }
 
 variable "rclone_image" {
-  description = "rclone container image"
+  description = "rclone container image (pinned for supply-chain security)"
   type        = string
-  default     = "rclone/rclone:latest"
+  default     = "rclone/rclone:1.72.0@sha256:0eb18825ac9732c21c11d654007170572bbd495352bb6dbb624f18e4f462c496"
 }
 
 variable "rclone_secret_name" {

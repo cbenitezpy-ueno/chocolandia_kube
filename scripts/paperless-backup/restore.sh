@@ -105,7 +105,7 @@ metadata:
 spec:
   containers:
   - name: restore
-    image: rclone/rclone:latest
+    image: rclone/rclone:1.72.0@sha256:0eb18825ac9732c21c11d654007170572bbd495352bb6dbb624f18e4f462c496
     command: ["sleep", "infinity"]
     volumeMounts:
     - name: data
@@ -155,20 +155,16 @@ if [ "$RESTORE_TYPE" = "partial" ]; then
     "
 else
     echo "Full restore in progress..."
-
-    # Restore data
-    echo "Restoring data directory..."
     kubectl exec paperless-restore -n $NAMESPACE -- sh -c "
+        set -e
         cp /config/rclone/rclone.conf /tmp/rclone.conf
         export RCLONE_CONFIG=/tmp/rclone.conf
-        rclone sync '$DATA_SOURCE' /data --verbose
-    "
 
-    # Restore media
-    echo ""
-    echo "Restoring media directory..."
-    kubectl exec paperless-restore -n $NAMESPACE -- sh -c "
-        export RCLONE_CONFIG=/tmp/rclone.conf
+        echo 'Restoring data directory...'
+        rclone sync '$DATA_SOURCE' /data --verbose
+
+        echo ''
+        echo 'Restoring media directory...'
         rclone sync '$MEDIA_SOURCE' /media --verbose
     "
 fi

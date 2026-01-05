@@ -146,9 +146,11 @@ resource "kubernetes_config_map" "backup_script" {
       DURATION_MIN=$((DURATION / 60))
       DURATION_SEC=$((DURATION % 60))
 
-      # Extract stats from logs
-      DATA_TRANSFERRED=$(grep -oP 'Transferred:\s+\K[^,]+' /tmp/data-sync.log 2>/dev/null | tail -1 || echo "unknown")
-      MEDIA_TRANSFERRED=$(grep -oP 'Transferred:\s+\K[^,]+' /tmp/media-sync.log 2>/dev/null | tail -1 || echo "unknown")
+      # Extract stats from logs (using awk for Alpine compatibility)
+      DATA_TRANSFERRED=$(awk '/Transferred:/ {gsub(/,.*/, "", $2); print $2, $3}' /tmp/data-sync.log 2>/dev/null | tail -1)
+      MEDIA_TRANSFERRED=$(awk '/Transferred:/ {gsub(/,.*/, "", $2); print $2, $3}' /tmp/media-sync.log 2>/dev/null | tail -1)
+      [ -z "$DATA_TRANSFERRED" ] && DATA_TRANSFERRED="unknown"
+      [ -z "$MEDIA_TRANSFERRED" ] && MEDIA_TRANSFERRED="unknown"
 
       echo ""
       echo "=========================================="
