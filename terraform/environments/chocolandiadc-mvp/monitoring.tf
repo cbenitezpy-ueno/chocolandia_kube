@@ -291,6 +291,14 @@ resource "helm_release" "kube_prometheus_stack" {
 
       # Grafana dashboards configuration
       grafana = {
+        # Enable anonymous access for read-only viewers
+        "grafana.ini" = {
+          "auth.anonymous" = {
+            enabled  = true
+            org_role = "Viewer"
+          }
+        }
+
         dashboardProviders = {
           "dashboardproviders.yaml" = {
             apiVersion = 1
