@@ -528,3 +528,24 @@ variable "paperless_admin_email" {
   type        = string
   default     = "admin@chocolandiadc.local"
 }
+
+# ============================================================================
+# Nexus Repository Configuration (Feature 016)
+# ============================================================================
+
+variable "nexus_admin_password" {
+  description = "Nexus admin password for Docker registry authentication"
+  type        = string
+  sensitive   = true
+}
+
+# ============================================================================
+# Jenkins CI Configuration (Feature 029)
+# ============================================================================
+
+variable "jenkins_admin_password" {
+  description = "Jenkins admin password (leave empty to auto-generate)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
