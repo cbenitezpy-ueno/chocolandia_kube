@@ -227,7 +227,7 @@ resource "helm_release" "kube_prometheus_stack" {
           }
           route = {
             receiver        = "ntfy-homelab"
-            group_by        = ["alertname", "namespace", "severity"]
+            group_by        = ["..."]  # Each alert individually to avoid ntfy message size limit
             group_wait      = "30s"
             group_interval  = "5m"
             repeat_interval = "4h"
@@ -241,6 +241,10 @@ resource "helm_release" "kube_prometheus_stack" {
               {
                 receiver = "null"
                 matchers = ["alertname=Watchdog"]
+              },
+              {
+                receiver = "null"
+                matchers = ["alertname=InfoInhibitor"]
               }
             ]
           }
@@ -284,6 +288,32 @@ resource "helm_release" "kube_prometheus_stack" {
               source_matchers = ["severity=critical"]
               target_matchers = ["severity=warning"]
               equal           = ["alertname", "namespace"]
+            },
+            # Silence cascading alerts when a node is down
+            {
+              source_matchers = ["alertname=NodeNotReady"]
+              target_matchers = ["alertname=PodNotReady"]
+              equal           = ["node"]
+            },
+            {
+              source_matchers = ["alertname=NodeDown"]
+              target_matchers = ["alertname=PodNotReady"]
+            },
+            {
+              source_matchers = ["alertname=NodeDown"]
+              target_matchers = ["alertname=TargetDown"]
+            },
+            {
+              source_matchers = ["alertname=NodeNotReady"]
+              target_matchers = ["alertname=TargetDown"]
+            },
+            {
+              source_matchers = ["alertname=NodeNotReady"]
+              target_matchers = ["alertname=KubeDaemonSetMisScheduled"]
+            },
+            {
+              source_matchers = ["alertname=NodeNotReady"]
+              target_matchers = ["alertname=KubeDaemonSetRolloutStuck"]
             }
           ]
         }
