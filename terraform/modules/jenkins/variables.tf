@@ -111,6 +111,12 @@ variable "dind_memory_limit" {
   default     = "1Gi"
 }
 
+variable "dind_storage_size" {
+  description = "Storage size for DinD Docker cache (improves build performance)"
+  type        = string
+  default     = "20Gi"
+}
+
 # ==============================================================================
 # Storage Configuration
 # ==============================================================================
@@ -181,27 +187,8 @@ variable "enable_metrics" {
   default     = true
 }
 
-variable "metrics_port" {
-  description = "Port for Prometheus metrics"
-  type        = number
-  default     = 8080
-}
-
-# ==============================================================================
-# Notification Configuration
-# ==============================================================================
-
-variable "ntfy_server" {
-  description = "ntfy server URL"
-  type        = string
-  default     = "http://ntfy.ntfy.svc.cluster.local"
-}
-
-variable "ntfy_topic" {
-  description = "ntfy topic for build notifications"
-  type        = string
-  default     = "homelab-alerts"
-}
+# Note: metrics_port removed - Jenkins uses standard port 8080 for metrics
+# Note: ntfy_server/ntfy_topic removed - ntfy integration not yet implemented in JCasC
 
 # ==============================================================================
 # Helm Chart Configuration

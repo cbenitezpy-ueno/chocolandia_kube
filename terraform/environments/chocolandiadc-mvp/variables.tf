@@ -549,3 +549,15 @@ variable "jenkins_admin_password" {
   sensitive   = true
   default     = ""
 }
+
+variable "jenkins_nexus_username" {
+  description = "Nexus username for Jenkins CI (dedicated CI user with limited permissions)"
+  type        = string
+  default     = "jenkins-ci"
+}
+
+variable "jenkins_nexus_password" {
+  description = "Nexus password for Jenkins CI user"
+  type        = string
+  sensitive   = true
+}

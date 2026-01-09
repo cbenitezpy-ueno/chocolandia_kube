@@ -92,7 +92,7 @@ credentials:
       - credentials:
           - usernamePassword:
               scope: GLOBAL
-              id: nexus-docker-credentials
+              id: nexus-docker
               username: ${NEXUS_USERNAME}
               password: ${NEXUS_PASSWORD}
               description: "Nexus Docker Registry"

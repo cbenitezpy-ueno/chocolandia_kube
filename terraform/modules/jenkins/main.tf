@@ -70,6 +70,34 @@ resource "kubernetes_persistent_volume_claim" "jenkins_home" {
 }
 
 # ==============================================================================
+# PersistentVolumeClaim for DinD Docker Cache
+# NOTE: Disabled for now - using emptyDir until DinD stability improves
+# ==============================================================================
+
+# resource "kubernetes_persistent_volume_claim" "dind_storage" {
+#   metadata {
+#     name      = "jenkins-dind-storage"
+#     namespace = kubernetes_namespace.jenkins.metadata[0].name
+#     labels = merge(local.labels, {
+#       "app.kubernetes.io/component" = "dind-cache"
+#     })
+#   }
+#
+#   spec {
+#     access_modes       = ["ReadWriteOnce"]
+#     storage_class_name = var.storage_class
+#
+#     resources {
+#       requests = {
+#         storage = var.dind_storage_size
+#       }
+#     }
+#   }
+#
+#   wait_until_bound = false
+# }
+
+# ==============================================================================
 # Kubernetes Secret - Jenkins Admin Password
 # ==============================================================================
 
@@ -138,18 +166,12 @@ resource "helm_release" "jenkins" {
       storage_size            = var.storage_size
       hostname                = var.hostname
       nexus_docker_registry   = var.nexus_docker_registry
-      nexus_username          = var.nexus_username
-      nexus_password          = var.nexus_password
       enable_metrics          = var.enable_metrics
-      ntfy_server             = var.ntfy_server
-      ntfy_topic              = var.ntfy_topic
     })
   ]
 
-  set_sensitive {
-    name  = "controller.admin.password"
-    value = local.admin_password
-  }
+  # Note: admin password is provided via existingSecret in values.yaml
+  # The set_sensitive block is not needed when using existingSecret
 
   depends_on = [
     kubernetes_namespace.jenkins,

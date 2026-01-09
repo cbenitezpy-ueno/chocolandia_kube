@@ -114,7 +114,7 @@ controller:
           remotingSecurity:
             enabled: true
 
-      # Credentials configuration
+      # Credentials configuration (using env vars from K8s secret)
       credentials-config: |
         credentials:
           system:
@@ -123,8 +123,8 @@ controller:
                   - usernamePassword:
                       scope: GLOBAL
                       id: "nexus-docker"
-                      username: "${nexus_username}"
-                      password: "${nexus_password}"
+                      username: $${NEXUS_USERNAME}
+                      password: $${NEXUS_PASSWORD}
                       description: "Nexus Docker Registry (${nexus_docker_registry})"
 
   # ==============================================================================
@@ -134,33 +134,28 @@ controller:
   sidecars:
     configAutoReload:
       enabled: true
-
-  # Additional containers (DinD sidecar)
-  additionalContainers:
-    - name: dind
-      image: docker:24-dind
-      securityContext:
-        privileged: true
-      env:
-        - name: DOCKER_TLS_CERTDIR
-          value: ""
-        - name: DOCKER_HOST
-          value: "tcp://localhost:2375"
-      resources:
-        requests:
-          cpu: "${dind_cpu_request}"
-          memory: "${dind_memory_request}"
-        limits:
-          cpu: "${dind_cpu_limit}"
-          memory: "${dind_memory_limit}"
-      volumeMounts:
-        - name: docker-graph-storage
-          mountPath: /var/lib/docker
-
-  # Additional volumes for DinD
-  additionalVolumes:
-    - name: docker-graph-storage
-      emptyDir: {}
+    # NOTE: DinD sidecar disabled due to K3s kernel compatibility issues
+    # TODO: Re-enable when DinD rootless mode is configured or use kaniko instead
+    # additionalSidecarContainers:
+    #   - name: dind
+    #     image: docker:24-dind
+    #     securityContext:
+    #       privileged: true
+    #     env:
+    #       - name: DOCKER_TLS_CERTDIR
+    #         value: ""
+    #       - name: DOCKER_HOST
+    #         value: "tcp://localhost:2375"
+    #     resources:
+    #       requests:
+    #         cpu: "${dind_cpu_request}"
+    #         memory: "${dind_memory_request}"
+    #       limits:
+    #         cpu: "${dind_cpu_limit}"
+    #         memory: "${dind_memory_limit}"
+    #     volumeMounts:
+    #       - name: docker-graph-storage
+    #         mountPath: /var/lib/docker
 
   # Environment variables for Jenkins controller
   containerEnv:
@@ -168,6 +163,16 @@ controller:
       value: "tcp://localhost:2375"
     - name: NEXUS_REGISTRY
       value: "${nexus_docker_registry}"
+    - name: NEXUS_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: nexus-docker-credentials
+          key: username
+    - name: NEXUS_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: nexus-docker-credentials
+          key: password
 
 # ==============================================================================
 # Persistence Configuration
@@ -178,6 +183,11 @@ persistence:
   existingClaim: jenkins-home
   storageClass: "${storage_class}"
   size: "${storage_size}"
+  # Additional volumes for DinD sidecar (using emptyDir for now)
+  # TODO: Use PVC for persistent Docker cache when DinD stability improves
+  volumes:
+    - name: docker-graph-storage
+      emptyDir: {}
 
 # ==============================================================================
 # Service Account

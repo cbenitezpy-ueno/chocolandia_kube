@@ -36,17 +36,15 @@ module "jenkins" {
   cluster_issuer     = "local-ca" # Using self-signed CA for .local domains
   traefik_entrypoint = "websecure"
 
-  # Nexus Docker registry integration
+  # Nexus Docker registry integration (using dedicated CI user)
   nexus_docker_registry = "docker.nexus.chocolandiadc.local"
-  nexus_username        = "admin"
-  nexus_password        = var.nexus_admin_password
+  nexus_username        = var.jenkins_nexus_username
+  nexus_password        = var.jenkins_nexus_password
 
   # Monitoring
   enable_metrics = true
 
-  # Notifications
-  ntfy_server = "http://ntfy.ntfy.svc.cluster.local"
-  ntfy_topic  = "homelab-alerts"
+  # Note: ntfy notifications not yet implemented in JCasC
 }
 
 # ==============================================================================
