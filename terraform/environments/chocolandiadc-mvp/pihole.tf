@@ -43,6 +43,9 @@ module "pihole" {
     "192.168.4.202 nexus.chocolandiadc.local",
     "192.168.4.202 docker.nexus.chocolandiadc.local",
 
+    # Dev Tools - Jenkins CI
+    "192.168.4.202 jenkins.chocolandiadc.local",
+
     # Home Automation
     "192.168.4.202 homeassistant.chocolandiadc.local",
 

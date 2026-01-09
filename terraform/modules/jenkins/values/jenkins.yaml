@@ -1,0 +1,213 @@
+# Jenkins Helm Values
+# Feature 029: Jenkins CI Deployment
+# Template variables are populated by OpenTofu templatefile()
+
+# ==============================================================================
+# Controller Configuration
+# ==============================================================================
+
+controller:
+  image:
+    registry: docker.io
+    repository: ${controller_image}
+    tag: ${controller_tag}
+    pullPolicy: IfNotPresent
+
+  # Admin user (password set via Helm set_sensitive)
+  admin:
+    username: ${admin_user}
+    existingSecret: jenkins-admin
+
+  # Resource limits per constitution requirement
+  resources:
+    requests:
+      cpu: "${controller_cpu_request}"
+      memory: "${controller_memory_request}"
+    limits:
+      cpu: "${controller_cpu_limit}"
+      memory: "${controller_memory_limit}"
+
+  # JVM options
+  javaOpts: >-
+    -Xms1g
+    -Xmx1g
+    -Djenkins.install.runSetupWizard=false
+
+  # Number of executors on controller
+  numExecutors: 2
+
+  # Service configuration (ClusterIP, Traefik handles ingress)
+  serviceType: ClusterIP
+  servicePort: 8080
+  targetPort: 8080
+  agentListenerPort: 50000
+
+  # Disable built-in ingress (using Traefik IngressRoute)
+  ingress:
+    enabled: false
+
+  # Prometheus metrics
+  prometheus:
+    enabled: ${enable_metrics}
+    scrapeInterval: 30s
+    scrapeEndpoint: /prometheus
+
+  # ==============================================================================
+  # Plugins - Pre-installed via JCasC
+  # ==============================================================================
+
+  installPlugins:
+    # Core pipeline
+    - kubernetes
+    - workflow-aggregator
+    - pipeline-stage-view
+    - pipeline-graph-view
+
+    # Docker support
+    - docker-workflow
+    - docker-commons
+
+    # SCM
+    - git
+    - github
+
+    # Build tools
+    - maven-plugin
+    - nodejs
+    - golang
+
+    # Configuration and credentials
+    - configuration-as-code
+    - credentials-binding
+    - credentials
+
+    # Monitoring
+    - prometheus
+
+    # UI improvements
+    - blueocean
+    - dark-theme
+
+  # Additional plugins loaded at runtime
+  additionalPlugins: []
+
+  # ==============================================================================
+  # JCasC - Jenkins Configuration as Code
+  # ==============================================================================
+
+  JCasC:
+    defaultConfig: true
+
+    configScripts:
+      # Security configuration
+      security-config: |
+        jenkins:
+          securityRealm:
+            local:
+              allowsSignup: false
+              users:
+                - id: "${admin_user}"
+                  name: "Administrator"
+          authorizationStrategy:
+            loggedInUsersCanDoAnything:
+              allowAnonymousRead: false
+          remotingSecurity:
+            enabled: true
+
+      # Credentials configuration (using env vars from K8s secret)
+      credentials-config: |
+        credentials:
+          system:
+            domainCredentials:
+              - credentials:
+                  - usernamePassword:
+                      scope: GLOBAL
+                      id: "nexus-docker"
+                      username: $${NEXUS_USERNAME}
+                      password: $${NEXUS_PASSWORD}
+                      description: "Nexus Docker Registry (${nexus_docker_registry})"
+
+  # ==============================================================================
+  # Sidecars - Docker-in-Docker
+  # ==============================================================================
+
+  sidecars:
+    configAutoReload:
+      enabled: true
+    # NOTE: DinD sidecar disabled due to K3s kernel compatibility issues
+    # TODO: Re-enable when DinD rootless mode is configured or use kaniko instead
+    # additionalSidecarContainers:
+    #   - name: dind
+    #     image: docker:24-dind
+    #     securityContext:
+    #       privileged: true
+    #     env:
+    #       - name: DOCKER_TLS_CERTDIR
+    #         value: ""
+    #       - name: DOCKER_HOST
+    #         value: "tcp://localhost:2375"
+    #     resources:
+    #       requests:
+    #         cpu: "${dind_cpu_request}"
+    #         memory: "${dind_memory_request}"
+    #       limits:
+    #         cpu: "${dind_cpu_limit}"
+    #         memory: "${dind_memory_limit}"
+    #     volumeMounts:
+    #       - name: docker-graph-storage
+    #         mountPath: /var/lib/docker
+
+  # Environment variables for Jenkins controller
+  containerEnv:
+    - name: DOCKER_HOST
+      value: "tcp://localhost:2375"
+    - name: NEXUS_REGISTRY
+      value: "${nexus_docker_registry}"
+    - name: NEXUS_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: nexus-docker-credentials
+          key: username
+    - name: NEXUS_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: nexus-docker-credentials
+          key: password
+
+# ==============================================================================
+# Persistence Configuration
+# ==============================================================================
+
+persistence:
+  enabled: true
+  existingClaim: jenkins-home
+  storageClass: "${storage_class}"
+  size: "${storage_size}"
+  # Additional volumes for DinD sidecar (using emptyDir for now)
+  # TODO: Use PVC for persistent Docker cache when DinD stability improves
+  volumes:
+    - name: docker-graph-storage
+      emptyDir: {}
+
+# ==============================================================================
+# Service Account
+# ==============================================================================
+
+serviceAccount:
+  create: true
+  name: jenkins
+
+# ==============================================================================
+# RBAC
+# ==============================================================================
+
+rbac:
+  create: true
+  readSecrets: true
+
+# ==============================================================================
+# Agent Configuration (disabled - using controller executors)
+# ==============================================================================
+
+agent:
+  enabled: false

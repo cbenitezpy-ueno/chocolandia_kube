@@ -53,6 +53,8 @@ Auto-generated from all feature plans. Last updated: 2025-11-08
 - Kubernetes Secrets (ntfy credentials), ConfigMaps (Homepage config) (026-ntfy-homepage-alerts)
 - HCL (OpenTofu 1.6+), Bash scripting para scripts de backup + rclone/rclone:latest, curl (para ntfy), kubectl (028-paperless-gdrive-backup)
 - PVCs existentes (paperless-ngx-data 5Gi, paperless-ngx-media 40Gi), Google Drive como destino (028-paperless-gdrive-backup)
+- HCL (OpenTofu 1.6+), YAML (Kubernetes manifests) + Jenkins Helm chart, kubernetes provider ~> 2.23, helm provider ~> 2.11 (029-jenkins-ci)
+- Kubernetes PersistentVolume via local-path-provisioner (20Gi for Jenkins home) (029-jenkins-ci)
 
 - HCL (OpenTofu) 1.6+, Bash scripting for validation (001-k3s-cluster-setup)
 
@@ -72,9 +74,9 @@ tests/
 HCL (Terraform) 1.6+, Bash scripting for validation: Follow standard conventions
 
 ## Recent Changes
+- 029-jenkins-ci: Added HCL (OpenTofu 1.6+), YAML (Kubernetes manifests) + Jenkins Helm chart, kubernetes provider ~> 2.23, helm provider ~> 2.11
 - 028-paperless-gdrive-backup: Added HCL (OpenTofu 1.6+), Bash scripting para scripts de backup + rclone/rclone:latest, curl (para ntfy), kubectl
 - 027-paperless-ngx: Added HCL (OpenTofu 1.6+), YAML (Kubernetes manifests)
-- 026-ntfy-homepage-alerts: Added HCL (OpenTofu 1.6+), YAML (Kubernetes manifests) + kube-prometheus-stack Helm chart, ntfy, Homepage
 
 
 <!-- MANUAL ADDITIONS START -->
